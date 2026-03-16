@@ -2,13 +2,13 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Azure DevOps Metrics</title>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <script type="module" crossorigin src="/azure-devops-dashboard/assets/index-DG7unlCP.js"></script>
+    <script type="module" crossorigin src="/azure-devops-dashboard/assets/index-DDMCHE6c.js"></script>
     <link rel="modulepreload" crossorigin href="/azure-devops-dashboard/assets/chunk-B3K2TuZy.js">
-    <link rel="stylesheet" crossorigin href="/azure-devops-dashboard/assets/index-mF5bzMco.css">
+    <link rel="stylesheet" crossorigin href="/azure-devops-dashboard/assets/index-Cq4fde92.css">
   </head>
   <body>
     <div id="app">
@@ -136,19 +136,20 @@
                 <!-- Custom Gantt implementation -->
             </div>
             
-            <div class="legend" id="gantt-legend">
-                <div class="legend-item"><div class="legend-color" style="background: var(--status-backlog)"></div> Backlog (New/Outros)</div>
-                <div class="legend-item"><div class="legend-color" style="background: var(--status-inprogress)"></div> In Progress</div>
-                <div class="legend-item"><div class="legend-color" style="background: var(--status-done)"></div> Done</div>
-                <div class="legend-item"><div class="legend-color" style="background: var(--status-removed); border: 1px solid var(--border-glass)"></div> Removed</div>
+            <div class="legend" id="gantt-legend" style="flex-direction: column; align-items: flex-start; gap: 1.25rem;">
+                <div class="legend-group">
+                    <span class="legend-group-title">Classificação de Itens</span>
+                    <div id="type-legend" style="display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center;">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
                 
-                <div style="width: 1px; height: 12px; background: var(--border-glass); margin: 0 0.5rem;"></div>
-                
-                <div class="legend-item"><i class="ph-fill ph-crown icon-epic"></i> Epic</div>
-                <div class="legend-item"><i class="ph-fill ph-trophy icon-feature"></i> Feature</div>
-                <div class="legend-item"><i class="ph-fill ph-notebook icon-userstory"></i> User Story</div>
-                <div class="legend-item"><i class="ph-fill ph-check-square icon-task"></i> Task</div>
-                <div class="legend-item"><i class="ph-fill ph-bug icon-bug"></i> Bug</div>
+                <div class="legend-group">
+                    <span class="legend-group-title">Status de Entrega (Cor da Barra)</span>
+                    <div id="status-legend" style="display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center;">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
             </div>
           </div>
         </div>
