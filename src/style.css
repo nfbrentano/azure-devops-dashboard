@@ -190,6 +190,34 @@ button.glass {
 button:hover { background: var(--primary-hover); }
 button:active { transform: scale(0.98); }
 
+.export-chart-pdf {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border-glass);
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.4rem;
+    cursor: pointer;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.2s;
+    width: auto;
+}
+
+.export-chart-pdf:hover {
+    background: var(--bg-input);
+    color: var(--text-main);
+    border-color: var(--text-muted);
+}
+
+@media print {
+    .no-print {
+        display: none !important;
+    }
+}
+
+
 /* Progress Items */
 .progress-item {
     display: flex;

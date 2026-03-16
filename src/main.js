@@ -1,5 +1,7 @@
 import './style.css';
 import Chart from 'chart.js/auto';
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
 
 // State
 let azureConfig = JSON.parse(localStorage.getItem('azure_config')) || null;
@@ -140,6 +142,111 @@ function populateQueries(queries) {
         querySelector.appendChild(option);
     });
     if (currentVal) querySelector.value = currentVal;
+}
+
+// PDF Export Event Listeners
+document.querySelectorAll('.export-chart-pdf').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+        const button = e.currentTarget;
+        const chartId = button.getAttribute('data-chart');
+        const elementId = button.getAttribute('data-element');
+        const targetId = chartId || elementId;
+        const targetElement = document.getElementById(targetId);
+        const title = button.closest('.card')?.querySelector('.card-title div')?.textContent.trim() || 'Export';
+        
+        await exportToPDF(targetElement, `${title}.pdf`);
+    });
+});
+
+document.getElementById('export-all-pdf').addEventListener('click', async () => {
+    const btn = document.getElementById('export-all-pdf');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="ph ph-circle-notch spinning"></i> Generating...';
+    btn.disabled = true;
+
+    try {
+        const doc = new jsPDF('p', 'mm', 'a4');
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const margin = 10;
+        
+        // Add Title Page
+        doc.setFontSize(22);
+        doc.setTextColor(99, 102, 241); // Primary color
+        doc.text('Azure DevOps Analytics Report', margin, 30);
+        doc.setFontSize(12);
+        doc.setTextColor(100, 116, 139); // Muted color
+        doc.text(`Generated on: ${new Date().toLocaleString()}`, margin, 40);
+        doc.text(`Project: ${azureConfig.project}`, margin, 47);
+        doc.text(`Organization: ${azureConfig.org}`, margin, 54);
+        
+        const cards = [
+            { id: 'leadTimeChart', title: 'Lead Time' },
+            { id: 'cycleTimeChart', title: 'Cycle Time' },
+            { id: 'comparisonChart', title: 'Comparison' },
+            { id: 'gantt-container', title: 'Gantt Chart' }
+        ];
+
+        for (const cardInfo of cards) {
+            const el = document.getElementById(cardInfo.id);
+            if (!el) continue;
+
+            const canvas = await html2canvas(el, {
+                scale: 2,
+                backgroundColor: currentTheme === 'dark' ? '#0f172a' : '#f8fafc'
+            });
+            
+            doc.addPage();
+            doc.setFontSize(16);
+            doc.setTextColor(30, 41, 59);
+            doc.text(cardInfo.title, margin, 20);
+            
+            const imgData = canvas.toDataURL('image/png');
+            const imgProps = doc.getImageProperties(imgData);
+            const pdfWidth = pageWidth - (margin * 2);
+            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+            
+            doc.addImage(imgData, 'PNG', margin, 30, pdfWidth, pdfHeight);
+        }
+
+        doc.save('Azure_DevOps_Report.pdf');
+    } catch (err) {
+        console.error('Export failed:', err);
+        alert('Falha ao exportar PDF. Verifique o console.');
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+});
+
+async function exportToPDF(element, filename) {
+    if (!element) return;
+    
+    const loadingBtn = document.activeElement;
+    const originalHtml = loadingBtn.innerHTML;
+    loadingBtn.innerHTML = '<i class="ph ph-circle-notch spinning"></i>';
+    
+    try {
+        const canvas = await html2canvas(element, {
+            scale: 2,
+            backgroundColor: currentTheme === 'dark' ? '#0f172a' : '#f8fafc',
+            logging: false
+        });
+        
+        const imgData = canvas.toDataURL('image/png');
+        const doc = new jsPDF(canvas.width > canvas.height ? 'l' : 'p', 'mm', 'a4');
+        
+        const imgProps = doc.getImageProperties(imgData);
+        const pdfWidth = doc.internal.pageSize.getWidth() - 20;
+        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+        
+        doc.addImage(imgData, 'PNG', 10, 10, pdfWidth, pdfHeight);
+        doc.save(filename);
+    } catch (err) {
+        console.error('Export failed:', err);
+    } finally {
+        loadingBtn.innerHTML = originalHtml;
+    }
 }
 
 function showLoading(container) {
