@@ -7,7 +7,7 @@ A powerful visualization tool for Azure DevOps work items, featuring custom Gant
 To embed this dashboard in your Google Site:
 
 1.  **Deployment**: The dashboard is hosted on GitHub Pages.
-2.  **Paste the following URL:** `https://nfbrentano.github.io/azure-devops-dashboard/`
+2.  **Paste the following URL:** [azure-devops-dashboard](https://nfbrentano.github.io/azure-devops-dashboard/)
 
 
 ## Setup Instructions
