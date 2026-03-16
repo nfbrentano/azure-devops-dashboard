@@ -1,6 +1,21 @@
 # Azure DevOps Dashboard
 
-A powerful visualization tool for Azure DevOps work items, featuring custom Gantt charts and real-time project tracking.
+A powerful visualization tool for Azure DevOps work items, featuring custom Gantt charts and real-time project tracking. This branch is optimized for **Google Sites** by generating a single-file build.
+
+## Google Sites Embedding
+
+To embed this dashboard in your Google Site:
+
+1.  **Generate the Build**: Run `npm run build`. This creates a single `index.html` file in the `dist/` folder.
+2.  **Embed in Google Site**:
+    - Open your Google Site editor.
+    - Click **Embed** in the Insert panel.
+    - Select **Embed Code**.
+    - Copy and paste the contents of `dist/index.html`.
+    - Click **Next** and then **Insert**.
+
+*Note: If the code is too large for the "Embed Code" character limit, you can host the `index.html` file (e.g., on GitHub Pages) and use the **Embed URL** option.*
+
 
 ## Setup Instructions
 
