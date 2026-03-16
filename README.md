@@ -2,7 +2,7 @@
 
 A powerful visualization tool for Azure DevOps work items, featuring custom Gantt charts and real-time project tracking. This branch is hosted on **GitHub Pages** for seamless embedding in Google Sites.
 
-## Google Sites Embedding
+## How to Acess
 
 To embed this dashboard in your Google Site:
 
