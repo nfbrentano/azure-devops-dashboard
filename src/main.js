@@ -9,6 +9,11 @@ let currentData = { items: [], tree: [] };
 let charts = {};
 let ganttOffset = 0; 
 let currentTheme = localStorage.getItem('theme') || 'dark';
+let workItemMetadata = {
+    types: {},
+    backlogs: [],
+    states: {} // { 'InProgress': { color: '', category: '' } }
+};
 
 // DOM Elements
 const setupView = document.getElementById('setup-view');
@@ -97,7 +102,8 @@ refreshBtn.addEventListener('click', async () => {
     if (querySelector.value) {
         await loadQueryData(querySelector.value);
     }
-    
+
+    renderLegends();
     refreshBtn.classList.remove('spinning');
 });
 
@@ -128,8 +134,163 @@ async function showDashboard(initialQueries = null) {
     setupView.classList.add('hidden');
     dashboardView.classList.remove('hidden');
     
+    // Fetch Metadata first
+    if (Object.keys(workItemMetadata.types).length === 0) {
+        await fetchMetadata(azureConfig);
+    }
+
     const queries = initialQueries || await fetchQueries(azureConfig);
     populateQueries(queries);
+    renderLegends();
+}
+
+async function fetchMetadata(config) {
+    try {
+        const auth = btoa(':' + config.pat);
+        
+        // 1. Fetch Work Item Types (Colors and names)
+        const typesUrl = `https://dev.azure.com/${config.org}/${config.project}/_apis/wit/workitemtypes?api-version=6.0`;
+        const typesResp = await fetch(typesUrl, { headers: { 'Authorization': `Basic ${auth}` }, cache: 'no-store' });
+        const typesData = await typesResp.json();
+        
+        const typePromises = typesData.value.map(async (type) => {
+            const lowName = type.name.toLowerCase();
+            let iconData = null;
+            if (type.icon && type.icon.url) {
+                iconData = await getBase64Image(type.icon.url, auth);
+            }
+            
+            workItemMetadata.types[lowName] = {
+                name: type.name,
+                color: type.color ? (type.color.startsWith('#') ? type.color : '#' + type.color) : '#64748b',
+                description: type.description,
+                iconData: iconData,
+                states: {}
+            };
+        });
+        await Promise.all(typePromises);
+
+        // 2. Fetch States for ALL discovered Work Item Types
+        for (const type of typesData.value) {
+            try {
+                const statesUrl = `https://dev.azure.com/${config.org}/${config.project}/_apis/wit/workitemtypes/${type.name}/states?api-version=6.0`;
+                const statesResp = await fetch(statesUrl, { headers: { 'Authorization': `Basic ${auth}` }, cache: 'no-store' });
+                if (!statesResp.ok) continue;
+                const statesData = await statesResp.json();
+                
+                statesData.value.forEach(s => {
+                    const lowState = s.name.toLowerCase();
+                    if (!workItemMetadata.states[lowState]) {
+                        workItemMetadata.states[lowState] = {
+                            name: s.name,
+                            color: s.color ? (s.color.startsWith('#') ? s.color : '#' + s.color) : '#64748b',
+                            category: s.category // Proposed, InProgress, Completed, Removed
+                        };
+                    }
+                });
+            } catch (e) { /* ignore types that don't exist */ }
+        }
+
+        // 3. Fetch Backlog Configurations (Levels and Priority)
+        const teamsUrl = `https://dev.azure.com/${config.org}/${config.project}/_apis/teams?api-version=6.0-preview.3`;
+        const teamsResp = await fetch(teamsUrl, { headers: { 'Authorization': `Basic ${auth}` }, cache: 'no-store' });
+        const teamsData = await teamsResp.json();
+        
+        if (teamsData.value && teamsData.value.length > 0) {
+            const teamId = teamsData.value[0].id;
+            const backlogsUrl = `https://dev.azure.com/${config.org}/${config.project}/${teamId}/_apis/work/backlogs?api-version=6.0-preview.1`;
+            const backlogsResp = await fetch(backlogsUrl, { headers: { 'Authorization': `Basic ${auth}` }, cache: 'no-store' });
+            const backlogsData = await backlogsResp.json();
+            
+            workItemMetadata.backlogs = backlogsData.value.map(b => ({
+                name: b.name,
+                type: b.type,
+                workItemTypes: b.workItemTypes.map(wit => wit.name.toLowerCase())
+            }));
+        }
+
+        renderLegends();
+    } catch (e) {
+        console.error('Failed to fetch Azure DevOps metadata:', e);
+    }
+}
+
+async function getBase64Image(url, auth) {
+    try {
+        const resp = await fetch(url, { headers: { 'Authorization': `Basic ${auth}` } });
+        if (!resp.ok) return null;
+        const blob = await resp.blob();
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.readAsDataURL(blob);
+        });
+    } catch (e) {
+        return null;
+    }
+}
+
+function renderLegends() {
+    const statusLegend = document.getElementById('status-legend');
+    const typeLegend = document.getElementById('type-legend');
+    if (!statusLegend || !typeLegend) return;
+
+    // 1. Render Status Legend (Grouped by Category)
+    const categories = {
+        'Proposed': { label: 'Backlog', class: 'bg-backlog' },
+        'InProgress': { label: 'In Progress', class: 'bg-inprogress' },
+        'Completed': { label: 'Done', class: 'bg-done' },
+        'Removed': { label: 'Removed', class: 'bg-removed' }
+    };
+
+    statusLegend.innerHTML = '';
+    Object.entries(categories).forEach(([cat, info]) => {
+        const item = document.createElement('div');
+        item.className = 'legend-item';
+        // Get sample color from states in this category if possible
+        const sampleState = Object.values(workItemMetadata.states).find(s => s.category === cat);
+        let color = sampleState ? sampleState.color : null;
+
+        // Fallback colors if no official state color found
+        if (!color) {
+            if (cat === 'Completed') color = '#10b981';
+            else if (cat === 'Removed') color = '#64748b';
+            else if (cat === 'InProgress') color = '#3b82f6';
+            else color = '#94a3b8';
+        }
+        
+        item.innerHTML = `<div class="legend-color" style="background: ${color}"></div> ${info.label}`;
+        statusLegend.appendChild(item);
+    });
+
+    // 2. Render Type Legend (Dynamic from workItemTypes)
+    typeLegend.innerHTML = '';
+    
+    // If backlogs empty (API fail), show all found types
+    const typesToRender = workItemMetadata.backlogs.length > 0 
+        ? workItemMetadata.backlogs.flatMap(b => b.workItemTypes)
+        : Object.keys(workItemMetadata.types);
+
+    const renderedTypes = new Set();
+    typesToRender.forEach(typeName => {
+        if (renderedTypes.has(typeName)) return;
+        renderedTypes.add(typeName);
+        
+        const type = workItemMetadata.types[typeName];
+        if (!type) return;
+        const iconInfo = getItemIcon(typeName);
+        
+        const item = document.createElement('div');
+        item.className = 'legend-item';
+        
+        let iconHtml = `<i class="${iconInfo.icon}" style="color: ${type.color}"></i>`;
+        if (iconInfo.iconData) {
+            iconHtml = `<img src="${iconInfo.iconData}" style="width: 16px; height: 16px;" alt="">`;
+        }
+        
+        item.innerHTML = `${iconHtml} ${type.name}`;
+        typeLegend.appendChild(item);
+    });
 }
 
 function populateQueries(queries) {
@@ -371,14 +532,23 @@ function buildTree(items) {
         }
     });
 
-    // Helper to get priority
+    // Helper to get priority from backlogs
     const getTypePriority = (type) => {
         const t = (type || '').toLowerCase();
+        
+        // Find in backlogs list (ordered from Portfolio down to Task)
+        for (let i = 0; i < workItemMetadata.backlogs.length; i++) {
+            if (workItemMetadata.backlogs[i].workItemTypes.includes(t)) {
+                return i + 1;
+            }
+        }
+
+        // Fallback or specific rules
         if (t === 'epic') return 1;
         if (t === 'feature') return 2;
         if (['user story', 'product backlog item', 'requirement', 'issue'].includes(t)) return 3;
         if (['task', 'bug'].includes(t)) return 4;
-        return 5;
+        return 99;
     };
 
     const sortByPriority = (a, b) => {
@@ -410,36 +580,53 @@ function getWorkItemUrl(id) {
 
 function getItemIcon(type) {
     const t = type.toLowerCase();
-    if (t === 'epic') return { icon: 'ph-fill ph-crown', iconClass: 'icon-epic', isPortfolio: true };
-    if (t === 'feature') return { icon: 'ph-fill ph-trophy', iconClass: 'icon-feature', isPortfolio: true };
+    const meta = workItemMetadata.types[t];
+    
+    // Determine if it's a portfolio item based on backlog levels
+    const isPortfolio = workItemMetadata.backlogs.some(b => b.type === 'portfolio' && b.workItemTypes.includes(t));
+    
+    // Basic defaults with dynamic color
+    const base = { 
+        icon: 'ph-fill ph-square', 
+        iconClass: '', 
+        isPortfolio,
+        color: meta?.color || '#64748b',
+        iconData: meta?.iconData || null
+    };
+
+    if (t === 'epic') return { ...base, icon: 'ph-fill ph-crown', iconClass: 'icon-epic' };
+    if (t === 'feature') return { ...base, icon: 'ph-fill ph-trophy', iconClass: 'icon-feature' };
     if (t.includes('requirement') || t === 'user story' || t === 'product backlog item' || t === 'issue') {
-        return { icon: 'ph-fill ph-notebook', iconClass: 'icon-userstory', isPortfolio: false };
+        return { ...base, icon: 'ph-fill ph-notebook', iconClass: 'icon-userstory' };
     }
-    if (t === 'task') return { icon: 'ph-fill ph-check-square', iconClass: 'icon-task', isPortfolio: false };
-    if (t === 'bug') return { icon: 'ph-fill ph-bug', iconClass: 'icon-bug', isPortfolio: false };
-    return { icon: 'ph-fill ph-question', iconClass: '', isPortfolio: false };
+    if (t === 'task') return { ...base, icon: 'ph-fill ph-check-square', iconClass: 'icon-task' };
+    if (t === 'bug') return { ...base, icon: 'ph-fill ph-bug', iconClass: 'icon-bug' };
+    
+    return base;
 }
 
 function getStatusInfo(state) {
     const s = (state || '').toLowerCase();
+    const meta = workItemMetadata.states[s];
     
-    // Done (Closed, Resolved, etc)
+    if (meta) {
+        if (meta.category === 'Completed') return { label: 'Done', class: 'bg-done', color: meta.color };
+        if (meta.category === 'Removed') return { label: 'Removed', class: 'bg-removed', color: meta.color };
+        if (meta.category === 'InProgress') return { label: 'In Progress', class: 'bg-inprogress', color: meta.color };
+        return { label: 'Backlog', class: 'bg-backlog', color: meta.color };
+    }
+
+    // Fallback logic
     if (['done', 'closed', 'resolved', 'concluído', 'concluido'].includes(s)) {
-        return { label: 'Done', class: 'bg-done' };
+        return { label: 'Done', class: 'bg-done', color: '#10b981' };
     }
-    
-    // Removed
     if (['removed', 'removido'].includes(s)) {
-        return { label: 'Removed', class: 'bg-removed' };
+        return { label: 'Removed', class: 'bg-removed', color: '#64748b' };
     }
-    
-    // In Progress (Active, In Progress, Committed, etc)
     if (['active', 'in progress', 'committed', 'doing', 'em progresso', 'ativo'].includes(s)) {
-        return { label: 'In Progress', class: 'bg-inprogress' };
+        return { label: 'In Progress', class: 'bg-inprogress', color: '#0078d4' };
     }
-    
-    // Backlog (New, To Do, Proposto, etc)
-    return { label: 'Backlog', class: 'bg-backlog' };
+    return { label: 'Backlog', class: 'bg-backlog', color: '#b2b2b2' };
 }
 
 function calculateProgress(item) {
@@ -608,16 +795,22 @@ function renderProgress(items) {
         const statusInfo = getStatusInfo(item.fields['System.State']);
         const card = document.createElement('div');
         card.className = 'progress-item';
+        
+        let iconHtml = `<i class="${iconInfo.icon} ${iconInfo.iconClass}" style="color: ${iconInfo.color}"></i>`;
+        if (iconInfo.iconData) {
+            iconHtml = `<img src="${iconInfo.iconData}" style="width: 18px; height: 18px;" alt="">`;
+        }
+
         card.innerHTML = `
             <div class="progress-header">
                 <a href="${getWorkItemUrl(item.id)}" target="_blank" class="item-link" style="display: flex; align-items: center; gap: 0.5rem; flex: 1;">
-                    <i class="${iconInfo.icon} ${iconInfo.iconClass}"></i>
+                    ${iconHtml}
                     <span style="font-weight: 600;">${item.fields['System.Title']}</span>
                 </a>
                 <span style="font-weight: bold; margin-left: 0.5rem;">${progress}%</span>
             </div>
             <div class="progress-bar-bg">
-                <div class="progress-bar-fill" style="width: ${progress}%; background: var(--status-${statusInfo.label.toLowerCase().replace(' ', '')})"></div>
+                <div class="progress-bar-fill" style="width: ${progress}%; background: ${statusInfo.color}"></div>
             </div>
         `;
         progressList.appendChild(card);
@@ -744,11 +937,16 @@ function renderGantt(tree, depth = 0, parentSiblingsActive = []) {
 
         const assignedTo = fields['System.AssignedTo']?.displayName || fields['System.AssignedTo'] || '';
 
+        let iconHtml = `<i class="${iconInfo.icon} ${iconInfo.iconClass}" style="flex-shrink: 0; color: ${iconInfo.color}"></i>`;
+        if (iconInfo.iconData) {
+            iconHtml = `<img src="${iconInfo.iconData}" style="width: 16px; height: 16px; flex-shrink: 0;" alt="">`;
+        }
+
         row.innerHTML = `
             <div class="gantt-label" title="${fields['System.Title']}">
                 ${treeLinesHtml}
                 <a href="${getWorkItemUrl(item.id)}" target="_blank" class="item-link" style="flex: 1; overflow: hidden; text-overflow: ellipsis;">
-                    <i class="${iconInfo.icon} ${iconInfo.iconClass}" style="flex-shrink: 0;"></i>
+                    ${iconHtml}
                     <span style="overflow: hidden; text-overflow: ellipsis;">${fields['System.Title']}</span>
                 </a>
                 <div class="status-indicator">
@@ -759,7 +957,7 @@ function renderGantt(tree, depth = 0, parentSiblingsActive = []) {
             </div>
             <div class="gantt-track">
                 ${!isOutside ? `
-                <div class="gantt-bar ${statusInfo.class}" style="left: ${Math.max(0, left)}%; width: ${Math.min(100, width)}%; padding-left: 0.5rem;">
+                <div class="gantt-bar ${statusInfo.class}" style="left: ${Math.max(0, left)}%; width: ${Math.min(100, width)}%; padding-left: 0.5rem; background-color: ${statusInfo.color}">
                     <span>${progress}%</span>
                 </div>
                 ` : ''}

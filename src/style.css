@@ -364,6 +364,24 @@ button:active { transform: scale(0.98); }
     align-items: center;
     gap: 0.5rem;
     font-size: 0.75rem;
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.05);
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.3rem;
+}
+
+.legend-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.legend-group-title {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
     color: var(--text-muted);
 }
 
