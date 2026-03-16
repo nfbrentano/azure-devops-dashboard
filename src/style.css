@@ -1,0 +1,537 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
+:root {
+  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Default Dark Theme Variables */
+  --bg-color: #0f172a;
+  --bg-card: rgba(30, 41, 59, 0.7);
+  --bg-input: rgba(0, 0, 0, 0.2);
+  --border-glass: rgba(255, 255, 255, 0.1);
+  --text-main: rgba(255, 255, 255, 0.87);
+  --text-muted: #94a3b8;
+  --primary: #6366f1;
+  --primary-hover: #4f46e5;
+  --accent: #10b981;
+  
+  --bg-gradient: radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                 radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                 radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+
+  /* Status Colors */
+  --status-backlog: #64748b;
+  --status-inprogress: #3b82f6;
+  --status-done: #10b981;
+  --status-removed: #f8fafc;
+  
+  /* Work Item Type Colors (ADO Official) */
+  --color-epic: #f24423;
+  --color-feature: #773b93;
+  --color-userstory: #009ccc;
+  --color-task: #f2cb1d;
+  --color-bug: #cc293d;
+  
+  --gantt-label-width: clamp(250px, 45vw, 600px); /* Increased for info */
+}
+
+/* Light Theme Overrides */
+[data-theme="light"] {
+  --bg-color: #f8fafc;
+  --bg-card: rgba(255, 255, 255, 0.8);
+  --bg-input: rgba(255, 255, 255, 0.5);
+  --border-glass: rgba(0, 0, 0, 0.1);
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --primary: #4f46e5;
+  --bg-gradient: radial-gradient(at 0% 0%, hsla(253,16%,95%,1) 0, transparent 50%), 
+                 radial-gradient(at 50% 0%, hsla(225,39%,90%,1) 0, transparent 50%), 
+                 radial-gradient(at 100% 0%, hsla(339,49%,90%,1) 0, transparent 50%);
+  --status-removed: #0f172a;
+}
+
+body {
+  margin: 0;
+  display: block;
+  min-width: 320px;
+  min-height: 100vh;
+  color: var(--text-main);
+  background-color: var(--bg-color);
+  background-image: var(--bg-gradient);
+  background-attachment: fixed;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+#app {
+  width: 100%;
+  max-width: 1800px;
+  margin: 0 auto;
+  padding: clamp(1rem, 5vw, 2rem);
+  box-sizing: border-box;
+}
+
+.glass {
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-glass);
+  border-radius: 1rem;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 3rem;
+  animation: fadeInDown 0.8s ease-out;
+}
+
+h1 {
+  font-size: clamp(1.5rem, 8vw, 2.5rem);
+  font-weight: 800;
+  margin: 0;
+  background: linear-gradient(to right, var(--text-main), var(--text-muted));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+h2 { margin: 0 0 1rem 0; }
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(clamp(280px, 100%, 600px), 1fr));
+  gap: 2rem;
+}
+
+.card {
+  padding: 1.5rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+.card-title i {
+  color: var(--primary);
+  font-size: 1.5rem;
+}
+
+.setup-container {
+    max-width: 500px;
+    margin: 5rem auto;
+    padding: 3rem;
+    text-align: center;
+}
+
+.form-group {
+    text-align: left;
+    margin-bottom: 1.5rem;
+}
+
+label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+input, select {
+    width: 100%;
+    background: var(--bg-input);
+    border: 1px solid var(--border-glass);
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    color: var(--text-main);
+    font-family: inherit;
+    box-sizing: border-box;
+    transition: border-color 0.2s, background 0.3s;
+}
+
+input:focus, select:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+button {
+    width: 100%;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+}
+
+button.glass {
+    background: var(--bg-input);
+    color: var(--text-main);
+    border: 1px solid var(--border-glass);
+}
+
+button:hover { background: var(--primary-hover); }
+button:active { transform: scale(0.98); }
+
+/* Progress Items */
+.progress-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 0.75rem;
+}
+[data-theme="light"] .progress-item {
+    background: rgba(0, 0, 0, 0.03);
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+}
+
+.progress-bar-bg {
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+}
+[data-theme="light"] .progress-bar-bg {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: var(--primary);
+    border-radius: 4px;
+    transition: width 1s ease-out;
+}
+
+/* Gantt Chart */
+.gantt-header {
+    display: flex;
+    margin-bottom: 0.5rem;
+    border-bottom: 2px solid var(--border-glass);
+    padding-bottom: 0.5rem;
+    min-width: 800px;
+}
+
+.gantt-row {
+    display: flex;
+    align-items: stretch; /* Modified to allow lines to stretch */
+    gap: 1rem;
+    min-width: 800px;
+    border-bottom: 1px solid var(--border-glass);
+    position: relative;
+    height: 36px; /* Fixed height for consistent lines */
+}
+
+.gantt-label { 
+    width: var(--gantt-label-width); 
+    min-width: 200px;
+    font-size: 0.8rem; 
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+    font-weight: 500;
+    transition: font-weight 0.2s;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.gantt-row.parent .gantt-label {
+    font-weight: 800;
+    color: var(--text-main);
+}
+
+.gantt-track {
+    flex-grow: 1;
+    height: 20px;
+    position: relative;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 4px;
+    margin: auto 0;
+}
+[data-theme="light"] .gantt-track {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.gantt-timeline {
+    display: flex;
+    flex-grow: 1;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+.timeline-milestone {
+    flex: 1;
+    text-align: center;
+    border-left: 1px solid var(--border-glass);
+}
+
+.gantt-bar {
+    position: absolute;
+    height: 100%;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    padding-left: 0.5rem;
+    font-size: 0.65rem;
+    font-weight: bold;
+    color: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.today-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #f43f5e;
+    z-index: 10;
+    pointer-events: none;
+}
+
+/* Status Classes */
+.bg-backlog { background: var(--status-backlog); }
+.bg-inprogress { background: var(--status-inprogress); }
+.bg-done { background: var(--status-done); }
+.bg-removed { background: var(--status-removed); color: #0f172a !important; }
+[data-theme="light"] .bg-removed { color: #f8fafc !important; }
+
+/* Legend Styles */
+.legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-glass);
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+}
+
+.item-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    margin-right: 0.5rem;
+    font-size: 1rem;
+}
+
+.icon-epic { color: var(--color-epic); }
+.icon-feature { color: var(--color-feature); }
+.icon-userstory { color: var(--color-userstory); }
+.icon-task { color: var(--color-task); }
+.icon-bug { color: var(--color-bug); }
+
+.item-link {
+    text-decoration: none;
+    color: inherit;
+    transition: color 0.2s, opacity 0.2s;
+    cursor: pointer;
+}
+
+.item-link:hover {
+    color: var(--primary);
+    text-decoration: underline;
+}
+
+.gantt-label .item-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    overflow: hidden;
+    width: 100%;
+}
+
+/* Tree Lines refined */
+.tree-line {
+    width: 24px;
+    height: 100%;
+    flex-shrink: 0;
+    position: relative;
+}
+
+/* Status Dot and Info */
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    min-width: 100px;
+    margin-left: auto;
+    padding: 0 0.5rem;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.assigned-user {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    min-width: 120px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: 0.8;
+}
+
+.tree-line.connector::before {
+    content: '';
+    position: absolute;
+    left: 12px;
+    top: 0;
+    bottom: 50%;
+    width: 1.5px;
+    background: var(--border-glass);
+}
+
+.tree-line.connector::after {
+    content: '';
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    width: 12px;
+    height: 1.5px;
+    background: var(--border-glass);
+}
+
+/* For continuous vertical lines */
+.tree-line.spacer.active::before {
+    content: '';
+    position: absolute;
+    left: 12px;
+    top: 0;
+    bottom: 0;
+    width: 1.5px;
+    background: var(--border-glass);
+}
+
+/* Specific logic for last child needs JS class or clever CSS */
+.gantt-row.last-child .tree-line.connector::before {
+    bottom: 50%; /* Stop at middle */
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.spinning i {
+    animation: spin 1s linear infinite;
+}
+
+/* Loading Overlay */
+.loading-overlay {
+    position: absolute;
+    inset: 0;
+    background: var(--bg-card);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    border-radius: 1rem;
+}
+
+/* Responsiveness */
+@media (max-width: 768px) {
+    header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.5rem;
+    }
+    
+    header > div {
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    #query-selector {
+        width: 100% !important;
+        flex-grow: 1;
+    }
+
+    .setup-container {
+        padding: 1.5rem;
+        margin: 2rem 1rem;
+    }
+    
+    .card-title {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .card-title > div {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-grid {
+        gap: 1rem;
+    }
+    
+    .card {
+        padding: 1rem;
+    }
+
+    .legend {
+        gap: 1rem;
+    }
+    
+    .progress-list {
+        grid-template-columns: 1fr !important;
+    }
+}
