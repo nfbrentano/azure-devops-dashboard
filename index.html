@@ -6,9 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Azure DevOps Metrics</title>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <script type="module" crossorigin src="/azure-devops-dashboard/assets/index-CaMq7nsR.js"></script>
+    <script type="module" crossorigin src="/azure-devops-dashboard/assets/index-uHg-g14P.js"></script>
     <link rel="modulepreload" crossorigin href="/azure-devops-dashboard/assets/chunk-B3K2TuZy.js">
-    <link rel="stylesheet" crossorigin href="/azure-devops-dashboard/assets/index-D9qqp857.css">
+    <link rel="stylesheet" crossorigin href="/azure-devops-dashboard/assets/index-BT-dLypq.css">
   </head>
   <body>
     <div id="app">
@@ -129,6 +129,13 @@
                 <button id="gantt-next" class="glass" style="padding: 0.25rem 0.5rem; border-radius: 0.4rem; cursor: pointer;">
                   <i class="ph ph-caret-right"></i>
                 </button>
+                <div style="width: 1px; height: 16px; background: var(--border-glass); margin: 0 0.25rem;"></div>
+                <div class="gantt-status-filters" style="display: flex; gap: 0.75rem; align-items: center; margin: 0 0.5rem;">
+                   <label class="filter-item"><input type="checkbox" data-category="Backlog" checked> <span>Backlog</span></label>
+                   <label class="filter-item"><input type="checkbox" data-category="InProgress" checked> <span>In Progress</span></label>
+                   <label class="filter-item"><input type="checkbox" data-category="Completed" checked> <span>Done</span></label>
+                   <label class="filter-item"><input type="checkbox" data-category="Removed"> <span>Removed</span></label>
+                </div>
                 <div style="width: 1px; height: 16px; background: var(--border-glass); margin: 0 0.25rem;"></div>
                 <label style="margin: 0; font-size: 0.75rem;">Período:</label>
                 <select id="gantt-period" class="glass" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">
