@@ -11,9 +11,6 @@ export default defineConfig({
             if (id.includes('chart.js')) {
               return 'vendor-charts';
             }
-            if (id.includes('jspdf') || id.includes('html2canvas')) {
-              return 'vendor-pdf';
-            }
             return 'vendor'; // all other node_modules
           }
         }

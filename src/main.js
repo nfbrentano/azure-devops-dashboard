@@ -1,7 +1,6 @@
+// Imports
 import './style.css';
 import Chart from 'chart.js/auto';
-import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
 
 // State
 let azureConfig = JSON.parse(localStorage.getItem('azure_config')) || null;
@@ -390,6 +389,11 @@ document.getElementById('export-all-pdf').addEventListener('click', async () => 
     btn.disabled = true;
 
     try {
+        const [{ jsPDF }, html2canvas] = await Promise.all([
+            import('jspdf'),
+            import('html2canvas').then(m => m.default || m)
+        ]);
+
         const doc = new jsPDF('p', 'mm', 'a4');
         const pageWidth = doc.internal.pageSize.getWidth();
         const pageHeight = doc.internal.pageSize.getHeight();
@@ -452,6 +456,11 @@ async function exportToPDF(element, filename) {
     loadingBtn.innerHTML = '<i class="ph ph-circle-notch spinning"></i>';
     
     try {
+        const [{ jsPDF }, html2canvas] = await Promise.all([
+            import('jspdf'),
+            import('html2canvas').then(m => m.default || m)
+        ]);
+
         const canvas = await html2canvas(element, {
             scale: 2,
             backgroundColor: currentTheme === 'dark' ? '#0f172a' : '#f8fafc',
