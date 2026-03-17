@@ -634,36 +634,32 @@ function processAnalytics(items, tree) {
             labels.push(`ID ${item.id}`);
         }
 
-        // Aging calculation for In Progress items (only for Requirement and Iteration levels)
+        // Aging calculation for In Progress items
         const statusInfo = getStatusInfo(state);
         const type = fields['System.WorkItemType']?.toLowerCase();
         
-        // 1. Check by backlog metadata (preferred)
-        let isAllowedLevel = workItemMetadata.backlogs.some(b => 
-            (b.type === 'requirement' || b.type === 'task') && 
-            b.workItemTypes.includes(type)
-        );
+        // Exclude Portfolio-level items (Epics, Features)
+        const portfolioTypes = (workItemMetadata.backlogs || [])
+            .filter(b => b.type === 'portfolio')
+            .flatMap(b => b.workItemTypes);
+        
+        const isPortfolio = portfolioTypes.includes(type) || type === 'epic' || type === 'feature';
+        const isExecutionItem = !isPortfolio;
 
-        // 2. Fallback: If metadata failed or is empty, exclude obvious portfolio types
-        if (workItemMetadata.backlogs.length === 0) {
-            const portfolioTypes = ['epic', 'feature'];
-            isAllowedLevel = !portfolioTypes.includes(type);
-        }
-        // 3. Extra security for common types if level check failed but typical names exist
-        if (!isAllowedLevel && (type === 'user story' || type === 'task' || type === 'bug' || type === 'product backlog item')) {
-            isAllowedLevel = true;
-        }
+        // More robust "In Progress" check
+        const lowState = (state || '').toLowerCase();
+        const isInProgress = statusInfo.label === 'In Progress' || 
+                             statusInfo.class === 'bg-inprogress' || 
+                             ['active', 'doing', 'in progress', 'em progresso', 'ativo', 'desenvolvimento'].includes(lowState);
 
-        if (statusInfo.label === 'In Progress' && !isNaN(changedDate)) {
-            if (isAllowedLevel) {
-                const ageDays = Math.floor((now - changedDate) / (1000 * 60 * 60 * 24));
-                agingData.push({
-                    id: item.id,
-                    title: fields['System.Title'],
-                    age: ageDays,
-                    state: state
-                });
-            }
+        if (isInProgress && isExecutionItem && !isNaN(changedDate)) {
+            const ageDays = Math.max(0, Math.floor((now - changedDate) / (1000 * 60 * 60 * 24)));
+            agingData.push({
+                id: item.id,
+                title: fields['System.Title'] || 'No Title',
+                age: ageDays,
+                state: state
+            });
         }
     });
 
@@ -782,8 +778,28 @@ function renderCharts(labels, leadTimes, cycleTimes) {
 }
 
 function renderAgingChart(agingData) {
+    let canvas = document.getElementById('agingChart');
+    const container = document.querySelector('#items-view .dashboard-grid .card.glass div[style*="height: 500px"]');
+    if (!container) return;
+
     if (charts.aging) charts.aging.destroy();
     
+    if (!agingData || agingData.length === 0) {
+        container.innerHTML = `<div id="aging-empty-msg" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); gap: 1rem;">
+            <i class="ph-bold ph-ghost" style="font-size: 3rem; opacity: 0.5;"></i>
+            <p>Nenhum item em execução (In Progress) encontrado para esta consulta.</p>
+        </div>`;
+        return;
+    }
+
+    // Restore canvas if it was replaced by message
+    if (document.getElementById('aging-empty-msg')) {
+        container.innerHTML = '<canvas id="agingChart"></canvas>';
+        canvas = document.getElementById('agingChart');
+    }
+
+    if (!canvas) return;
+
     // Sort by age descending
     agingData.sort((a, b) => b.age - a.age);
     
