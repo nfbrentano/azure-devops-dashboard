@@ -1125,8 +1125,8 @@ function renderActivityHeatmap(activityMap) {
     monthsRow.className = 'heatmap-labels-months';
     monthsRow.style.display = 'flex';
     monthsRow.style.position = 'relative';
-    monthsRow.style.height = '1.2rem';
-    monthsRow.style.marginLeft = '35px'; // Space for day labels
+    monthsRow.style.height = '1.5rem';
+    monthsRow.style.marginLeft = '42px'; // Adjust for wider day labels
 
     let lastMonth = -1;
     weeks.forEach((week, weekIdx) => {
@@ -1135,8 +1135,8 @@ function renderActivityHeatmap(activityMap) {
             lastMonth = firstDay.getMonth();
             const monthLabel = document.createElement('div');
             monthLabel.style.position = 'absolute';
-            monthLabel.style.left = `${weekIdx * 15}px`; // 12px cell + 3px gap
-            monthLabel.style.fontSize = '0.75rem';
+            monthLabel.style.left = `${weekIdx * 21}px`; // 18px cell + 3px gap
+            monthLabel.style.fontSize = '0.85rem';
             monthLabel.style.color = 'var(--text-muted)';
             monthLabel.textContent = firstDay.toLocaleString('default', { month: 'short' });
             monthsRow.appendChild(monthLabel);
@@ -1154,8 +1154,8 @@ function renderActivityHeatmap(activityMap) {
     ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].forEach((day, i) => {
         const d = document.createElement('div');
         d.textContent = i % 2 === 0 ? day : '';
-        d.style.height = '12px';
-        d.style.lineHeight = '12px';
+        d.style.height = '18px';
+        d.style.lineHeight = '18px';
         daysCol.appendChild(d);
     });
     mainRow.appendChild(daysCol);
@@ -1163,6 +1163,7 @@ function renderActivityHeatmap(activityMap) {
     // Grid
     const grid = document.createElement('div');
     grid.className = 'heatmap-grid';
+    grid.style.gridTemplateRows = 'repeat(7, 18px)';
     
     weeks.forEach(week => {
         week.forEach(day => {
@@ -1182,12 +1183,11 @@ function renderActivityHeatmap(activityMap) {
             dayEl.title = `${day.toLocaleDateString()}: ${count} entregas`;
             grid.appendChild(dayEl);
         });
-        // Fill partial last week with invisible spacers if needed (though iter stops at 'now')
         if (week.length < 7) {
             for (let i = week.length; i < 7; i++) {
                 const spacer = document.createElement('div');
-                spacer.style.width = '12px';
-                spacer.style.height = '12px';
+                spacer.style.width = '18px';
+                spacer.style.height = '18px';
                 grid.appendChild(spacer);
             }
         }
