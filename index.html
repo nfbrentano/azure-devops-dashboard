@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Azure DevOps Metrics</title>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <script type="module" crossorigin src="/azure-devops-dashboard/assets/index-DRQ431Sj.js"></script>
+    <script type="module" crossorigin src="/azure-devops-dashboard/assets/index-yRg3WlDO.js"></script>
     <link rel="stylesheet" crossorigin href="/azure-devops-dashboard/assets/index-Cv5ElSwg.css">
   </head>
   <body>
@@ -22,6 +22,12 @@
           <i class="ph-bold ph-sun-dim"></i>
         </button>
       </nav>
+
+      <!-- Global Data Header (Visible in Dashboard and Items) -->
+      <div id="data-controls" class="hidden no-print" style="padding: 1rem 5% 0 5%; display: flex; justify-content: flex-end; align-items: center; gap: 1rem;">
+        <select id="query-selector" class="glass header-select" title="Select Analytics Query" style="min-width: 250px;"></select>
+        <button id="refresh-btn" class="glass btn-icon-glass" title="Refresh Data" style="width: auto;"><i class="ph-bold ph-arrows-clockwise"></i></button>
+      </div>
 
       <!-- Setup View -->
       <div id="setup-view" class="setup-container glass hidden">
@@ -137,10 +143,6 @@
             <h1>Development Analytics</h1>
             <p id="active-query-name" style="color: var(--text-muted); margin-top: 0.5rem;">Selecione uma consulta para começar</p>
           </div>
-          <div class="header-actions">
-             <select id="query-selector" class="glass header-select" title="Select Analytics Query"></select>
-             <button id="refresh-btn" class="glass btn-icon-glass" title="Refresh Data"><i class="ph-bold ph-arrows-clockwise"></i></button>
-           </div>
         </header>
 
         <div class="dashboard-grid">
