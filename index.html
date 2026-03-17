@@ -6,15 +6,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Azure DevOps Metrics</title>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <script type="module" crossorigin src="/azure-devops-dashboard/assets/index-A58yxfs_.js"></script>
-    <link rel="stylesheet" crossorigin href="/azure-devops-dashboard/assets/index-Cltg9SfP.css">
+    <script type="module" crossorigin src="/azure-devops-dashboard/assets/index-DzAZRfns.js"></script>
+    <link rel="stylesheet" crossorigin href="/azure-devops-dashboard/assets/index-TbpxbM4D.css">
   </head>
   <body>
     <div id="app">
       <!-- Tab Navigation -->
       <nav class="tabs-nav no-print glass">
-        <button id="tab-dashboard" class="tab-btn active"><i class="ph-bold ph-layout"></i> Dashboard</button>
-        <button id="tab-setup" class="tab-btn"><i class="ph-bold ph-gear"></i> Setup</button>
+        <div class="tabs-center">
+          <button id="tab-dashboard" class="tab-btn active"><i class="ph-bold ph-layout"></i> Dashboard</button>
+          <button id="tab-setup" class="tab-btn"><i class="ph-bold ph-gear"></i> Setup</button>
+        </div>
+        <button id="theme-toggle" class="glass btn-icon-glass theme-toggle-nav" title="Toggle Dark/Light Mode">
+          <i class="ph-bold ph-sun-dim"></i>
+        </button>
       </nav>
 
       <!-- Setup View -->
@@ -54,7 +59,6 @@
           <div class="header-actions">
              <select id="query-selector" class="glass header-select" title="Select Analytics Query"></select>
              <button id="refresh-btn" class="glass btn-icon-glass" title="Refresh Data"><i class="ph-bold ph-arrows-clockwise"></i></button>
-             <button id="theme-toggle" class="glass btn-icon-glass" title="Toggle Dark/Light Mode"><i class="ph-bold ph-sun-dim"></i></button>
            </div>
         </header>
 
