@@ -11,8 +11,13 @@
     <div id="app">
       <!-- Tab Navigation -->
       <nav class="tabs-nav no-print glass">
-        <button id="tab-dashboard" class="tab-btn active"><i class="ph-bold ph-layout"></i> Dashboard</button>
-        <button id="tab-setup" class="tab-btn"><i class="ph-bold ph-gear"></i> Setup</button>
+        <div class="tabs-center">
+          <button id="tab-dashboard" class="tab-btn active"><i class="ph-bold ph-layout"></i> Dashboard</button>
+          <button id="tab-setup" class="tab-btn"><i class="ph-bold ph-gear"></i> Setup</button>
+        </div>
+        <button id="theme-toggle" class="glass btn-icon-glass theme-toggle-nav" title="Toggle Dark/Light Mode">
+          <i class="ph-bold ph-sun-dim"></i>
+        </button>
       </nav>
 
       <!-- Setup View -->
@@ -52,7 +57,6 @@
           <div class="header-actions">
              <select id="query-selector" class="glass header-select" title="Select Analytics Query"></select>
              <button id="refresh-btn" class="glass btn-icon-glass" title="Refresh Data"><i class="ph-bold ph-arrows-clockwise"></i></button>
-             <button id="theme-toggle" class="glass btn-icon-glass" title="Toggle Dark/Light Mode"><i class="ph-bold ph-sun-dim"></i></button>
            </div>
         </header>
 
