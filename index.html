@@ -23,15 +23,15 @@
         
         <form id="setup-form">
           <div class="form-group">
-            <label>Organização</label>
+            <label>Organização <i class="ph ph-info info-icon" data-tooltip="Seu nome de organização no Azure DevOps (ex: minha-empresa)."></i></label>
             <input type="text" id="org" placeholder="ex: minha-empresa" required>
           </div>
           <div class="form-group">
-            <label>Projeto</label>
+            <label>Projeto <i class="ph ph-info info-icon" data-tooltip="O nome exato do projeto que você deseja analisar."></i></label>
             <input type="text" id="project" placeholder="ex: meu-projeto" required>
           </div>
           <div class="form-group">
-            <label>Personal Access Token (PAT)</label>
+            <label>Personal Access Token (PAT) <i class="ph ph-info info-icon" data-tooltip="Token com permissão de leitura para 'Analytics' e 'Work Items'."></i></label>
             <input type="password" id="pat" placeholder="Seu Token do Azure" required>
           </div>
           <button type="submit">Conectar e Carregar Consultas</button>
@@ -63,7 +63,7 @@
             <div class="card-title" style="justify-content: space-between;">
               <div style="display: flex; align-items: center; gap: 0.75rem;">
                 <i class="ph-bold ph-calendar-check"></i>
-                Lead Time
+                Lead Time <i class="ph ph-info info-icon" data-tooltip="Tempo total desde a criação do item até a sua conclusão."></i>
               </div>
               <button class="export-chart-pdf no-print" data-chart="leadTimeChart" title="Export PDF"><i class="ph ph-download-simple"></i></button>
             </div>
@@ -77,7 +77,7 @@
             <div class="card-title" style="justify-content: space-between;">
               <div style="display: flex; align-items: center; gap: 0.75rem;">
                 <i class="ph-bold ph-timer"></i>
-                Cycle Time
+                Cycle Time <i class="ph ph-info info-icon" data-tooltip="Tempo gasto trabalhando no item (do início do trabalho até conclusão)."></i>
               </div>
               <button class="export-chart-pdf no-print" data-chart="cycleTimeChart" title="Export PDF"><i class="ph ph-download-simple"></i></button>
             </div>
@@ -91,7 +91,7 @@
             <div class="card-title" style="justify-content: space-between;">
               <div style="display: flex; align-items: center; gap: 0.75rem;">
                 <i class="ph-bold ph-stack"></i>
-                Lead vs Cycle Time Comparison
+                Lead vs Cycle Time Comparison <i class="ph ph-info info-icon" data-tooltip="Compara a performance do período atual com o período anterior equivalente."></i>
               </div>
               <button class="export-chart-pdf no-print" data-chart="comparisonChart" title="Export PDF"><i class="ph ph-download-simple"></i></button>
             </div>
@@ -104,7 +104,7 @@
           <div class="card glass" style="grid-column: 1 / -1;">
             <div class="card-title">
               <i class="ph-bold ph-chart-line-up"></i>
-              Features & Portfolio
+              Features & Portfolio <i class="ph ph-info info-icon" data-tooltip="Distribuição percentual dos estados dos itens selecionados."></i>
             </div>
             <div id="progress-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
                 <!-- Will be populated by JS -->
@@ -115,7 +115,7 @@
             <div class="card-title" style="justify-content: space-between;">
               <div style="display: flex; align-items: center; gap: 0.75rem;">
                 <i class="ph-bold ph-projector-screen-chart"></i>
-                Hierarchical Gantt
+                Hierarchical Gantt <i class="ph ph-info info-icon" data-tooltip="Visualização cronológica dos itens, suas relações e durações."></i>
               </div>
               <div style="display: flex; gap: 0.5rem; align-items: center;">
                 <button class="export-chart-pdf no-print" data-element="gantt-container" title="Export PDF" style="margin-right: 0.5rem;"><i class="ph ph-download-simple"></i></button>
