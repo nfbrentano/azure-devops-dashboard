@@ -1094,35 +1094,17 @@ function renderActivityHeatmap() {
     
     container.innerHTML = '';
     
-    // Setup ResizeObserver once
-    if (!heatmapResizeObserver) {
-        let timeout;
-        heatmapResizeObserver = new ResizeObserver(() => {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => renderActivityHeatmap(), 100);
-        });
-        heatmapResizeObserver.observe(container);
-    }
-
-    const containerWidth = container.clientWidth;
-    const labelSpace = 45; // Approx space for day labels + margin
-    const columnWidth = 21; // 18px cell + 3px gap
-    const numWeeks = Math.floor((containerWidth - labelSpace) / columnWidth);
-
-    if (numWeeks <= 0) return;
-
     // Create inner wrapper
     const heatmapWrapper = document.createElement('div');
     heatmapWrapper.style.display = 'flex';
     heatmapWrapper.style.flexDirection = 'column';
-    heatmapWrapper.style.gap = '0.5rem';
-    heatmapWrapper.style.width = '100%';
+    heatmapWrapper.style.gap = '0.75rem';
 
-    // Calculation: numWeeks starting from sunday
+    // Fixed calculation: Last 6 months starting from sunday
     const now = new Date();
     const startDate = new Date();
-    startDate.setDate(now.getDate() - (numWeeks * 7) + 1);
-    startDate.setDate(startDate.getDate() - startDate.getDay()); // Align to Sunday
+    startDate.setMonth(now.getMonth() - 6);
+    startDate.setDate(startDate.getDate() - startDate.getDay()); 
     startDate.setHours(0,0,0,0);
 
     // Build the data grid of weeks
@@ -1146,7 +1128,7 @@ function renderActivityHeatmap() {
     monthsRow.style.display = 'flex';
     monthsRow.style.position = 'relative';
     monthsRow.style.height = '1.5rem';
-    monthsRow.style.marginLeft = '42px';
+    monthsRow.style.marginLeft = '58px'; // Adjust for wider day labels + gap
 
     let lastMonth = -1;
     weeks.forEach((week, weekIdx) => {
@@ -1155,8 +1137,8 @@ function renderActivityHeatmap() {
             lastMonth = firstDay.getMonth();
             const monthLabel = document.createElement('div');
             monthLabel.style.position = 'absolute';
-            monthLabel.style.left = `${weekIdx * 21}px`;
-            monthLabel.style.fontSize = '0.85rem';
+            monthLabel.style.left = `${weekIdx * 26}px`; // 22px cell + 4px gap
+            monthLabel.style.fontSize = '0.9rem';
             monthLabel.style.color = 'var(--text-muted)';
             monthLabel.textContent = firstDay.toLocaleString('default', { month: 'short' });
             monthsRow.appendChild(monthLabel);
@@ -1174,8 +1156,8 @@ function renderActivityHeatmap() {
     ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].forEach((day, i) => {
         const d = document.createElement('div');
         d.textContent = i % 2 === 0 ? day : '';
-        d.style.height = '18px';
-        d.style.lineHeight = '18px';
+        d.style.height = '22px';
+        d.style.lineHeight = '22px';
         daysCol.appendChild(d);
     });
     mainRow.appendChild(daysCol);
@@ -1183,7 +1165,8 @@ function renderActivityHeatmap() {
     // Grid
     const grid = document.createElement('div');
     grid.className = 'heatmap-grid';
-    grid.style.gridTemplateRows = 'repeat(7, 18px)';
+    grid.style.gridTemplateRows = 'repeat(7, 22px)';
+    grid.style.gap = '4px';
     
     weeks.forEach(week => {
         week.forEach(day => {
@@ -1206,8 +1189,8 @@ function renderActivityHeatmap() {
         if (week.length < 7) {
             for (let i = week.length; i < 7; i++) {
                 const spacer = document.createElement('div');
-                spacer.style.width = '18px';
-                spacer.style.height = '18px';
+                spacer.style.width = '22px';
+                spacer.style.height = '22px';
                 grid.appendChild(spacer);
             }
         }

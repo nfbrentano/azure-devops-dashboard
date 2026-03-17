@@ -262,38 +262,39 @@ h1 {
 /* Heatmap Styles */
 .heatmap-wrapper {
   padding: 2rem;
-  overflow-x: hidden;
+  overflow-x: auto;
   display: flex;
-  justify-content: flex-start;
+  justify-content: center;
   width: 100%;
 }
 
 .heatmap-grid {
   display: grid;
   grid-auto-flow: column;
-  grid-template-rows: repeat(7, 18px);
-  gap: 3px;
+  grid-template-rows: repeat(7, 22px);
+  gap: 4px;
   width: max-content;
 }
 
 .heatmap-day {
-  width: 18px;
-  height: 18px;
-  border-radius: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
   background: var(--heatmap-l0);
   cursor: pointer;
   transition: transform 0.1s ease;
 }
 
 .heatmap-day:hover {
-  transform: scale(1.3);
+  transform: scale(1.25);
   z-index: 2;
-  box-shadow: 0 0 8px rgba(0,0,0,0.2);
+  box-shadow: 0 0 8px rgba(0,0,0,0.3);
 }
 
 .heatmap-labels-months {
   margin-bottom: 0.75rem;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
+  font-weight: 500;
   color: var(--text-muted);
 }
 
@@ -304,10 +305,10 @@ h1 {
 .heatmap-labels-days {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  font-size: 0.75rem;
+  gap: 4px;
+  font-size: 0.8rem;
   color: var(--text-muted);
-  width: 35px;
+  width: 50px;
 }
 
 /* Intensity Levels */
