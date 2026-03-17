@@ -633,9 +633,15 @@ function processAnalytics(items, tree) {
             labels.push(`ID ${item.id}`);
         }
 
-        // Aging calculation for In Progress items
+        // Aging calculation for In Progress items (only for Requirement and Iteration levels)
         const statusInfo = getStatusInfo(state);
-        if (statusInfo.label === 'In Progress' && !isNaN(changedDate)) {
+        const type = fields['System.WorkItemType']?.toLowerCase();
+        const isAllowedLevel = workItemMetadata.backlogs.some(b => 
+            (b.type === 'requirement' || b.type === 'task') && 
+            b.workItemTypes.includes(type)
+        );
+
+        if (statusInfo.label === 'In Progress' && !isNaN(changedDate) && isAllowedLevel) {
             const ageDays = Math.floor((now - changedDate) / (1000 * 60 * 60 * 24));
             agingData.push({
                 id: item.id,
