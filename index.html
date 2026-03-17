@@ -23,22 +23,22 @@
         
         <form id="setup-form">
           <div class="form-group">
-            <label>Organização <i class="ph ph-info info-icon" data-tooltip="O identificador da sua organização no Azure DevOps. Ex: dev.azure.com/{organizacao}"></i></label>
+            <label>Organização <i class="ph ph-info info-icon" data-tooltip="O identificador da sua organização no Azure DevOps. Você o encontra na URL: dev.azure.com/{sua-organizacao}"></i></label>
             <input type="text" id="org" placeholder="ex: minha-empresa" required>
           </div>
           <div class="form-group">
-            <label>Projeto <i class="ph ph-info info-icon" data-tooltip="O nome exato do projeto dentro da organização. Ex: dev.azure.com/{org}/{projeto}"></i></label>
+            <label>Projeto <i class="ph ph-info info-icon" data-tooltip="O nome exato do projeto dentro da organização do Azure DevOps."></i></label>
             <input type="text" id="project" placeholder="ex: meu-projeto" required>
           </div>
           <div class="form-group">
-            <label>Personal Access Token (PAT) <i class="ph ph-info info-icon" data-tooltip="Gere em User Settings > Personal Access Tokens com escopo 'Work Items: Read'."></i></label>
+            <label>Personal Access Token (PAT) <i class="ph ph-info info-icon" data-tooltip="Token de acesso pessoal. Gere no Azure DevOps em 'User Settings' > 'Personal Access Tokens'. Escopo necessário: 'Work Items: Read'."></i></label>
             <input type="password" id="pat" placeholder="Seu Token do Azure" required>
           </div>
-          <button type="submit">Conectar e Carregar Consultas</button>
+          <button type="submit" data-tooltip="Clique para validar suas credenciais e carregar as consultas disponíveis no seu projeto.">Conectar e Carregar Consultas</button>
         </form>
 
         <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-glass);">
-          <button id="logout-btn" class="glass btn-danger-glass"><i class="ph-bold ph-sign-out"></i> Sair da Conta</button>
+          <button id="logout-btn" class="glass btn-danger-glass" data-tooltip="Sai da conta atual e limpa as credenciais salvas localmente neste navegador."><i class="ph-bold ph-sign-out"></i> Sair da Conta</button>
         </div>
       </div>
 
