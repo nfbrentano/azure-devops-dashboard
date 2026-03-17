@@ -262,7 +262,7 @@ h2 { margin: 0 0 1rem 0; }
   margin-bottom: 1.5rem;
 }
 
-.card-title i {
+.card-title > div > i:first-child {
   color: var(--primary);
   font-size: 1.5rem;
 }
