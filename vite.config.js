@@ -11,6 +11,9 @@ export default defineConfig({
             if (id.includes('chart.js')) {
               return 'vendor-charts';
             }
+            if (id.includes('jspdf') || id.includes('html2canvas')) {
+              return null; // Let Vite handle dynamic splitting
+            }
             return 'vendor'; // all other node_modules
           }
         }
