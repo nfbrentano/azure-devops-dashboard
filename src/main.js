@@ -9,7 +9,8 @@ let charts = {
     comparison: null,
     aging: null,
     assignee: null,
-    cfd: null
+    cfd: null,
+    throughput: null
 };
 let heatmapData = null; // Store for responsive re-renders
 let heatmapResizeObserver = null;
@@ -725,11 +726,50 @@ function processAnalytics(items, tree) {
         }
     });
 
+    // Throughput Processing: Delivered items per week (Requirement backlog level)
+    const weeksCount = 12; // Show last 12 weeks
+    const throughputData = [];
+    const requirementBacklogTypes = workItemMetadata.backlogs.find(b => b.name.toLowerCase().includes('requirement'))?.workItemTypes || [];
+
+    for (let i = weeksCount - 1; i >= 0; i--) {
+        const startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - now.getDay() - (i * 7));
+        startOfWeek.setHours(0, 0, 0, 0);
+
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+        endOfWeek.setHours(23, 59, 59, 999);
+
+        let count = 0;
+        items.forEach(item => {
+            const closedDateStr = item.fields['Microsoft.VSTS.Common.ClosedDate'];
+            if (!closedDateStr) return;
+
+            const type = item.fields['System.WorkItemType']?.toLowerCase();
+            const isRequirement = requirementBacklogTypes.includes(type) || 
+                                ['user story', 'product backlog item', 'requirement', 'issue'].includes(type);
+            
+            if (!isRequirement) return;
+
+            const closed = new Date(closedDateStr);
+            if (closed >= startOfWeek && closed <= endOfWeek) {
+                count++;
+            }
+        });
+
+        throughputData.push({
+            label: `W${weeksCount - i}`,
+            range: `${startOfWeek.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })} - ${endOfWeek.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}`,
+            count: count
+        });
+    }
+
     renderCharts(labels, leadTimes, cycleTimes);
     renderAgingChart(agingData);
     renderAssigneeChart(assigneeWorkload);
     renderCFDChart(cfdSeries);
     renderActivityHeatmap();
+    renderThroughputChart(throughputData);
     renderPortfolioFilters(items);
     renderProgress(items);
     renderGantt(tree);
