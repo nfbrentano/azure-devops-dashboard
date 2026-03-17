@@ -646,8 +646,9 @@ function getItemIcon(type) {
     const t = type.toLowerCase();
     const meta = workItemMetadata.types[t];
     
-    // Determine if it's a portfolio item based on backlog levels
-    const isPortfolio = workItemMetadata.backlogs.some(b => b.type === 'portfolio' && b.workItemTypes.includes(t));
+    // Determine if it's a portfolio item based on backlog levels or common types
+    const isPortfolio = workItemMetadata.backlogs.some(b => b.type === 'portfolio' && b.workItemTypes.includes(t)) || 
+                        t === 'epic' || t === 'feature';
     
     // Basic defaults with dynamic color
     const base = { 
@@ -846,7 +847,8 @@ function renderProgress(items) {
     const filteredItems = items.filter(item => {
         const iconInfo = getItemIcon(item.fields['System.WorkItemType']);
         const statusInfo = getStatusInfo(item.fields['System.State']);
-        return iconInfo.isPortfolio && (statusInfo.label === 'Backlog' || statusInfo.label === 'In Progress');
+        // Only exclude completed items (Done category); show all others in Portfolio
+        return iconInfo.isPortfolio && statusInfo.label !== 'Done';
     });
 
     if (filteredItems.length === 0) {
