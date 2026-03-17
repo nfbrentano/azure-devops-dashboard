@@ -28,15 +28,15 @@
         
         <form id="setup-form">
           <div class="form-group">
-            <label>Organização <i class="ph-bold ph-info info-icon" data-tooltip="O identificador da sua organização no Azure DevOps. Você o encontra na URL: dev.azure.com/{sua-organizacao}"></i></label>
+            <label>Organização <i class="ph ph-info info-icon" data-tooltip="O identificador da sua organização no Azure DevOps. Você o encontra na URL: dev.azure.com/{sua-organizacao}"></i></label>
             <input type="text" id="org" placeholder="ex: minha-empresa" required>
           </div>
           <div class="form-group">
-            <label>Projeto <i class="ph-bold ph-info info-icon" data-tooltip="O nome exato do projeto dentro da organização do Azure DevOps."></i></label>
+            <label>Projeto <i class="ph ph-info info-icon" data-tooltip="O nome exato do projeto dentro da organização do Azure DevOps."></i></label>
             <input type="text" id="project" placeholder="ex: meu-projeto" required>
           </div>
           <div class="form-group">
-            <label>Personal Access Token (PAT) <i class="ph-bold ph-info info-icon" data-tooltip="Token de acesso pessoal. Gere no Azure DevOps em 'User Settings' > 'Personal Access Tokens'. Escopo necessário: 'Work Items: Read'."></i></label>
+            <label>Personal Access Token (PAT) <i class="ph ph-info info-icon" data-tooltip="Token de acesso pessoal. Gere no Azure DevOps em 'User Settings' > 'Personal Access Tokens'. Escopo necessário: 'Work Items: Read'."></i></label>
             <input type="password" id="pat" placeholder="Seu Token do Azure" required>
           </div>
           <button type="submit" data-tooltip="Clique para validar suas credenciais e carregar as consultas disponíveis no seu projeto.">Conectar e Carregar Consultas</button>
@@ -65,7 +65,7 @@
             <div class="card-title">
               <div style="display: flex; align-items: center; gap: 0.75rem;">
                 <i class="ph-bold ph-calendar-check"></i>
-                Lead Time <i class="ph-bold ph-info info-icon" data-tooltip="O Lead Time mede o tempo total desde que um item é criado até ser concluído. Ele reflete a experiência completa do cliente/solicitante."></i>
+                Lead Time <i class="ph ph-info info-icon" data-tooltip="O Lead Time mede o tempo total desde que um item é criado até ser concluído. Ele reflete a experiência completa do cliente/solicitante."></i>
               </div>
             </div>
             <div style="height: 300px;">
@@ -78,7 +78,7 @@
             <div class="card-title">
               <div style="display: flex; align-items: center; gap: 0.75rem;">
                 <i class="ph-bold ph-timer"></i>
-                Cycle Time <i class="ph-bold ph-info info-icon" data-tooltip="O Cycle Time mede o tempo em que o item esteve efetivamente em desenvolvimento (movido para 'In Progress' até ser concluído). Ele foca na eficiência da execução."></i>
+                Cycle Time <i class="ph ph-info info-icon" data-tooltip="O Cycle Time mede o tempo em que o item esteve efetivamente em desenvolvimento (movido para 'In Progress' até ser concluído). Ele foca na eficiência da execução."></i>
               </div>
             </div>
             <div style="height: 300px;">
@@ -91,7 +91,7 @@
             <div class="card-title">
               <div style="display: flex; align-items: center; gap: 0.75rem;">
                 <i class="ph-bold ph-stack"></i>
-                Lead vs Cycle Time Comparison <i class="ph-bold ph-info info-icon" data-tooltip="Este gráfico compara o Lead Time e Cycle Time médio do período atual com o período anterior, permitindo identificar tendências de melhoria ou gargalos."></i>
+                Lead vs Cycle Time Comparison <i class="ph ph-info info-icon" data-tooltip="Este gráfico compara o Lead Time e Cycle Time médio do período atual com o período anterior, permitindo identificar tendências de melhoria ou gargalos."></i>
               </div>
             </div>
             <div style="height: 400px;">
@@ -104,7 +104,7 @@
             <div class="card-title" style="justify-content: space-between;">
               <div style="display: flex; align-items: center; gap: 0.75rem;">
                 <i class="ph-bold ph-chart-line-up"></i>
-                Features & Portfolio <i class="ph-bold ph-info info-icon" data-tooltip="Visualização macro do progresso de Epics e Features, mostrando como os itens estão distribuídos pelas diversas etapas do fluxo de trabalho."></i>
+                Features & Portfolio <i class="ph ph-info info-icon" data-tooltip="Visualização macro do progresso de Epics e Features, mostrando como os itens estão distribuídos pelas diversas etapas do fluxo de trabalho."></i>
               </div>
               <div id="portfolio-status-filters" class="gantt-status-filters no-print">
                 <!-- Populated dynamically -->
@@ -119,7 +119,7 @@
             <div class="card-title" style="justify-content: space-between;">
               <div style="display: flex; align-items: center; gap: 0.75rem;">
                 <i class="ph-bold ph-projector-screen-chart"></i>
-                Hierarchical Gantt <i class="ph-bold ph-info info-icon" data-tooltip="Uma linha do tempo hierárquica que mostra a duração e o encadeamento dos itens de trabalho, permitindo visualizar o sequenciamento e dependências do projeto."></i>
+                Hierarchical Gantt <i class="ph ph-info info-icon" data-tooltip="Uma linha do tempo hierárquica que mostra a duração e o encadeamento dos itens de trabalho, permitindo visualizar o sequenciamento e dependências do projeto."></i>
               </div>
               <div style="display: flex; gap: 0.5rem; align-items: center;">
                 <button id="gantt-prev" class="glass" style="padding: 0.25rem 0.5rem; border-radius: 0.4rem; cursor: pointer;">
