@@ -6,9 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Azure DevOps Metrics</title>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <script type="module" crossorigin src="/azure-devops-dashboard/assets/index-BeGl5jy4.js"></script>
+    <script type="module" crossorigin src="/azure-devops-dashboard/assets/index-qPxnRS0Y.js"></script>
     <link rel="modulepreload" crossorigin href="/azure-devops-dashboard/assets/chunk-B3K2TuZy.js">
-    <link rel="stylesheet" crossorigin href="/azure-devops-dashboard/assets/index-Dp-9IKIL.css">
+    <link rel="stylesheet" crossorigin href="/azure-devops-dashboard/assets/index-Bm8yNFKd.css">
   </head>
   <body>
     <div id="app">
@@ -41,7 +41,7 @@
         </form>
 
         <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-glass);">
-          <button id="logout-btn" class="glass" style="width: auto; padding: 0.75rem 1.5rem; background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: rgba(239, 68, 68, 0.2);"><i class="ph ph-sign-out"></i> Sair da Conta</button>
+          <button id="logout-btn" class="glass btn-danger-glass"><i class="ph-bold ph-sign-out"></i> Sair da Conta</button>
         </div>
       </div>
 
@@ -52,11 +52,11 @@
             <h1>Development Analytics</h1>
             <p id="active-query-name" style="color: var(--text-muted); margin-top: 0.5rem;">Selecione uma consulta para começar</p>
           </div>
-          <div style="display: flex; gap: 1rem; align-items: center;">
-             <button id="export-all-pdf" class="glass" style="width: auto; padding: 0.5rem 1rem; background: var(--primary); color: white; border: none;"><i class="ph-bold ph-file-pdf"></i> Full Report</button>
-             <select id="query-selector" class="glass" style="padding: 0.5rem 1rem;"></select>
-             <button id="refresh-btn" class="glass" style="width: auto; padding: 0.5rem 1rem;"><i class="ph ph-arrows-clockwise"></i></button>
-             <button id="theme-toggle" class="glass" style="width: auto; padding: 0.5rem 1rem;"><i class="ph ph-sun-dim"></i></button>
+          <div class="header-actions">
+             <button id="export-all-pdf" class="glass btn-primary-gradient" title="Export Full PDF Report"><i class="ph-bold ph-file-pdf"></i> Full Report</button>
+             <select id="query-selector" class="glass header-select" title="Select Analytics Query"></select>
+             <button id="refresh-btn" class="glass btn-icon-glass" title="Refresh Data"><i class="ph-bold ph-arrows-clockwise"></i></button>
+             <button id="theme-toggle" class="glass btn-icon-glass" title="Toggle Dark/Light Mode"><i class="ph-bold ph-sun-dim"></i></button>
            </div>
         </header>
 
