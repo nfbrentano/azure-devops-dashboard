@@ -26,15 +26,15 @@
         
         <form id="setup-form">
           <div class="form-group">
-            <label>Organização <i class="ph ph-info info-icon" data-tooltip="Seu nome de organização no Azure DevOps (ex: minha-empresa)."></i></label>
+            <label>Organização <i class="ph ph-info info-icon" data-tooltip="O identificador da sua organização no Azure DevOps. Ex: dev.azure.com/{organizacao}"></i></label>
             <input type="text" id="org" placeholder="ex: minha-empresa" required>
           </div>
           <div class="form-group">
-            <label>Projeto <i class="ph ph-info info-icon" data-tooltip="O nome exato do projeto que você deseja analisar."></i></label>
+            <label>Projeto <i class="ph ph-info info-icon" data-tooltip="O nome exato do projeto dentro da organização. Ex: dev.azure.com/{org}/{projeto}"></i></label>
             <input type="text" id="project" placeholder="ex: meu-projeto" required>
           </div>
           <div class="form-group">
-            <label>Personal Access Token (PAT) <i class="ph ph-info info-icon" data-tooltip="Token com permissão de leitura para 'Analytics' e 'Work Items'."></i></label>
+            <label>Personal Access Token (PAT) <i class="ph ph-info info-icon" data-tooltip="Gere em User Settings > Personal Access Tokens com escopo 'Work Items: Read'."></i></label>
             <input type="password" id="pat" placeholder="Seu Token do Azure" required>
           </div>
           <button type="submit">Conectar e Carregar Consultas</button>
