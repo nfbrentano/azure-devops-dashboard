@@ -50,7 +50,6 @@
             <p id="active-query-name" style="color: var(--text-muted); margin-top: 0.5rem;">Selecione uma consulta para começar</p>
           </div>
           <div class="header-actions">
-             <button id="export-all-pdf" class="glass btn-primary-gradient" title="Export Full PDF Report"><i class="ph-bold ph-file-pdf"></i> Full Report</button>
              <select id="query-selector" class="glass header-select" title="Select Analytics Query"></select>
              <button id="refresh-btn" class="glass btn-icon-glass" title="Refresh Data"><i class="ph-bold ph-arrows-clockwise"></i></button>
              <button id="theme-toggle" class="glass btn-icon-glass" title="Toggle Dark/Light Mode"><i class="ph-bold ph-sun-dim"></i></button>
@@ -60,12 +59,10 @@
         <div class="dashboard-grid">
           <!-- Lead Time Card -->
           <div class="card glass">
-            <div class="card-title" style="justify-content: space-between;">
               <div style="display: flex; align-items: center; gap: 0.75rem;">
                 <i class="ph-bold ph-calendar-check"></i>
                 Lead Time <i class="ph ph-info info-icon" data-tooltip="O Lead Time mede o tempo total desde que um item é criado até ser concluído. Ele reflete a experiência completa do cliente/solicitante."></i>
               </div>
-              <button class="export-chart-pdf no-print" data-chart="leadTimeChart" title="Export PDF"><i class="ph ph-download-simple"></i></button>
             </div>
             <div style="height: 300px;">
               <canvas id="leadTimeChart"></canvas>
@@ -79,7 +76,6 @@
                 <i class="ph-bold ph-timer"></i>
                 Cycle Time <i class="ph ph-info info-icon" data-tooltip="O Cycle Time mede o tempo em que o item esteve efetivamente em desenvolvimento (movido para 'In Progress' até ser concluído). Ele foca na eficiência da execução."></i>
               </div>
-              <button class="export-chart-pdf no-print" data-chart="cycleTimeChart" title="Export PDF"><i class="ph ph-download-simple"></i></button>
             </div>
             <div style="height: 300px;">
               <canvas id="cycleTimeChart"></canvas>
@@ -93,7 +89,6 @@
                 <i class="ph-bold ph-stack"></i>
                 Lead vs Cycle Time Comparison <i class="ph ph-info info-icon" data-tooltip="Este gráfico compara o Lead Time e Cycle Time médio do período atual com o período anterior, permitindo identificar tendências de melhoria ou gargalos."></i>
               </div>
-              <button class="export-chart-pdf no-print" data-chart="comparisonChart" title="Export PDF"><i class="ph ph-download-simple"></i></button>
             </div>
             <div style="height: 400px;">
               <canvas id="comparisonChart"></canvas>
@@ -123,8 +118,6 @@
                 Hierarchical Gantt <i class="ph ph-info info-icon" data-tooltip="Uma linha do tempo hierárquica que mostra a duração e o encadeamento dos itens de trabalho, permitindo visualizar o sequenciamento e dependências do projeto."></i>
               </div>
               <div style="display: flex; gap: 0.5rem; align-items: center;">
-                <button class="export-chart-pdf no-print" data-element="gantt-container" title="Export PDF" style="margin-right: 0.5rem;"><i class="ph ph-download-simple"></i></button>
-                <div style="width: 1px; height: 16px; background: var(--border-glass); margin: 0 0.5rem;"></div>
                 <button id="gantt-prev" class="glass" style="padding: 0.25rem 0.5rem; border-radius: 0.4rem; cursor: pointer;">
                   <i class="ph ph-caret-left"></i>
                 </button>
