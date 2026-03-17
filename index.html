@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Azure DevOps Metrics</title>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <script type="module" crossorigin src="/azure-devops-dashboard/assets/index-Nruj4UtE.js"></script>
+    <script type="module" crossorigin src="/azure-devops-dashboard/assets/index-MEwWgHa8.js"></script>
     <link rel="stylesheet" crossorigin href="/azure-devops-dashboard/assets/index-CDIyz3_B.css">
   </head>
   <body>
@@ -197,6 +197,19 @@
             </div>
             <div style="height: 400px;">
               <canvas id="comparisonChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Throughput Chart Card -->
+          <div class="card glass" style="grid-column: 1 / -1; margin-top: 1rem;">
+            <div class="card-title">
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <i class="ph-bold ph-chart-bar"></i>
+                Throughput (Items per Week) — Requirement Backlog
+              </div>
+            </div>
+            <div style="height: 300px;">
+              <canvas id="throughputChart"></canvas>
             </div>
           </div>
 
