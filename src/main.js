@@ -242,6 +242,7 @@ async function fetchMetadata(config) {
                 type: b.type,
                 workItemTypes: b.workItemTypes.map(wit => wit.name.toLowerCase())
             }));
+            console.log('Backlogs loaded:', workItemMetadata.backlogs);
         }
 
         renderLegends();
@@ -636,19 +637,24 @@ function processAnalytics(items, tree) {
         // Aging calculation for In Progress items (only for Requirement and Iteration levels)
         const statusInfo = getStatusInfo(state);
         const type = fields['System.WorkItemType']?.toLowerCase();
+        
+        // Debug filtering
         const isAllowedLevel = workItemMetadata.backlogs.some(b => 
             (b.type === 'requirement' || b.type === 'task') && 
             b.workItemTypes.includes(type)
         );
 
-        if (statusInfo.label === 'In Progress' && !isNaN(changedDate) && isAllowedLevel) {
-            const ageDays = Math.floor((now - changedDate) / (1000 * 60 * 60 * 24));
-            agingData.push({
-                id: item.id,
-                title: fields['System.Title'],
-                age: ageDays,
-                state: state
-            });
+        if (statusInfo.label === 'In Progress' && !isNaN(changedDate)) {
+            console.log(`Checking item ${item.id} (${type}): isAllowedLevel=${isAllowedLevel}`);
+            if (isAllowedLevel) {
+                const ageDays = Math.floor((now - changedDate) / (1000 * 60 * 60 * 24));
+                agingData.push({
+                    id: item.id,
+                    title: fields['System.Title'],
+                    age: ageDays,
+                    state: state
+                });
+            }
         }
     });
 
