@@ -747,49 +747,66 @@ function renderCharts(labels, leadTimes, cycleTimes) {
         responsive: true,
         maintainAspectRatio: false,
         scales: {
-            y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor } },
-            x: { grid: { display: false }, ticks: { color: textColor } }
+            y: { 
+                beginAtZero: true, 
+                grid: { color: gridColor }, 
+                ticks: { color: textColor },
+                title: { display: true, text: 'Dias', color: textColor }
+            },
+            x: { 
+                grid: { display: false }, 
+                ticks: { color: textColor, maxRotation: 45, minRotation: 45 } 
+            }
         },
-        plugins: { legend: { display: false } }
+        plugins: { 
+            legend: { 
+                display: true, 
+                position: 'top', 
+                labels: { color: textColor, font: { weight: 'bold' } } 
+            },
+            tooltip: {
+                mode: 'index',
+                intersect: false
+            }
+        },
+        onClick: (e, elements) => {
+            if (elements.length > 0) {
+                const index = elements[0].index;
+                const label = labels[index];
+                const id = label.replace('ID ', '');
+                window.open(getWorkItemUrl(id), '_blank');
+            }
+        }
     };
 
-    // Calculate Averages for Comparison
-    const currentLeadAvg = (leadTimes.reduce((a, b) => parseFloat(a) + parseFloat(b), 0) / leadTimes.length) || 0;
-    const currentCycleAvg = (cycleTimes.reduce((a, b) => parseFloat(a) + parseFloat(b), 0) / cycleTimes.length) || 0;
-
-    // Fixed mockup targets for comparison (demo purpose)
-    const prevLeadAvg = currentLeadAvg * 1.15;
-    const prevCycleAvg = currentCycleAvg * 1.1;
-
     charts.comparison = new Chart(document.getElementById('comparisonChart'), {
-        type: 'bar',
+        type: 'line',
         data: {
-            labels: ['Lead Time (Days)', 'Cycle Time (Days)'],
+            labels: labels,
             datasets: [
                 {
-                    label: 'Período Atual',
-                    data: [currentLeadAvg.toFixed(1), currentCycleAvg.toFixed(1)],
-                    backgroundColor: ['#6366f1', '#10b981'],
-                    borderRadius: 8
+                    label: 'Lead Time',
+                    data: leadTimes,
+                    borderColor: '#6366f1',
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                 },
                 {
-                    label: 'Período Anterior',
-                    data: [prevLeadAvg.toFixed(1), prevCycleAvg.toFixed(1)],
-                    backgroundColor: ['rgba(99, 102, 241, 0.2)', 'rgba(16, 185, 129, 0.2)'],
-                    borderRadius: 8
+                    label: 'Cycle Time',
+                    data: cycleTimes,
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                 }
             ]
         },
-        options: {
-            ...chartOptions,
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'top',
-                    labels: { color: textColor, font: { weight: 'bold' } }
-                }
-            }
-        }
+        options: chartOptions
     });
 }
 
