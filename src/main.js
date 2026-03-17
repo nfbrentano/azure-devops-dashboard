@@ -5,7 +5,13 @@ import Chart from 'chart.js/auto';
 // State
 let azureConfig = JSON.parse(localStorage.getItem('azure_config')) || null;
 let currentData = { items: [], tree: [] };
-let charts = {};
+let charts = {
+    lead: null,
+    cycle: null,
+    comparison: null,
+    aging: null,
+    assignee: null
+};
 let ganttOffset = 0; 
 let currentTheme = localStorage.getItem('theme') || 'dark';
 let workItemMetadata = {
@@ -614,6 +620,7 @@ function processAnalytics(items, tree) {
     const cycleTimes = [];
     const labels = [];
     const agingData = [];
+    const assigneeWorkload = {}; // { 'Name': count }
 
     const now = new Date();
 
@@ -661,10 +668,23 @@ function processAnalytics(items, tree) {
                 state: state
             });
         }
+
+        // Assignee Workload (only for non-portfolio items)
+        if (isExecutionItem) {
+            let assignee = fields['System.AssignedTo'];
+            let name = 'Unassigned';
+            
+            if (assignee) {
+                name = assignee.displayName || assignee.uniqueName || (typeof assignee === 'string' ? assignee : 'Unassigned');
+            }
+            
+            assigneeWorkload[name] = (assigneeWorkload[name] || 0) + 1;
+        }
     });
 
     renderCharts(labels, leadTimes, cycleTimes);
     renderAgingChart(agingData);
+    renderAssigneeChart(assigneeWorkload);
     renderPortfolioFilters(items);
     renderProgress(items);
     renderGantt(tree);
@@ -810,7 +830,7 @@ function renderAgingChart(agingData) {
     const gridColor = isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)';
     const textColor = isLight ? '#64748b' : '#94a3b8';
 
-    charts.aging = new Chart(document.getElementById('agingChart'), {
+    charts.aging = new Chart(canvas, {
         type: 'bar',
         data: {
             labels,
@@ -853,6 +873,75 @@ function renderAgingChart(agingData) {
                     const index = elements[0].index;
                     const item = agingData[index];
                     window.open(getWorkItemUrl(item.id), '_blank');
+                }
+            }
+        }
+    });
+}
+
+function renderAssigneeChart(workloadData) {
+    let canvas = document.getElementById('assigneeChart');
+    const allContainers = document.querySelectorAll('#items-view .dashboard-grid .card.glass div[style*="height: 500px"]');
+    const container = allContainers[1] || allContainers[0]?.parentElement?.querySelector('.card.glass:last-child div[style*="height: 500px"]');
+    if (!container) return;
+
+    if (charts.assignee) charts.assignee.destroy();
+
+    const names = Object.keys(workloadData).sort((a, b) => workloadData[b] - workloadData[a]);
+    const counts = names.map(name => workloadData[name]);
+
+    if (names.length === 0) {
+        container.innerHTML = `<div id="assignee-empty-msg" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); gap: 1rem;">
+            <i class="ph-bold ph-ghost" style="font-size: 3rem; opacity: 0.5;"></i>
+            <p>Nenhum responsável encontrado para os itens da consulta.</p>
+        </div>`;
+        return;
+    }
+
+    if (document.getElementById('assignee-empty-msg')) {
+        container.innerHTML = '<canvas id="assigneeChart"></canvas>';
+        canvas = document.getElementById('assigneeChart');
+    }
+
+    if (!canvas) return;
+
+    const isLight = currentTheme === 'light';
+    const gridColor = isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)';
+    const textColor = isLight ? '#64748b' : '#94a3b8';
+
+    charts.assignee = new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels: names,
+            datasets: [{
+                label: 'Work Items Count',
+                data: counts,
+                backgroundColor: '#8b5cf6',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: { 
+                    beginAtZero: true, 
+                    grid: { color: gridColor }, 
+                    ticks: { color: textColor, stepSize: 1 },
+                    title: { display: true, text: 'Number of Items', color: textColor }
+                },
+                y: { 
+                    grid: { display: false }, 
+                    ticks: { color: textColor } 
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (context) => `Items: ${context.raw}`
+                    }
                 }
             }
         }

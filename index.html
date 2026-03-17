@@ -120,7 +120,7 @@
 
         <div class="dashboard-grid">
           <!-- Aging Chart -->
-          <div class="card glass" style="grid-column: 1 / -1;">
+          <div class="card glass">
             <div class="card-title">
               <div style="display: flex; align-items: center; gap: 0.75rem;">
                 <i class="ph-bold ph-hourglass"></i>
@@ -129,6 +129,19 @@
             </div>
             <div style="height: 500px;">
               <canvas id="agingChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Assignee Workload Chart -->
+          <div class="card glass">
+            <div class="card-title">
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <i class="ph-bold ph-users-three"></i>
+                Workload by Assignee
+              </div>
+            </div>
+            <div style="height: 500px;">
+              <canvas id="assigneeChart"></canvas>
             </div>
           </div>
         </div>
