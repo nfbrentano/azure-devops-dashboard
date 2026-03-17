@@ -133,12 +133,51 @@ h2 { margin: 0 0 1rem 0; }
   font-size: 1.5rem;
 }
 
+.tabs-nav {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding: 0.5rem;
+    justify-content: center;
+    position: sticky;
+    top: 1rem;
+    z-index: 100;
+}
+
+.tab-btn {
+    background: transparent;
+    color: var(--text-muted);
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: auto;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.tab-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-main);
+}
+
+.tab-btn.active {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
 .setup-container {
     max-width: 500px;
-    margin: 5rem auto;
-    padding: 3rem;
+    margin: 2rem auto;
+    padding: 2.5rem;
     text-align: center;
 }
+
+.hidden { display: none !important; }
 
 .form-group {
     text-align: left;

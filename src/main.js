@@ -29,6 +29,11 @@ const ganttPeriod = document.getElementById('gantt-period');
 const ganttPrev = document.getElementById('gantt-prev');
 const ganttNext = document.getElementById('gantt-next');
 
+// Tab Elements
+const tabDashboard = document.getElementById('tab-dashboard');
+const tabSetup = document.getElementById('tab-setup');
+const tabsNav = document.querySelector('.tabs-nav');
+
 // Apply Theme on Load
 document.documentElement.setAttribute('data-theme', currentTheme);
 updateThemeIcon();
@@ -36,7 +41,27 @@ updateThemeIcon();
 // Initialize
 if (azureConfig) {
     showDashboard();
+} else {
+    switchTab('setup');
 }
+
+// Tab Switching
+function switchTab(tabId) {
+    if (tabId === 'dashboard') {
+        tabDashboard.classList.add('active');
+        tabSetup.classList.remove('active');
+        dashboardView.classList.remove('hidden');
+        setupView.classList.add('hidden');
+    } else {
+        tabDashboard.classList.remove('active');
+        tabSetup.classList.add('active');
+        dashboardView.classList.add('hidden');
+        setupView.classList.remove('hidden');
+    }
+}
+
+tabDashboard.addEventListener('click', () => switchTab('dashboard'));
+tabSetup.addEventListener('click', () => switchTab('setup'));
 
 setupForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -131,8 +156,7 @@ ganttNext.addEventListener('click', () => {
 });
 
 async function showDashboard(initialQueries = null) {
-    setupView.classList.add('hidden');
-    dashboardView.classList.remove('hidden');
+    switchTab('dashboard');
     
     // Fetch Metadata first
     if (Object.keys(workItemMetadata.types).length === 0) {
