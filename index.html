@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Azure DevOps Metrics</title>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <script type="module" crossorigin src="/azure-devops-dashboard/assets/index-KpYR1DHp.js"></script>
-    <link rel="stylesheet" crossorigin href="/azure-devops-dashboard/assets/index-Cv5ElSwg.css">
+    <script type="module" crossorigin src="/azure-devops-dashboard/assets/index-BFL3VEfS.js"></script>
+    <link rel="stylesheet" crossorigin href="/azure-devops-dashboard/assets/index-CmmpCFN_.css">
   </head>
   <body>
     <div id="app">
@@ -157,6 +157,19 @@
             </div>
             <div style="height: 500px;">
               <canvas id="cfdChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Activity Heatmap -->
+          <div class="card glass" style="grid-column: 1 / -1;">
+            <div class="card-title">
+              <div style="flex: 1; display: flex; align-items: center; gap: 0.75rem;">
+                <i class="ph-bold ph-calendar"></i>
+                Delivery Activity (Last 6 Months)
+              </div>
+            </div>
+            <div id="heatmap-container" class="heatmap-wrapper">
+              <!-- Heatmap will be rendered here -->
             </div>
           </div>
         </div>
