@@ -21,6 +21,7 @@ const setupForm = document.getElementById('setup-form');
 const querySelector = document.getElementById('query-selector');
 const progressList = document.getElementById('progress-list');
 const ganttContainer = document.getElementById('gantt-container');
+const itemsView = document.getElementById('items-view');
 const logoutBtn = document.getElementById('logout-btn');
 const refreshBtn = document.getElementById('refresh-btn');
 const themeToggle = document.getElementById('theme-toggle');
@@ -30,6 +31,7 @@ const ganttNext = document.getElementById('gantt-next');
 
 // Tab Elements
 const tabDashboard = document.getElementById('tab-dashboard');
+const tabItems = document.getElementById('tab-items');
 const tabSetup = document.getElementById('tab-setup');
 const tabsNav = document.querySelector('.tabs-nav');
 
@@ -46,20 +48,19 @@ if (azureConfig) {
 
 // Tab Switching
 function switchTab(tabId) {
-    if (tabId === 'dashboard') {
-        tabDashboard.classList.add('active');
-        tabSetup.classList.remove('active');
-        dashboardView.classList.remove('hidden');
-        setupView.classList.add('hidden');
-    } else {
-        tabDashboard.classList.remove('active');
-        tabSetup.classList.add('active');
-        dashboardView.classList.add('hidden');
-        setupView.classList.remove('hidden');
-    }
+    // Buttons
+    tabDashboard.classList.toggle('active', tabId === 'dashboard');
+    tabItems.classList.toggle('active', tabId === 'items');
+    tabSetup.classList.toggle('active', tabId === 'setup');
+
+    // Views
+    dashboardView.classList.toggle('hidden', tabId !== 'dashboard');
+    itemsView.classList.toggle('hidden', tabId !== 'items');
+    setupView.classList.toggle('hidden', tabId !== 'setup');
 }
 
 tabDashboard.addEventListener('click', () => switchTab('dashboard'));
+tabItems.addEventListener('click', () => switchTab('items'));
 tabSetup.addEventListener('click', () => switchTab('setup'));
 
 setupForm.addEventListener('submit', async (e) => {

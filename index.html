@@ -13,6 +13,7 @@
       <nav class="tabs-nav no-print glass">
         <div class="tabs-center">
           <button id="tab-dashboard" class="tab-btn active"><i class="ph-bold ph-layout"></i> Dashboard</button>
+          <button id="tab-items" class="tab-btn"><i class="ph-bold ph-hourglass"></i> Item Details</button>
           <button id="tab-setup" class="tab-btn"><i class="ph-bold ph-gear"></i> Setup</button>
         </div>
         <button id="theme-toggle" class="glass btn-icon-glass theme-toggle-nav" title="Toggle Dark/Light Mode">
@@ -97,6 +98,31 @@
                 <span>Hierarchical Gantt</span>
               </div>
               <p>Linha do tempo hierárquica que mostra a duração e o encadeamento dos itens, permitindo visualizar o sequenciamento e dependências do projeto.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Item Details View -->
+      <div id="items-view" class="hidden">
+        <header>
+          <div>
+            <h1>Item Details & Aging</h1>
+            <p style="color: var(--text-muted); margin-top: 0.5rem;">Análise detalhada de inatividade e saúde dos itens</p>
+          </div>
+        </header>
+
+        <div class="dashboard-grid">
+          <!-- Aging Chart -->
+          <div class="card glass" style="grid-column: 1 / -1;">
+            <div class="card-title">
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <i class="ph-bold ph-hourglass"></i>
+                Work Item Aging (In Progress)
+              </div>
+            </div>
+            <div style="height: 500px;">
+              <canvas id="agingChart"></canvas>
             </div>
           </div>
         </div>
@@ -191,15 +217,17 @@
                    <label class="filter-item"><input type="checkbox" data-category="Removed"> <span>Removed</span></label>
                 </div>
                 <div style="width: 1px; height: 16px; background: var(--border-glass); margin: 0 0.25rem;"></div>
-                <label style="margin: 0; font-size: 0.75rem;">Período:</label>
-                <select id="gantt-period" class="glass" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">
-                  <option value="total">Tudo (Auto-ajuste)</option>
-                  <option value="year">Ano</option>
-                  <option value="trimester">Trimestre</option>
-                  <option value="bimester">Bimestre</option>
-                  <option value="month" selected>Mês</option>
-                  <option value="week">Semana</option>
-                </select>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <label style="margin: 0; font-size: 0.75rem;">Período:</label>
+                    <select id="gantt-period" class="glass" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">
+                      <option value="total">Tudo (Auto-ajuste)</option>
+                      <option value="year">Ano</option>
+                      <option value="trimester">Trimestre</option>
+                      <option value="bimester">Bimestre</option>
+                      <option value="month" selected>Mês</option>
+                      <option value="week">Semana</option>
+                    </select>
+                </div>
               </div>
             </div>
             <div id="gantt-container" style="overflow-x: auto; padding-bottom: 1rem; position: relative;">
@@ -220,19 +248,6 @@
                         <!-- Populated dynamically -->
                     </div>
                 </div>
-            </div>
-          </div>
-
-          <!-- Aging Chart -->
-          <div class="card glass" style="grid-column: 1 / -1; margin-top: 2rem;">
-            <div class="card-title">
-              <div style="display: flex; align-items: center; gap: 0.75rem;">
-                <i class="ph-bold ph-hourglass"></i>
-                Work Item Aging (In Progress)
-              </div>
-            </div>
-            <div style="height: 400px;">
-              <canvas id="agingChart"></canvas>
             </div>
           </div>
         </div>
