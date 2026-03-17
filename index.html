@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Azure DevOps Metrics</title>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <script type="module" crossorigin src="/azure-devops-dashboard/assets/index-zX7wLeeR.js"></script>
+    <script type="module" crossorigin src="/azure-devops-dashboard/assets/index-D7SIsQDk.js"></script>
     <link rel="stylesheet" crossorigin href="/azure-devops-dashboard/assets/index-Cv5ElSwg.css">
   </head>
   <body>
@@ -122,7 +122,7 @@
 
         <div class="dashboard-grid">
           <!-- Aging Chart -->
-          <div class="card glass" style="grid-column: 1 / -1;">
+          <div class="card glass">
             <div class="card-title">
               <div style="display: flex; align-items: center; gap: 0.75rem;">
                 <i class="ph-bold ph-hourglass"></i>
@@ -131,6 +131,19 @@
             </div>
             <div style="height: 500px;">
               <canvas id="agingChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Assignee Workload Chart -->
+          <div class="card glass">
+            <div class="card-title">
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <i class="ph-bold ph-users-three"></i>
+                Workload by Assignee
+              </div>
+            </div>
+            <div style="height: 500px;">
+              <canvas id="assigneeChart"></canvas>
             </div>
           </div>
         </div>
