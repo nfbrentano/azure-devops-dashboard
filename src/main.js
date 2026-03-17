@@ -165,7 +165,7 @@ async function showDashboard(initialQueries = null) {
 
     const queries = initialQueries || await fetchQueries(azureConfig);
     populateQueries(queries);
-    renderLegends();
+    renderLegends(currentData?.items || []);
 }
 
 async function fetchMetadata(config) {
@@ -254,10 +254,23 @@ async function getBase64Image(url, auth) {
     }
 }
 
-function renderLegends() {
+function renderLegends(activeItems = []) {
     const statusLegend = document.getElementById('status-legend');
     const typeLegend = document.getElementById('type-legend');
     if (!statusLegend || !typeLegend) return;
+
+    // Extract active statuses and types if items provided
+    const activeStatesSet = new Set();
+    const activeTypesSet = new Set();
+    
+    if (activeItems.length > 0) {
+        activeItems.forEach(item => {
+            const state = item.fields['System.State'];
+            const type = item.fields['System.WorkItemType'];
+            if (state) activeStatesSet.add(state.toLowerCase());
+            if (type) activeTypesSet.add(type.toLowerCase());
+        });
+    }
 
     // 1. Render Status Legend (Grouped by Category)
     const categories = {
@@ -269,6 +282,21 @@ function renderLegends() {
 
     statusLegend.innerHTML = '';
     Object.entries(categories).forEach(([cat, info]) => {
+        // If we have active items, check if this category is represented
+        if (activeItems.length > 0) {
+            const hasCategory = Object.values(workItemMetadata.states).some(s => 
+                s.category === cat && activeStatesSet.has(s.name.toLowerCase())
+            );
+            
+            // Fallback for categories without official metadata states
+            const fallbackHasCategory = activeItems.some(item => {
+                const sInfo = getStatusInfo(item.fields['System.State']);
+                return sInfo.label === info.label;
+            });
+
+            if (!hasCategory && !fallbackHasCategory) return;
+        }
+
         const item = document.createElement('div');
         item.className = 'legend-item';
         // Get sample color from states in this category if possible
@@ -290,10 +318,15 @@ function renderLegends() {
     // 2. Render Type Legend (Dynamic from workItemTypes)
     typeLegend.innerHTML = '';
     
-    // If backlogs empty (API fail), show all found types
-    const typesToRender = workItemMetadata.backlogs.length > 0 
-        ? workItemMetadata.backlogs.flatMap(b => b.workItemTypes)
-        : Object.keys(workItemMetadata.types);
+    // Determine which types to show
+    let typesToRender = [];
+    if (activeItems.length > 0) {
+        typesToRender = Array.from(activeTypesSet);
+    } else {
+        typesToRender = workItemMetadata.backlogs.length > 0 
+            ? workItemMetadata.backlogs.flatMap(b => b.workItemTypes)
+            : Object.keys(workItemMetadata.types);
+    }
 
     const renderedTypes = new Set();
     typesToRender.forEach(typeName => {
@@ -691,6 +724,7 @@ function processAnalytics(items, tree) {
     renderCharts(labels, leadTimes, cycleTimes);
     renderProgress(items);
     renderGantt(tree);
+    renderLegends(items);
 }
 
 function renderCharts(labels, leadTimes, cycleTimes) {
