@@ -206,22 +206,58 @@ h1 {
     transform: translateX(-50%) translateY(0);
 }
 
-.info-icon {
-    display: inline-flex !important;
-    align-items: center;
-    justify-content: center;
-    color: var(--primary) !important; /* Force visibility with primary color */
-    font-size: 1rem !important;
-    margin-left: 0.5rem;
-    transition: color 0.2s ease;
-    cursor: help;
-    vertical-align: middle;
-    opacity: 1 !important;
-    visibility: visible !important;
+/* Metrics Guide Styles */
+.metrics-guide {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-glass);
+    text-align: left;
 }
 
-.info-icon:hover {
+.metrics-guide h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1.25rem;
+    margin-bottom: 1.5rem;
+    color: var(--text-main);
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.metric-item {
+    background: var(--bg-input);
+    padding: 1.25rem;
+    border-radius: 1rem;
+    border: 1px solid var(--border-glass);
+}
+
+.metric-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.75rem;
     color: var(--primary);
+    font-weight: 700;
+}
+
+.metric-header i {
+    font-size: 1.2rem;
+}
+
+.metric-item p {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin: 0;
+    line-height: 1.5;
+}
+
+.metric-item p strong {
+    color: var(--text-main);
 }
 
 .header-select {
