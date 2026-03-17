@@ -10,7 +10,8 @@ let charts = {
     cycle: null,
     comparison: null,
     aging: null,
-    assignee: null
+    assignee: null,
+    cfd: null
 };
 let ganttOffset = 0; 
 let currentTheme = localStorage.getItem('theme') || 'dark';
@@ -682,9 +683,42 @@ function processAnalytics(items, tree) {
         }
     });
 
+    // CFD Processing: Create a timeline of the last 30 days
+    const cfdSeries = [];
+    for (let i = 29; i >= 0; i--) {
+        const d = new Date(now);
+        d.setDate(d.getDate() - i);
+        d.setHours(0, 0, 0, 0);
+        
+        const counts = { date: d, Proposed: 0, InProgress: 0, Done: 0 };
+        
+        items.forEach(item => {
+            const f = item.fields;
+            const itemType = f['System.WorkItemType']?.toLowerCase();
+            const iconInfo = getItemIcon(itemType);
+            if (iconInfo.isPortfolio) return; // Only execution items in CFD
+
+            const created = new Date(f['System.CreatedDate']);
+            const activated = f['Microsoft.VSTS.Common.ActivatedDate'] ? new Date(f['Microsoft.VSTS.Common.ActivatedDate']) : null;
+            const closed = f['Microsoft.VSTS.Common.ClosedDate'] ? new Date(f['Microsoft.VSTS.Common.ClosedDate']) : null;
+
+            if (created <= d) {
+                if (closed && closed <= d) {
+                    counts.Done++;
+                } else if (activated && activated <= d) {
+                    counts.InProgress++;
+                } else {
+                    counts.Proposed++;
+                }
+            }
+        });
+        cfdSeries.push(counts);
+    }
+
     renderCharts(labels, leadTimes, cycleTimes);
     renderAgingChart(agingData);
     renderAssigneeChart(assigneeWorkload);
+    renderCFDChart(cfdSeries);
     renderPortfolioFilters(items);
     renderProgress(items);
     renderGantt(tree);
@@ -941,6 +975,99 @@ function renderAssigneeChart(workloadData) {
                 tooltip: {
                     callbacks: {
                         label: (context) => `Items: ${context.raw}`
+                    }
+                }
+            }
+        }
+    });
+}
+
+function renderCFDChart(cfdSeries) {
+    let canvas = document.getElementById('cfdChart');
+    const container = document.querySelector('#items-view .dashboard-grid .card.glass[style*="grid-column: 1 / -1"] div[style*="height: 500px"]');
+    if (!container) return;
+
+    if (charts.cfd) charts.cfd.destroy();
+
+    if (!cfdSeries || cfdSeries.length === 0) {
+        container.innerHTML = `<div id="cfd-empty-msg" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); gap: 1rem;">
+            <i class="ph-bold ph-ghost" style="font-size: 3rem; opacity: 0.5;"></i>
+            <p>Dados insuficientes para gerar o CFD.</p>
+        </div>`;
+        return;
+    }
+
+    if (document.getElementById('cfd-empty-msg')) {
+        container.innerHTML = '<canvas id="cfdChart"></canvas>';
+        canvas = document.getElementById('cfdChart');
+    }
+
+    if (!canvas) return;
+
+    const isLight = currentTheme === 'light';
+    const gridColor = isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)';
+    const textColor = isLight ? '#64748b' : '#94a3b8';
+
+    const labels = cfdSeries.map(d => d.date.toLocaleDateString(undefined, { day: 'numeric', month: 'short' }));
+    
+    charts.cfd = new Chart(canvas, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [
+                {
+                    label: 'Done',
+                    data: cfdSeries.map(d => d.Done),
+                    backgroundColor: '#10b981',
+                    borderColor: '#10b981',
+                    fill: true,
+                    pointRadius: 0,
+                    tension: 0.3
+                },
+                {
+                    label: 'In Progress',
+                    data: cfdSeries.map(d => d.InProgress),
+                    backgroundColor: '#0078d4',
+                    borderColor: '#0078d4',
+                    fill: true,
+                    pointRadius: 0,
+                    tension: 0.3
+                },
+                {
+                    label: 'Backlog',
+                    data: cfdSeries.map(d => d.Proposed),
+                    backgroundColor: '#b2b2b2',
+                    borderColor: '#b2b2b2',
+                    fill: true,
+                    pointRadius: 0,
+                    tension: 0.3
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            scales: {
+                x: { 
+                    grid: { color: gridColor }, 
+                    ticks: { color: textColor, maxRotation: 0, autoSkip: true, maxTicksLimit: 10 } 
+                },
+                y: { 
+                    stacked: true,
+                    beginAtZero: true, 
+                    grid: { color: gridColor }, 
+                    ticks: { color: textColor } 
+                }
+            },
+            plugins: {
+                legend: { 
+                    position: 'top',
+                    labels: { color: textColor, font: { size: 12 }, usePointStyle: true }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: (context) => `${context.dataset.label}: ${context.raw}`
                     }
                 }
             }

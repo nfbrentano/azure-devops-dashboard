@@ -135,13 +135,26 @@
           <!-- Assignee Workload Chart -->
           <div class="card glass">
             <div class="card-title">
-              <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <div style="flex: 1; display: flex; align-items: center; gap: 0.75rem;">
                 <i class="ph-bold ph-users-three"></i>
                 Workload by Assignee
               </div>
             </div>
             <div style="height: 500px;">
               <canvas id="assigneeChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Cumulative Flow Diagram (CFD) -->
+          <div class="card glass" style="grid-column: 1 / -1;">
+            <div class="card-title">
+              <div style="flex: 1; display: flex; align-items: center; gap: 0.75rem;">
+                <i class="ph-bold ph-chart-line-up"></i>
+                Cumulative Flow Diagram (CFD)
+              </div>
+            </div>
+            <div style="height: 500px;">
+              <canvas id="cfdChart"></canvas>
             </div>
           </div>
         </div>
