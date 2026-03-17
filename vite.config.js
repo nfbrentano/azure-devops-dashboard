@@ -6,9 +6,16 @@ export default defineConfig({
     outDir: "dist",
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor-charts': ['chart.js'],
-          'vendor-pdf': ['jspdf', 'html2canvas']
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('chart.js')) {
+              return 'vendor-charts';
+            }
+            if (id.includes('jspdf') || id.includes('html2canvas')) {
+              return 'vendor-pdf';
+            }
+            return 'vendor'; // all other node_modules
+          }
         }
       }
     }
