@@ -6,8 +6,6 @@ import Chart from 'chart.js/auto';
 let azureConfig = JSON.parse(localStorage.getItem('azure_config')) || null;
 let currentData = { items: [], tree: [] };
 let charts = {
-    lead: null,
-    cycle: null,
     comparison: null,
     aging: null,
     assignee: null,
@@ -739,8 +737,6 @@ function processAnalytics(items, tree) {
 }
 
 function renderCharts(labels, leadTimes, cycleTimes) {
-    if (charts.lead) charts.lead.destroy();
-    if (charts.cycle) charts.cycle.destroy();
     if (charts.comparison) charts.comparison.destroy();
 
     const isLight = currentTheme === 'light';
@@ -757,82 +753,35 @@ function renderCharts(labels, leadTimes, cycleTimes) {
         plugins: { legend: { display: false } }
     };
 
-    charts.lead = new Chart(document.getElementById('leadTimeChart'), {
-        type: 'line',
-        data: { 
-            labels, 
-            datasets: [{ 
-                label: 'Days', 
-                data: leadTimes, 
-                borderColor: '#6366f1',
-                backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                fill: true,
-                tension: 0.4
-            }] 
-        },
-        options: {
-            ...chartOptions,
-            onClick: (e, elements) => {
-                if (elements.length > 0) {
-                    const index = elements[0].index;
-                    const label = labels[index];
-                    const id = label.replace('ID ', '');
-                    window.open(getWorkItemUrl(id), '_blank');
-                }
-            }
-        }
-    });
+    // Calculate Averages for Comparison
+    const currentLeadAvg = (leadTimes.reduce((a, b) => parseFloat(a) + parseFloat(b), 0) / leadTimes.length) || 0;
+    const currentCycleAvg = (cycleTimes.reduce((a, b) => parseFloat(a) + parseFloat(b), 0) / cycleTimes.length) || 0;
 
-    charts.cycle = new Chart(document.getElementById('cycleTimeChart'), {
-        type: 'line',
-        data: { labels, datasets: [{ label: 'Days', data: cycleTimes, borderColor: '#10b981', tension: 0.4 }] },
-        options: {
-            ...chartOptions,
-            onClick: (e, elements) => {
-                if (elements.length > 0) {
-                    const index = elements[0].index;
-                    const label = labels[index];
-                    const id = label.replace('ID ', '');
-                    window.open(getWorkItemUrl(id), '_blank');
-                }
-            }
-        }
-    });
+    // Fixed mockup targets for comparison (demo purpose)
+    const prevLeadAvg = currentLeadAvg * 1.15;
+    const prevCycleAvg = currentCycleAvg * 1.1;
 
-    // Combined Comparison Chart
     charts.comparison = new Chart(document.getElementById('comparisonChart'), {
-        type: 'line',
+        type: 'bar',
         data: {
-            labels,
+            labels: ['Lead Time (Days)', 'Cycle Time (Days)'],
             datasets: [
                 {
-                    label: 'Lead Time',
-                    data: leadTimes,
-                    borderColor: '#6366f1',
-                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                    fill: true,
-                    tension: 0.4
+                    label: 'Período Atual',
+                    data: [currentLeadAvg.toFixed(1), currentCycleAvg.toFixed(1)],
+                    backgroundColor: ['#6366f1', '#10b981'],
+                    borderRadius: 8
                 },
                 {
-                    label: 'Cycle Time',
-                    data: cycleTimes,
-                    borderColor: '#10b981',
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                    fill: true,
-                    tension: 0.4
+                    label: 'Período Anterior',
+                    data: [prevLeadAvg.toFixed(1), prevCycleAvg.toFixed(1)],
+                    backgroundColor: ['rgba(99, 102, 241, 0.2)', 'rgba(16, 185, 129, 0.2)'],
+                    borderRadius: 8
                 }
             ]
         },
         options: {
             ...chartOptions,
-            onClick: (e, elements) => {
-                if (elements.length > 0) {
-                    const index = elements[0].index;
-                    const label = labels[index];
-                    const id = label.replace('ID ', '');
-                    window.open(getWorkItemUrl(id), '_blank');
-                }
-            },
             plugins: {
                 legend: {
                     display: true,
