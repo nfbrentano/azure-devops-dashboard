@@ -730,6 +730,7 @@ function processAnalytics(items, tree) {
     });
 
     renderCharts(labels, leadTimes, cycleTimes);
+    renderPortfolioFilters(items);
     renderProgress(items);
     renderGantt(tree);
     renderLegends(items);
@@ -841,14 +842,67 @@ function renderCharts(labels, leadTimes, cycleTimes) {
     });
 }
 
+function renderPortfolioFilters(items) {
+    const container = document.getElementById('portfolio-status-filters');
+    if (!container) return;
+
+    // 1. Get all unique statuses for portfolio items
+    const portfolioStatuses = new Set();
+    items.forEach(item => {
+        const iconInfo = getItemIcon(item.fields['System.WorkItemType']);
+        if (iconInfo.isPortfolio) {
+            portfolioStatuses.add(item.fields['System.State']);
+        }
+    });
+
+    if (portfolioStatuses.size === 0) {
+        container.innerHTML = '';
+        return;
+    }
+
+    // 2. Remember current selection if any
+    const previousSelection = new Set(
+        Array.from(container.querySelectorAll('input:checked'))
+            .map(cb => cb.value)
+    );
+
+    // 3. Render checkboxes
+    container.innerHTML = '';
+    Array.from(portfolioStatuses).sort().forEach(state => {
+        const label = document.createElement('label');
+        label.className = 'filter-item';
+        
+        // Default: checked if it was checked before, OR if it's the first time and not 'Done' 
+        // (to keep it clean by default, but user said "mostrar todos os status que vierem")
+        // I'll check everything by default except maybe 'Done' (concluido) to match previous logic
+        const statusInfo = getStatusInfo(state);
+        const isChecked = previousSelection.size > 0 
+            ? previousSelection.has(state) 
+            : statusInfo.label !== 'Done';
+
+        label.innerHTML = `
+            <input type="checkbox" value="${state}" ${isChecked ? 'checked' : ''}>
+            <span>${state}</span>
+        `;
+        
+        label.querySelector('input').addEventListener('change', () => renderProgress(items));
+        container.appendChild(label);
+    });
+}
+
 function renderProgress(items) {
     progressList.innerHTML = '';
     
+    // Get active filters
+    const activeFilters = new Set(
+        Array.from(document.querySelectorAll('#portfolio-status-filters input:checked'))
+            .map(cb => cb.value)
+    );
+
     const filteredItems = items.filter(item => {
         const iconInfo = getItemIcon(item.fields['System.WorkItemType']);
-        const statusInfo = getStatusInfo(item.fields['System.State']);
-        // Only exclude completed items (Done category); show all others in Portfolio
-        return iconInfo.isPortfolio && statusInfo.label !== 'Done';
+        const state = item.fields['System.State'];
+        return iconInfo.isPortfolio && activeFilters.has(state);
     });
 
     if (filteredItems.length === 0) {

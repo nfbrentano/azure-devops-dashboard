@@ -102,9 +102,14 @@
 
           <!-- Progress List Card -->
           <div class="card glass" style="grid-column: 1 / -1;">
-            <div class="card-title">
-              <i class="ph-bold ph-chart-line-up"></i>
-              Features & Portfolio <i class="ph ph-info info-icon" data-tooltip="Distribuição percentual dos estados dos itens selecionados."></i>
+            <div class="card-title" style="justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <i class="ph-bold ph-chart-line-up"></i>
+                Features & Portfolio <i class="ph ph-info info-icon" data-tooltip="Distribuição percentual dos estados dos itens selecionados."></i>
+              </div>
+              <div id="portfolio-status-filters" class="gantt-status-filters no-print">
+                <!-- Populated dynamically -->
+              </div>
             </div>
             <div id="progress-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
                 <!-- Will be populated by JS -->
