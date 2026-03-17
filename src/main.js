@@ -925,13 +925,45 @@ function getGanttDates(period, items = []) {
     return { start, end };
 }
 
+function filterTreeByDate(tree, start, end) {
+    return tree.map(node => {
+        const fields = node.fields;
+        const itemStart = new Date(fields['Microsoft.VSTS.Scheduling.StartDate'] || fields['System.CreatedDate']);
+        const itemEnd = new Date(fields['Microsoft.VSTS.Scheduling.TargetDate'] || fields['Microsoft.VSTS.Common.ClosedDate'] || new Date());
+        
+        // Item overlaps if (itemStart <= end AND itemEnd >= start)
+        const overlaps = (itemStart <= end && itemEnd >= start);
+        
+        // Recursively filter children
+        const filteredChildren = filterTreeByDate(node.children || [], start, end);
+        
+        // Include item if it overlaps OR if it has filtered children
+        if (overlaps || filteredChildren.length > 0) {
+            return {
+                ...node,
+                children: filteredChildren,
+                isMatch: overlaps // Track if the item itself matches or just its children
+            };
+        }
+        return null;
+    }).filter(node => node !== null);
+}
+
 function renderGantt(tree, depth = 0, parentSiblingsActive = []) {
     const periodValue = ganttPeriod.value;
     const { start: viewStart, end: viewEnd } = getGanttDates(periodValue, currentData.items);
     const totalMs = viewEnd - viewStart;
 
+    let displayTree = tree;
     if (depth === 0) {
+        displayTree = filterTreeByDate(tree, viewStart, viewEnd);
+        
         ganttContainer.innerHTML = '';
+        if (displayTree.length === 0) {
+            ganttContainer.innerHTML = '<div style="text-align: center; opacity: 0.5; padding: 2rem;">Nenhuma tarefa encontrada neste período.</div>';
+            return;
+        }
+
         const header = document.createElement('div');
         header.className = 'gantt-header';
         header.innerHTML = `<div class="gantt-label" style="border: none;"></div><div class="gantt-timeline"></div>`;
@@ -962,7 +994,7 @@ function renderGantt(tree, depth = 0, parentSiblingsActive = []) {
         }
     }
 
-    tree.forEach((item, index) => {
+    displayTree.forEach((item, index) => {
         const fields = item.fields;
         const state = fields['System.State'];
         const iconInfo = getItemIcon(fields['System.WorkItemType']);
@@ -1024,7 +1056,7 @@ function renderGantt(tree, depth = 0, parentSiblingsActive = []) {
         ganttContainer.appendChild(row);
 
         if (item.children && item.children.length > 0) {
-            const isLast = (index === tree.length - 1);
+            const isLast = (index === displayTree.length - 1);
             const nextActiveSiblings = [...parentSiblingsActive];
             if (depth > 0) nextActiveSiblings.push(!isLast);
             renderGantt(item.children, depth + 1, nextActiveSiblings);
