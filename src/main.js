@@ -155,6 +155,13 @@ ganttNext.addEventListener('click', () => {
     renderGantt(currentData.tree);
 });
 
+// Gantt Status Filter Listeners
+document.querySelectorAll('.gantt-status-filters input').forEach(cb => {
+    cb.addEventListener('change', () => {
+        if (currentData.tree.length > 0) renderGantt(currentData.tree);
+    });
+});
+
 async function showDashboard(initialQueries = null) {
     switchTab('dashboard');
     
@@ -925,17 +932,26 @@ function getGanttDates(period, items = []) {
     return { start, end };
 }
 
-function filterTreeByDate(tree, start, end) {
+function filterTreeByDate(tree, start, end, activeStatusCategories = null) {
     return tree.map(node => {
         const fields = node.fields;
         const itemStart = new Date(fields['Microsoft.VSTS.Scheduling.StartDate'] || fields['System.CreatedDate']);
         const itemEnd = new Date(fields['Microsoft.VSTS.Scheduling.TargetDate'] || fields['Microsoft.VSTS.Common.ClosedDate'] || new Date());
         
         // Item overlaps if (itemStart <= end AND itemEnd >= start)
-        const overlaps = (itemStart <= end && itemEnd >= start);
+        const dateMatch = (itemStart <= end && itemEnd >= start);
+        
+        // Status match
+        let statusMatch = true;
+        if (activeStatusCategories) {
+            const statusInfo = getStatusInfo(fields['System.State']);
+            statusMatch = activeStatusCategories.includes(statusInfo.label.replace(' ', ''));
+        }
+
+        const overlaps = dateMatch && statusMatch;
         
         // Recursively filter children
-        const filteredChildren = filterTreeByDate(node.children || [], start, end);
+        const filteredChildren = filterTreeByDate(node.children || [], start, end, activeStatusCategories);
         
         // Include item if it overlaps OR if it has filtered children
         if (overlaps || filteredChildren.length > 0) {
@@ -956,7 +972,10 @@ function renderGantt(tree, depth = 0, parentSiblingsActive = []) {
 
     let displayTree = tree;
     if (depth === 0) {
-        displayTree = filterTreeByDate(tree, viewStart, viewEnd);
+        const activeStatusCategories = Array.from(document.querySelectorAll('.gantt-status-filters input:checked'))
+            .map(cb => cb.getAttribute('data-category'));
+            
+        displayTree = filterTreeByDate(tree, viewStart, viewEnd, activeStatusCategories);
         
         ganttContainer.innerHTML = '';
         if (displayTree.length === 0) {
