@@ -1092,70 +1092,110 @@ function renderActivityHeatmap(activityMap) {
     
     container.innerHTML = '';
     
+    // Create inner wrapper for labels + grid
+    const heatmapWrapper = document.createElement('div');
+    heatmapWrapper.style.display = 'flex';
+    heatmapWrapper.style.flexDirection = 'column';
+    heatmapWrapper.style.gap = '0.5rem';
+
+    // Calculation: Last 6 months starting from sunday
     const now = new Date();
     const startDate = new Date();
     startDate.setMonth(now.getMonth() - 6);
-    startDate.setDate(startDate.getDate() - startDate.getDay()); // Align to start of week (Sunday)
+    startDate.setDate(startDate.getDate() - startDate.getDay()); 
+    startDate.setHours(0,0,0,0);
+
+    // Build the data grid of weeks
+    const weeks = [];
+    let currentWeek = [];
+    let iterDate = new Date(startDate);
     
-    // Month labels
+    while (iterDate <= now) {
+        currentWeek.push(new Date(iterDate));
+        if (iterDate.getDay() === 6) {
+            weeks.push(currentWeek);
+            currentWeek = [];
+        }
+        iterDate.setDate(iterDate.getDate() + 1);
+    }
+    if (currentWeek.length > 0) weeks.push(currentWeek);
+
+    // Month Row
     const monthsRow = document.createElement('div');
     monthsRow.className = 'heatmap-labels-months';
-    
-    let currentMonth = -1;
-    const tempDate = new Date(startDate);
-    while (tempDate <= now) {
-        if (tempDate.getMonth() !== currentMonth) {
-            currentMonth = tempDate.getMonth();
+    monthsRow.style.display = 'flex';
+    monthsRow.style.position = 'relative';
+    monthsRow.style.height = '1.2rem';
+    monthsRow.style.marginLeft = '35px'; // Space for day labels
+
+    let lastMonth = -1;
+    weeks.forEach((week, weekIdx) => {
+        const firstDay = week[0];
+        if (firstDay.getMonth() !== lastMonth) {
+            lastMonth = firstDay.getMonth();
             const monthLabel = document.createElement('div');
-            monthLabel.className = 'heatmap-month-label';
-            monthLabel.textContent = tempDate.toLocaleString('default', { month: 'short' });
+            monthLabel.style.position = 'absolute';
+            monthLabel.style.left = `${weekIdx * 15}px`; // 12px cell + 3px gap
+            monthLabel.style.fontSize = '0.75rem';
+            monthLabel.style.color = 'var(--text-muted)';
+            monthLabel.textContent = firstDay.toLocaleString('default', { month: 'short' });
             monthsRow.appendChild(monthLabel);
         }
-        tempDate.setDate(tempDate.getDate() + 7); // Check monthly change every week
-    }
-    container.appendChild(monthsRow);
-    
-    const innerContainer = document.createElement('div');
-    innerContainer.className = 'heatmap-container-inner';
-    
-    // Day labels
-    const daysColumn = document.createElement('div');
-    daysColumn.className = 'heatmap-labels-days';
+    });
+    heatmapWrapper.appendChild(monthsRow);
+
+    const mainRow = document.createElement('div');
+    mainRow.style.display = 'flex';
+    mainRow.style.gap = '0.75rem';
+
+    // Day Labels
+    const daysCol = document.createElement('div');
+    daysCol.className = 'heatmap-labels-days';
     ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].forEach((day, i) => {
         const d = document.createElement('div');
-        d.textContent = i % 2 === 0 ? day : ''; // Only show some labels to keep it clean
-        daysColumn.appendChild(d);
+        d.textContent = i % 2 === 0 ? day : '';
+        d.style.height = '12px';
+        d.style.lineHeight = '12px';
+        daysCol.appendChild(d);
     });
-    innerContainer.appendChild(daysColumn);
-    
-    // Heatmap Grid
+    mainRow.appendChild(daysCol);
+
+    // Grid
     const grid = document.createElement('div');
     grid.className = 'heatmap-grid';
     
-    const iterDate = new Date(startDate);
-    while (iterDate <= now) {
-        const dateStr = iterDate.toISOString().split('T')[0];
-        const count = activityMap[dateStr] || 0;
-        
-        const dayEl = document.createElement('div');
-        dayEl.className = 'heatmap-day';
-        
-        // Determine intensity
-        let level = 0;
-        if (count > 0) level = 1;
-        if (count > 2) level = 2;
-        if (count > 5) level = 3;
-        if (count > 10) level = 4;
-        
-        dayEl.classList.add(`heatmap-l${level}`);
-        dayEl.title = `${iterDate.toLocaleDateString()}: ${count} entregas`;
-        
-        grid.appendChild(dayEl);
-        iterDate.setDate(iterDate.getDate() + 1);
-    }
-    
-    innerContainer.appendChild(grid);
-    container.appendChild(innerContainer);
+    weeks.forEach(week => {
+        week.forEach(day => {
+            const dateStr = day.toISOString().split('T')[0];
+            const count = activityMap[dateStr] || 0;
+            
+            const dayEl = document.createElement('div');
+            dayEl.className = 'heatmap-day';
+            
+            let level = 0;
+            if (count > 0) level = 1;
+            if (count > 2) level = 2;
+            if (count > 5) level = 3;
+            if (count > 10) level = 4;
+            
+            dayEl.classList.add(`heatmap-l${level}`);
+            dayEl.title = `${day.toLocaleDateString()}: ${count} entregas`;
+            grid.appendChild(dayEl);
+        });
+        // Fill partial last week with invisible spacers if needed (though iter stops at 'now')
+        if (week.length < 7) {
+            for (let i = week.length; i < 7; i++) {
+                const spacer = document.createElement('div');
+                spacer.style.width = '12px';
+                spacer.style.height = '12px';
+                grid.appendChild(spacer);
+            }
+        }
+    });
+
+    mainRow.appendChild(grid);
+    heatmapWrapper.appendChild(mainRow);
+    container.appendChild(heatmapWrapper);
 }
 
 function renderPortfolioFilters(items) {
