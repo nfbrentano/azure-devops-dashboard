@@ -262,10 +262,10 @@ h1 {
 /* Heatmap Styles */
 .heatmap-wrapper {
   padding: 2rem;
-  overflow-x: auto;
-  min-height: 250px;
+  overflow-x: hidden;
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
+  width: 100%;
 }
 
 .heatmap-grid {

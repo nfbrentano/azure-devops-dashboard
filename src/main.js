@@ -13,6 +13,8 @@ let charts = {
     assignee: null,
     cfd: null
 };
+let heatmapData = null; // Store for responsive re-renders
+let heatmapResizeObserver = null;
 let ganttOffset = 0; 
 let currentTheme = localStorage.getItem('theme') || 'dark';
 let workItemMetadata = {
@@ -715,13 +717,13 @@ function processAnalytics(items, tree) {
         cfdSeries.push(counts);
     }
 
-    // Activity Heatmap Processing: Count closed items per day for the last 180 days
-    const activityMap = {}; // { 'YYYY-MM-DD': count }
+    // Activity Heatmap Processing: Count closed items per day
+    heatmapData = {}; // { 'YYYY-MM-DD': count }
     items.forEach(item => {
         const closedDate = item.fields['Microsoft.VSTS.Common.ClosedDate'];
         if (closedDate) {
             const dateStr = new Date(closedDate).toISOString().split('T')[0];
-            activityMap[dateStr] = (activityMap[dateStr] || 0) + 1;
+            heatmapData[dateStr] = (heatmapData[dateStr] || 0) + 1;
         }
     });
 
@@ -729,7 +731,7 @@ function processAnalytics(items, tree) {
     renderAgingChart(agingData);
     renderAssigneeChart(assigneeWorkload);
     renderCFDChart(cfdSeries);
-    renderActivityHeatmap(activityMap);
+    renderActivityHeatmap();
     renderPortfolioFilters(items);
     renderProgress(items);
     renderGantt(tree);
@@ -1086,23 +1088,41 @@ function renderCFDChart(cfdSeries) {
     });
 }
 
-function renderActivityHeatmap(activityMap) {
+function renderActivityHeatmap() {
     const container = document.getElementById('heatmap-container');
-    if (!container) return;
+    if (!container || !heatmapData) return;
     
     container.innerHTML = '';
     
-    // Create inner wrapper for labels + grid
+    // Setup ResizeObserver once
+    if (!heatmapResizeObserver) {
+        let timeout;
+        heatmapResizeObserver = new ResizeObserver(() => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => renderActivityHeatmap(), 100);
+        });
+        heatmapResizeObserver.observe(container);
+    }
+
+    const containerWidth = container.clientWidth;
+    const labelSpace = 45; // Approx space for day labels + margin
+    const columnWidth = 21; // 18px cell + 3px gap
+    const numWeeks = Math.floor((containerWidth - labelSpace) / columnWidth);
+
+    if (numWeeks <= 0) return;
+
+    // Create inner wrapper
     const heatmapWrapper = document.createElement('div');
     heatmapWrapper.style.display = 'flex';
     heatmapWrapper.style.flexDirection = 'column';
     heatmapWrapper.style.gap = '0.5rem';
+    heatmapWrapper.style.width = '100%';
 
-    // Calculation: Last 6 months starting from sunday
+    // Calculation: numWeeks starting from sunday
     const now = new Date();
     const startDate = new Date();
-    startDate.setMonth(now.getMonth() - 6);
-    startDate.setDate(startDate.getDate() - startDate.getDay()); 
+    startDate.setDate(now.getDate() - (numWeeks * 7) + 1);
+    startDate.setDate(startDate.getDate() - startDate.getDay()); // Align to Sunday
     startDate.setHours(0,0,0,0);
 
     // Build the data grid of weeks
@@ -1126,7 +1146,7 @@ function renderActivityHeatmap(activityMap) {
     monthsRow.style.display = 'flex';
     monthsRow.style.position = 'relative';
     monthsRow.style.height = '1.5rem';
-    monthsRow.style.marginLeft = '42px'; // Adjust for wider day labels
+    monthsRow.style.marginLeft = '42px';
 
     let lastMonth = -1;
     weeks.forEach((week, weekIdx) => {
@@ -1135,7 +1155,7 @@ function renderActivityHeatmap(activityMap) {
             lastMonth = firstDay.getMonth();
             const monthLabel = document.createElement('div');
             monthLabel.style.position = 'absolute';
-            monthLabel.style.left = `${weekIdx * 21}px`; // 18px cell + 3px gap
+            monthLabel.style.left = `${weekIdx * 21}px`;
             monthLabel.style.fontSize = '0.85rem';
             monthLabel.style.color = 'var(--text-muted)';
             monthLabel.textContent = firstDay.toLocaleString('default', { month: 'short' });
@@ -1168,7 +1188,7 @@ function renderActivityHeatmap(activityMap) {
     weeks.forEach(week => {
         week.forEach(day => {
             const dateStr = day.toISOString().split('T')[0];
-            const count = activityMap[dateStr] || 0;
+            const count = heatmapData[dateStr] || 0;
             
             const dayEl = document.createElement('div');
             dayEl.className = 'heatmap-day';
