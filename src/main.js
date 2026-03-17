@@ -28,6 +28,7 @@ const themeToggle = document.getElementById('theme-toggle');
 const ganttPeriod = document.getElementById('gantt-period');
 const ganttPrev = document.getElementById('gantt-prev');
 const ganttNext = document.getElementById('gantt-next');
+const dataControls = document.getElementById('data-controls');
 
 // Tab Elements
 const tabDashboard = document.getElementById('tab-dashboard');
@@ -57,6 +58,9 @@ function switchTab(tabId) {
     dashboardView.classList.toggle('hidden', tabId !== 'dashboard');
     itemsView.classList.toggle('hidden', tabId !== 'items');
     setupView.classList.toggle('hidden', tabId !== 'setup');
+
+    // Data Controls Visibility
+    dataControls.classList.toggle('hidden', tabId === 'setup');
 }
 
 tabDashboard.addEventListener('click', () => switchTab('dashboard'));

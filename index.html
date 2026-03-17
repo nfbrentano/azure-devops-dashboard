@@ -21,6 +21,12 @@
         </button>
       </nav>
 
+      <!-- Global Data Header (Visible in Dashboard and Items) -->
+      <div id="data-controls" class="hidden no-print" style="padding: 1rem 5% 0 5%; display: flex; justify-content: flex-end; align-items: center; gap: 1rem;">
+        <select id="query-selector" class="glass header-select" title="Select Analytics Query" style="min-width: 250px;"></select>
+        <button id="refresh-btn" class="glass btn-icon-glass" title="Refresh Data" style="width: auto;"><i class="ph-bold ph-arrows-clockwise"></i></button>
+      </div>
+
       <!-- Setup View -->
       <div id="setup-view" class="setup-container glass hidden">
         <i class="ph-fill ph-chart-line-up" style="font-size: 3rem; color: var(--primary); margin-bottom: 2rem; display: block;"></i>
@@ -135,10 +141,6 @@
             <h1>Development Analytics</h1>
             <p id="active-query-name" style="color: var(--text-muted); margin-top: 0.5rem;">Selecione uma consulta para começar</p>
           </div>
-          <div class="header-actions">
-             <select id="query-selector" class="glass header-select" title="Select Analytics Query"></select>
-             <button id="refresh-btn" class="glass btn-icon-glass" title="Refresh Data"><i class="ph-bold ph-arrows-clockwise"></i></button>
-           </div>
         </header>
 
         <div class="dashboard-grid">
