@@ -638,14 +638,23 @@ function processAnalytics(items, tree) {
         const statusInfo = getStatusInfo(state);
         const type = fields['System.WorkItemType']?.toLowerCase();
         
-        // Debug filtering
-        const isAllowedLevel = workItemMetadata.backlogs.some(b => 
+        // 1. Check by backlog metadata (preferred)
+        let isAllowedLevel = workItemMetadata.backlogs.some(b => 
             (b.type === 'requirement' || b.type === 'task') && 
             b.workItemTypes.includes(type)
         );
 
+        // 2. Fallback: If metadata failed or is empty, exclude obvious portfolio types
+        if (workItemMetadata.backlogs.length === 0) {
+            const portfolioTypes = ['epic', 'feature'];
+            isAllowedLevel = !portfolioTypes.includes(type);
+        }
+        // 3. Extra security for common types if level check failed but typical names exist
+        if (!isAllowedLevel && (type === 'user story' || type === 'task' || type === 'bug' || type === 'product backlog item')) {
+            isAllowedLevel = true;
+        }
+
         if (statusInfo.label === 'In Progress' && !isNaN(changedDate)) {
-            console.log(`Checking item ${item.id} (${type}): isAllowedLevel=${isAllowedLevel}`);
             if (isAllowedLevel) {
                 const ageDays = Math.floor((now - changedDate) / (1000 * 60 * 60 * 24));
                 agingData.push({
