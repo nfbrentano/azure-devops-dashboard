@@ -850,6 +850,53 @@ function renderCharts(labels, leadTimes, cycleTimes) {
     });
 }
 
+function renderThroughputChart(throughputData) {
+    if (charts.throughput) charts.throughput.destroy();
+
+    const isLight = currentTheme === 'light';
+    const gridColor = isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)';
+    const textColor = isLight ? '#64748b' : '#94a3b8';
+
+    charts.throughput = new Chart(document.getElementById('throughputChart'), {
+        type: 'bar',
+        data: {
+            labels: throughputData.map(d => d.label),
+            datasets: [{
+                label: 'Itens Entregues',
+                data: throughputData.map(d => d.count),
+                backgroundColor: '#3b82f6',
+                borderRadius: 6,
+                hoverBackgroundColor: '#2563eb'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { 
+                    beginAtZero: true, 
+                    grid: { color: gridColor }, 
+                    ticks: { color: textColor, stepSize: 1 },
+                    title: { display: true, text: 'Quantidade', color: textColor }
+                },
+                x: { 
+                    grid: { display: false }, 
+                    ticks: { color: textColor } 
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        title: (items) => throughputData[items[0].dataIndex].range,
+                        label: (item) => `Entregues: ${item.raw} itens`
+                    }
+                }
+            }
+        }
+    });
+}
+
 function renderAgingChart(agingData) {
     let canvas = document.getElementById('agingChart');
     const container = document.querySelector('#items-view .dashboard-grid .card.glass div[style*="height: 500px"]');
