@@ -85,6 +85,14 @@
 
             <div class="metric-item">
               <div class="metric-header">
+                <i class="ph-bold ph-hourglass"></i>
+                <span>Work Item Aging</span>
+              </div>
+              <p>Mede quantos dias um item em <strong>In Progress</strong> está sem receber atualizações. Ajuda a identificar itens esquecidos ou gargalos operacionais.</p>
+            </div>
+
+            <div class="metric-item">
+              <div class="metric-header">
                 <i class="ph-bold ph-projector-screen-chart"></i>
                 <span>Hierarchical Gantt</span>
               </div>
@@ -143,6 +151,19 @@
             </div>
             <div style="height: 400px;">
               <canvas id="comparisonChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Aging Chart -->
+          <div class="card glass" style="grid-column: span 12;">
+            <div class="card-title">
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <i class="ph-bold ph-hourglass"></i>
+                Work Item Aging (In Progress)
+              </div>
+            </div>
+            <div style="height: 400px;">
+              <canvas id="agingChart"></canvas>
             </div>
           </div>
 

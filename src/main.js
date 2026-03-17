@@ -607,13 +607,19 @@ function processAnalytics(items, tree) {
     const leadTimes = [];
     const cycleTimes = [];
     const labels = [];
+    const agingData = [];
+
+    const now = new Date();
 
     items.forEach(item => {
         const fields = item.fields;
         const createdDate = new Date(fields['System.CreatedDate']);
         const activatedDate = fields['Microsoft.VSTS.Common.ActivatedDate'] ? new Date(fields['Microsoft.VSTS.Common.ActivatedDate']) : null;
         const closedDate = fields['Microsoft.VSTS.Common.ClosedDate'] ? new Date(fields['Microsoft.VSTS.Common.ClosedDate']) : null;
+        const state = fields['System.State'];
+        const changedDate = new Date(fields['System.ChangedDate']);
 
+        // Lead/Cycle Time
         if (closedDate && !isNaN(closedDate)) {
             const leadTime = (closedDate - createdDate) / (1000 * 60 * 60 * 24);
             leadTimes.push(leadTime.toFixed(1));
@@ -621,9 +627,22 @@ function processAnalytics(items, tree) {
             cycleTimes.push(cycleTime.toFixed(1));
             labels.push(`ID ${item.id}`);
         }
+
+        // Aging calculation for In Progress items
+        const statusInfo = getStatusInfo(state);
+        if (statusInfo.label === 'In Progress' && !isNaN(changedDate)) {
+            const ageDays = Math.floor((now - changedDate) / (1000 * 60 * 60 * 24));
+            agingData.push({
+                id: item.id,
+                title: fields['System.Title'],
+                age: ageDays,
+                state: state
+            });
+        }
     });
 
     renderCharts(labels, leadTimes, cycleTimes);
+    renderAgingChart(agingData);
     renderPortfolioFilters(items);
     renderProgress(items);
     renderGantt(tree);
@@ -730,6 +749,68 @@ function renderCharts(labels, leadTimes, cycleTimes) {
                     display: true,
                     position: 'top',
                     labels: { color: textColor, font: { weight: 'bold' } }
+                }
+            }
+        }
+    });
+}
+
+function renderAgingChart(agingData) {
+    if (charts.aging) charts.aging.destroy();
+    
+    // Sort by age descending
+    agingData.sort((a, b) => b.age - a.age);
+    
+    const labels = agingData.map(d => `ID ${d.id} - ${d.title.substring(0, 30)}${d.title.length > 30 ? '...' : ''}`);
+    const values = agingData.map(d => d.age);
+    
+    const isLight = currentTheme === 'light';
+    const gridColor = isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)';
+    const textColor = isLight ? '#64748b' : '#94a3b8';
+
+    charts.aging = new Chart(document.getElementById('agingChart'), {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Days Inactive',
+                data: values,
+                backgroundColor: values.map(v => v > 15 ? '#ef4444' : (v > 7 ? '#f59e0b' : '#3b82f6')),
+                borderRadius: 4
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: { 
+                    beginAtZero: true, 
+                    grid: { color: gridColor }, 
+                    ticks: { color: textColor },
+                    title: { display: true, text: 'Days Since Last Update', color: textColor }
+                },
+                y: { 
+                    grid: { display: false }, 
+                    ticks: { color: textColor, font: { size: 10 } } 
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (context) => {
+                            const item = agingData[context.dataIndex];
+                            return `Days Inactive: ${item.age} | ${item.state}`;
+                        }
+                    }
+                }
+            },
+            onClick: (e, elements) => {
+                if (elements.length > 0) {
+                    const index = elements[0].index;
+                    const item = agingData[index];
+                    window.open(getWorkItemUrl(item.id), '_blank');
                 }
             }
         }
