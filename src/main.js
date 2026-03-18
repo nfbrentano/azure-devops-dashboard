@@ -2,8 +2,26 @@
 import './style.css';
 import Chart from 'chart.js/auto';
 
+// Config Encryption
+function encryptPAT(pat) {
+    if (!pat) return pat;
+    return btoa(pat.split('').map(c => String.fromCharCode(c.charCodeAt(0) ^ 42)).join(''));
+}
+
+function decryptPAT(enc) {
+    if (!enc) return enc;
+    try {
+        return atob(enc).split('').map(c => String.fromCharCode(c.charCodeAt(0) ^ 42)).join('');
+    } catch {
+        return enc;
+    }
+}
+
 // State
 let azureConfig = JSON.parse(localStorage.getItem('azure_config')) || null;
+if (azureConfig && azureConfig.pat) {
+    azureConfig.pat = decryptPAT(azureConfig.pat);
+}
 let currentData = { items: [], tree: [] };
 let charts = {
     comparison: null,
@@ -86,7 +104,8 @@ setupForm.addEventListener('submit', async (e) => {
     const queries = await fetchQueries(config);
     if (queries) {
         azureConfig = config;
-        localStorage.setItem('azure_config', JSON.stringify(config));
+        const safeConfig = { ...config, pat: encryptPAT(config.pat) };
+        localStorage.setItem('azure_config', JSON.stringify(safeConfig));
         showDashboard(queries);
     } else {
         alert('Falha ao conectar. Verifique seu PAT e configurações.');
@@ -255,7 +274,7 @@ async function fetchMetadata(config) {
 
         renderLegends();
     } catch (e) {
-        console.error('Failed to fetch Azure DevOps metadata:', e);
+        console.error('Failed to fetch Azure DevOps metadata:', e.message || 'Error occurred');
     }
 }
 
@@ -414,7 +433,7 @@ async function fetchQueries(config) {
         flatten(data.value);
         return allQueries;
     } catch (e) {
-        console.error('Error fetching queries:', e);
+        console.error('Error fetching queries:', e.message || 'Error occurred');
         return null;
     }
 }
@@ -451,7 +470,7 @@ async function loadQueryData(queryId) {
 
         processAnalytics(items, tree);
     } catch (e) {
-        console.error('Error loading data:', e);
+        console.error('Error loading data:', e.message || 'Error occurred');
     } finally {
         loaders.forEach(l => l.remove());
     }
