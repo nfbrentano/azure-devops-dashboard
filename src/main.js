@@ -45,6 +45,7 @@ const setupView = document.getElementById('setup-view');
 const dashboardView = document.getElementById('dashboard-view');
 const setupForm = document.getElementById('setup-form');
 const querySelector = document.getElementById('query-selector');
+
 const progressList = document.getElementById('progress-list');
 const ganttContainer = document.getElementById('gantt-container');
 const itemsView = document.getElementById('items-view');
@@ -143,17 +144,12 @@ querySelector.addEventListener('change', (e) => {
     loadQueryData(e.target.value);
 });
 
+
+
 refreshBtn.addEventListener('click', async () => {
     if (refreshBtn.classList.contains('spinning')) return;
     
     refreshBtn.classList.add('spinning');
-    const currentQuery = querySelector.value;
-    
-    const queries = await fetchQueries(azureConfig);
-    if (queries) {
-        populateQueries(queries);
-        querySelector.value = currentQuery;
-    }
     
     if (querySelector.value) {
         await loadQueryData(querySelector.value);
@@ -202,6 +198,7 @@ async function showDashboard(initialQueries = null) {
     }
 
     const queries = initialQueries || await fetchQueries(azureConfig);
+    
     populateQueries(queries);
     renderLegends(currentData?.items || []);
 }
@@ -438,6 +435,8 @@ async function fetchQueries(config) {
     }
 }
 
+
+
 async function loadQueryData(queryId) {
     if (!queryId) return;
     
@@ -467,6 +466,13 @@ async function loadQueryData(queryId) {
         const items = await fetchFullDetails(ids);
         const tree = buildTree(items);
         currentData = { items, tree };
+
+        // Update UI Header
+        const activeNameEl = document.getElementById('active-query-name');
+        if (activeNameEl) {
+            const selectedOption = querySelector.options[querySelector.selectedIndex];
+            activeNameEl.textContent = `Consulta: ${selectedOption ? selectedOption.text : 'Carregada'}`;
+        }
 
         processAnalytics(items, tree);
     } catch (e) {
