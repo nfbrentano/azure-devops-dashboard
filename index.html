@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Azure DevOps Metrics</title>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <script type="module" crossorigin src="/azure-devops-dashboard/assets/index-CnHmxXpz.js"></script>
+    <script type="module" crossorigin src="/azure-devops-dashboard/assets/index-Cthj-v7i.js"></script>
     <link rel="stylesheet" crossorigin href="/azure-devops-dashboard/assets/index-CQbYQ7Ni.css">
   </head>
   <body>
@@ -235,32 +235,28 @@
                 <i class="ph-bold ph-projector-screen-chart"></i>
                 Hierarchical Gantt
               </div>
-              <div style="display: flex; gap: 0.5rem; align-items: center;">
-                <button id="gantt-prev" class="glass" style="padding: 0.25rem 0.5rem; border-radius: 0.4rem; cursor: pointer;">
-                  <i class="ph ph-caret-left"></i>
-                </button>
-                <button id="gantt-next" class="glass" style="padding: 0.25rem 0.5rem; border-radius: 0.4rem; cursor: pointer;">
-                  <i class="ph ph-caret-right"></i>
-                </button>
-                <div style="width: 1px; height: 16px; background: var(--border-glass); margin: 0 0.25rem;"></div>
-                <div class="gantt-status-filters" style="display: flex; gap: 0.75rem; align-items: center; margin: 0 0.5rem;">
+              <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                <div class="gantt-status-filters" style="display: flex; gap: 0.75rem; align-items: center;">
                    <label class="filter-item"><input type="checkbox" data-category="Backlog" checked> <span>Backlog</span></label>
                    <label class="filter-item"><input type="checkbox" data-category="InProgress" checked> <span>In Progress</span></label>
                    <label class="filter-item"><input type="checkbox" data-category="Completed" checked> <span>Done</span></label>
                    <label class="filter-item"><input type="checkbox" data-category="Removed"> <span>Removed</span></label>
                 </div>
-                <div style="width: 1px; height: 16px; background: var(--border-glass); margin: 0 0.25rem;"></div>
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <label style="margin: 0; font-size: 0.75rem;">Período:</label>
-                    <select id="gantt-period" class="glass" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">
-                      <option value="total">Tudo (Auto-ajuste)</option>
-                      <option value="year">Ano</option>
-                      <option value="trimester">Trimestre</option>
-                      <option value="bimester">Bimestre</option>
-                      <option value="month" selected>Mês</option>
-                      <option value="week">Semana</option>
-                    </select>
+                <div style="width: 1px; height: 24px; background: var(--border-glass); margin: 0 0.5rem;"></div>
+                <div style="display: flex; align-items: center; gap: 0.25rem; background: var(--glass-bg); border-radius: 0.5rem; border: 1px solid var(--border-glass); padding: 0.25rem;">
+                  <button id="gantt-prev" class="glass" style="padding: 0.4rem; border-radius: 0.4rem; cursor: pointer; border: none; background: transparent;"><i class="ph-bold ph-caret-left"></i></button>
+                  <span id="gantt-current-period-label" style="font-weight: 600; font-size: 0.85rem; min-width: 150px; text-align: center; white-space: nowrap;">Carregando...</span>
+                  <button id="gantt-next" class="glass" style="padding: 0.4rem; border-radius: 0.4rem; cursor: pointer; border: none; background: transparent;"><i class="ph-bold ph-caret-right"></i></button>
                 </div>
+                <div style="width: 1px; height: 24px; background: var(--border-glass); margin: 0 0.5rem;"></div>
+                <select id="gantt-period" class="glass" style="padding: 0.5rem 0.75rem; font-size: 0.85rem; font-weight: 500; border-radius: 0.5rem; cursor: pointer;">
+                  <option value="total">Visão Geral (Auto)</option>
+                  <option value="year">Anual</option>
+                  <option value="trimester">Trimestral</option>
+                  <option value="bimester">Bimestral</option>
+                  <option value="month" selected>Mensal</option>
+                  <option value="week">Semanal</option>
+                </select>
               </div>
             </div>
             <div id="gantt-container" style="overflow-x: auto; padding-bottom: 1rem; position: relative;">
