@@ -1,253 +1,273 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Azure DevOps Metrics</title>
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
-  </head>
-  <body>
-    <div id="app">
-      <!-- Tab Navigation -->
-      <nav class="tabs-nav no-print glass">
-        <div class="tabs-center">
-          <button id="tab-dashboard" class="tab-btn active"><i class="ph-bold ph-layout"></i> Dashboard</button>
-          <button id="tab-items" class="tab-btn"><i class="ph-bold ph-hourglass"></i> Item Details</button>
-          <button id="tab-setup" class="tab-btn"><i class="ph-bold ph-gear"></i> Setup</button>
-        </div>
-        <button id="theme-toggle" class="glass btn-icon-glass theme-toggle-nav" title="Toggle Dark/Light Mode">
-          <i class="ph-bold ph-sun-dim"></i>
-        </button>
-      </nav>
 
-      <!-- Global Data Header (Visible in Dashboard and Items) -->
-      <div id="data-controls" class="hidden no-print" style="padding: 1rem 5% 0 5%; display: flex; justify-content: flex-end; align-items: center; gap: 1rem;">
-        <select id="query-selector" class="glass header-select" title="Select Analytics Query" style="min-width: 250px;"></select>
-        <button id="refresh-btn" class="glass btn-icon-glass" title="Refresh Data" style="width: auto;"><i class="ph-bold ph-arrows-clockwise"></i></button>
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Azure DevOps Metrics</title>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+
+<body>
+  <div id="app">
+    <!-- Tab Navigation -->
+    <nav class="tabs-nav no-print glass">
+      <div class="tabs-center">
+        <button id="tab-dashboard" class="tab-btn active"><i class="ph-bold ph-layout"></i> Dashboard</button>
+        <button id="tab-items" class="tab-btn"><i class="ph-bold ph-hourglass"></i> Item Details</button>
+        <button id="tab-setup" class="tab-btn"><i class="ph-bold ph-gear"></i> Setup</button>
+      </div>
+      <button id="theme-toggle" class="glass btn-icon-glass theme-toggle-nav" title="Toggle Dark/Light Mode">
+        <i class="ph-bold ph-sun-dim"></i>
+      </button>
+    </nav>
+
+    <!-- Global Data Header (Visible in Dashboard and Items) -->
+    <div id="data-controls" class="hidden no-print"
+      style="padding: 1rem 5% 0 5%; display: flex; justify-content: flex-end; align-items: center; gap: 1rem;">
+      <select id="query-selector" class="glass header-select" title="Select Analytics Query"
+        style="min-width: 250px;"></select>
+      <button id="refresh-btn" class="glass btn-icon-glass" title="Refresh Data" style="width: auto;"><i
+          class="ph-bold ph-arrows-clockwise"></i></button>
+    </div>
+
+    <!-- Setup View -->
+    <div id="setup-view" class="setup-container glass hidden">
+      <i class="ph-fill ph-chart-line-up"
+        style="font-size: 3rem; color: var(--primary); margin-bottom: 2rem; display: block;"></i>
+      <h2>Azure DevOps Dashboard</h2>
+      <p style="color: var(--text-muted); margin-bottom: 2rem;">Conecte sua conta para visualizar métricas</p>
+
+      <form id="setup-form">
+        <div class="form-group">
+          <label>Organização</label>
+          <input type="text" id="org" placeholder="ex: minha-empresa" required>
+        </div>
+        <div class="form-group">
+          <label>Projeto</label>
+          <input type="text" id="project" placeholder="ex: meu-projeto" required>
+        </div>
+        <div class="form-group">
+          <label>Personal Access Token (PAT)</label>
+          <input type="password" id="pat" placeholder="Seu Token do Azure" required>
+        </div>
+        <button type="submit">Conectar e Carregar Consultas</button>
+      </form>
+
+      <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-glass);">
+        <button id="logout-btn" class="glass btn-danger-glass"><i class="ph-bold ph-sign-out"></i> Sair da
+          Conta</button>
       </div>
 
-      <!-- Setup View -->
-      <div id="setup-view" class="setup-container glass hidden">
-        <i class="ph-fill ph-chart-line-up" style="font-size: 3rem; color: var(--primary); margin-bottom: 2rem; display: block;"></i>
-        <h2>Azure DevOps Dashboard</h2>
-        <p style="color: var(--text-muted); margin-bottom: 2rem;">Conecte sua conta para visualizar métricas</p>
-        
-        <form id="setup-form">
-          <div class="form-group">
-            <label>Organização</label>
-            <input type="text" id="org" placeholder="ex: minha-empresa" required>
-          </div>
-          <div class="form-group">
-            <label>Projeto</label>
-            <input type="text" id="project" placeholder="ex: meu-projeto" required>
-          </div>
-          <div class="form-group">
-            <label>Personal Access Token (PAT)</label>
-            <input type="password" id="pat" placeholder="Seu Token do Azure" required>
-          </div>
-          <button type="submit">Conectar e Carregar Consultas</button>
-        </form>
+      <!-- Metrics Guide Section -->
+      <div class="metrics-guide">
+        <h3><i class="ph-bold ph-book-open"></i> Guia de Métricas</h3>
 
-        <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-glass);">
-          <button id="logout-btn" class="glass btn-danger-glass"><i class="ph-bold ph-sign-out"></i> Sair da Conta</button>
-        </div>
-
-        <!-- Metrics Guide Section -->
-        <div class="metrics-guide">
-          <h3><i class="ph-bold ph-book-open"></i> Guia de Métricas</h3>
-          
-          <div class="metrics-grid">
-            <div class="metric-item">
-              <div class="metric-header">
-                <i class="ph-bold ph-calendar-check"></i>
-                <span>Lead Time</span>
-              </div>
-              <p>Mede o tempo total desde que um item é <strong>criado</strong> até ser <strong>concluído</strong>. Reflete a experiência completa do cliente ou solicitante.</p>
+        <div class="metrics-grid">
+          <div class="metric-item">
+            <div class="metric-header">
+              <i class="ph-bold ph-calendar-check"></i>
+              <span>Lead Time</span>
             </div>
-
-            <div class="metric-item">
-              <div class="metric-header">
-                <i class="ph-bold ph-timer"></i>
-                <span>Cycle Time</span>
-              </div>
-              <p>Mede o tempo em que o item esteve efetivamente <strong>em desenvolvimento</strong> (desde 'In Progress' até ser concluído). Foca na eficiência da execução.</p>
-            </div>
-
-            <div class="metric-item">
-              <div class="metric-header">
-                <i class="ph-bold ph-stack"></i>
-                <span>Lead vs Cycle Time</span>
-              </div>
-              <p>Compara o Lead Time e Cycle Time médio do período atual com o anterior, permitindo identificar tendências de melhoria ou gargalos no fluxo.</p>
-            </div>
-
-            <div class="metric-item">
-              <div class="metric-header">
-                <i class="ph-bold ph-chart-line-up"></i>
-                <span>Features & Portfolio</span>
-              </div>
-              <p>Visualização macro do progresso de Epics e Features, mostrando como os itens estão distribuídos pelas diversas etapas do fluxo de trabalho.</p>
-            </div>
-
-            <div class="metric-item">
-              <div class="metric-header">
-                <i class="ph-bold ph-hourglass"></i>
-                <span>Work Item Aging</span>
-              </div>
-              <p>Mede quantos dias um item em <strong>In Progress</strong> está sem receber atualizações. Ajuda a identificar itens esquecidos ou gargalos operacionais.</p>
-            </div>
-
-            <div class="metric-item">
-              <div class="metric-header">
-                <i class="ph-bold ph-projector-screen-chart"></i>
-                <span>Hierarchical Gantt</span>
-              </div>
-              <p>Linha do tempo hierárquica que mostra a duração e o encadeamento dos itens, permitindo visualizar o sequenciamento e dependências do projeto.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Item Details View -->
-      <div id="items-view" class="hidden">
-        <header>
-          <div>
-            <h1>Item Details & Aging</h1>
-            <p style="color: var(--text-muted); margin-top: 0.5rem;">Análise detalhada de inatividade e saúde dos itens</p>
-          </div>
-        </header>
-
-        <div class="dashboard-grid">
-          <!-- Aging Chart -->
-          <div class="card glass">
-            <div class="card-title">
-              <div style="display: flex; align-items: center; gap: 0.75rem;">
-                <i class="ph-bold ph-hourglass"></i>
-                Work Item Aging (In Progress)
-              </div>
-            </div>
-            <div style="height: 500px;">
-              <canvas id="agingChart"></canvas>
-            </div>
+            <p>Mede o tempo total desde que um item é <strong>criado</strong> até ser <strong>concluído</strong>.
+              Reflete a experiência completa do cliente ou solicitante.</p>
           </div>
 
-          <!-- Assignee Workload Chart -->
-          <div class="card glass">
-            <div class="card-title">
-              <div style="flex: 1; display: flex; align-items: center; gap: 0.75rem;">
-                <i class="ph-bold ph-users-three"></i>
-                Workload by Assignee
-              </div>
+          <div class="metric-item">
+            <div class="metric-header">
+              <i class="ph-bold ph-timer"></i>
+              <span>Cycle Time</span>
             </div>
-            <div style="height: 500px;">
-              <canvas id="assigneeChart"></canvas>
-            </div>
+            <p>Mede o tempo em que o item esteve efetivamente <strong>em desenvolvimento</strong> (desde 'In Progress'
+              até ser concluído). Foca na eficiência da execução.</p>
           </div>
 
-          <!-- Cumulative Flow Diagram (CFD) -->
-          <div class="card glass" style="grid-column: 1 / -1;">
-            <div class="card-title">
-              <div style="flex: 1; display: flex; align-items: center; gap: 0.75rem;">
-                <i class="ph-bold ph-chart-line-up"></i>
-                Cumulative Flow Diagram (CFD)
-              </div>
+          <div class="metric-item">
+            <div class="metric-header">
+              <i class="ph-bold ph-stack"></i>
+              <span>Lead vs Cycle Time</span>
             </div>
-            <div style="height: 500px;">
-              <canvas id="cfdChart"></canvas>
-            </div>
+            <p>Compara o Lead Time e Cycle Time médio do período atual com o anterior, permitindo identificar tendências
+              de melhoria ou gargalos no fluxo.</p>
           </div>
 
-          <!-- Activity Heatmap -->
-          <div class="card glass" style="grid-column: 1 / -1;">
-            <div class="card-title">
-              <div style="flex: 1; display: flex; align-items: center; gap: 0.75rem;">
-                <i class="ph-bold ph-calendar"></i>
-                Delivery Activity (Last 6 Months)
-              </div>
+          <div class="metric-item">
+            <div class="metric-header">
+              <i class="ph-bold ph-chart-line-up"></i>
+              <span>Features & Portfolio</span>
             </div>
-            <div id="heatmap-container" class="heatmap-wrapper">
-              <!-- Heatmap will be rendered here -->
+            <p>Visualização macro do progresso de Epics e Features, mostrando como os itens estão distribuídos pelas
+              diversas etapas do fluxo de trabalho.</p>
+          </div>
+
+          <div class="metric-item">
+            <div class="metric-header">
+              <i class="ph-bold ph-hourglass"></i>
+              <span>Work Item Aging</span>
             </div>
+            <p>Mede quantos dias um item em <strong>In Progress</strong> está sem receber atualizações. Ajuda a
+              identificar itens esquecidos ou gargalos operacionais.</p>
+          </div>
+
+          <div class="metric-item">
+            <div class="metric-header">
+              <i class="ph-bold ph-projector-screen-chart"></i>
+              <span>Hierarchical Gantt</span>
+            </div>
+            <p>Linha do tempo hierárquica que mostra a duração e o encadeamento dos itens, permitindo visualizar o
+              sequenciamento e dependências do projeto.</p>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Main Dashboard View (Hidden initially) -->
-      <div id="dashboard-view" class="hidden">
-        <header>
-          <div>
-            <h1>Development Analytics</h1>
-            <p id="active-query-name" style="color: var(--text-muted); margin-top: 0.5rem;">Selecione uma consulta para começar</p>
-          </div>
-        </header>
+    <!-- Item Details View -->
+    <div id="items-view" class="hidden">
+      <header>
+        <div>
+          <h1>Item Details & Aging</h1>
+          <p style="color: var(--text-muted); margin-top: 0.5rem;">Análise detalhada de inatividade e saúde dos itens
+          </p>
+        </div>
+      </header>
 
-        <div class="dashboard-grid">
-          <!-- Individual Lead/Cycle charts removed to declutter. Comparison Chart below covers this. -->
-
-          <!-- Comparison Chart Card -->
-          <div class="card glass" style="grid-column: 1 / -1; margin-top: 1rem;">
-            <div class="card-title">
-              <div style="display: flex; align-items: center; gap: 0.75rem;">
-                <i class="ph-bold ph-stack"></i>
-                Lead vs Cycle Time Comparison
-              </div>
-            </div>
-            <div style="height: 400px;">
-              <canvas id="comparisonChart"></canvas>
+      <div class="dashboard-grid">
+        <!-- Aging Chart -->
+        <div class="card glass">
+          <div class="card-title">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <i class="ph-bold ph-hourglass"></i>
+              Work Item Aging (In Progress)
             </div>
           </div>
+          <div style="height: 500px;">
+            <canvas id="agingChart"></canvas>
+          </div>
+        </div>
 
-          <!-- Throughput Chart Card -->
-          <div class="card glass" style="grid-column: 1 / -1; margin-top: 1rem;">
-            <div class="card-title">
-              <div style="display: flex; align-items: center; gap: 0.75rem;">
-                <i class="ph-bold ph-chart-bar"></i>
-                Throughput (Items per Week) — Requirement Backlog
-              </div>
-            </div>
-            <div style="height: 300px;">
-              <canvas id="throughputChart"></canvas>
+        <!-- Assignee Workload Chart -->
+        <div class="card glass">
+          <div class="card-title">
+            <div style="flex: 1; display: flex; align-items: center; gap: 0.75rem;">
+              <i class="ph-bold ph-users-three"></i>
+              Workload by Assignee
             </div>
           </div>
+          <div style="height: 500px;">
+            <canvas id="assigneeChart"></canvas>
+          </div>
+        </div>
 
-          <!-- Progress List Card -->
-          <div class="card glass" style="grid-column: 1 / -1; margin-top: 1rem;">
-            <div class="card-title" style="justify-content: space-between;">
-              <div style="display: flex; align-items: center; gap: 0.75rem;">
-                <i class="ph-bold ph-chart-line-up"></i>
-                Features & Portfolio
-              </div>
-              <div id="portfolio-status-filters" class="gantt-status-filters no-print">
-                <!-- Populated dynamically -->
-              </div>
-            </div>
-            <div id="progress-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
-                <!-- Will be populated by JS -->
+        <!-- Cumulative Flow Diagram (CFD) -->
+        <div class="card glass" style="grid-column: 1 / -1;">
+          <div class="card-title">
+            <div style="flex: 1; display: flex; align-items: center; gap: 0.75rem;">
+              <i class="ph-bold ph-chart-line-up"></i>
+              Cumulative Flow Diagram (CFD)
             </div>
           </div>
+          <div style="height: 500px;">
+            <canvas id="cfdChart"></canvas>
+          </div>
+        </div>
 
-          <div class="card glass" style="grid-column: 1 / -1; margin-top: 1rem;">
-            <div class="card-title" style="justify-content: space-between;">
-              <div style="display: flex; align-items: center; gap: 0.75rem;">
-                <i class="ph-bold ph-projector-screen-chart"></i>
-                Hierarchical Gantt
+        <!-- Activity Heatmap -->
+        <div class="card glass" style="grid-column: 1 / -1;">
+          <div class="card-title">
+            <div style="flex: 1; display: flex; align-items: center; gap: 0.75rem;">
+              <i class="ph-bold ph-calendar"></i>
+              Delivery Activity (Last 6 Months)
+            </div>
+          </div>
+          <div id="heatmap-container" class="heatmap-wrapper">
+            <!-- Heatmap will be rendered here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Dashboard View (Hidden initially) -->
+    <div id="dashboard-view" class="hidden">
+      <header>
+        <div>
+          <h1>Development Analytics</h1>
+          <p id="active-query-name" style="color: var(--text-muted); margin-top: 0.5rem;">Selecione uma consulta para
+            começar</p>
+        </div>
+      </header>
+
+      <div class="dashboard-grid">
+        <!-- Individual Lead/Cycle charts removed to declutter. Comparison Chart below covers this. -->
+
+        <!-- Comparison Chart Card -->
+        <div class="card glass" style="grid-column: 1 / -1; margin-top: 1rem;">
+          <div class="card-title">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <i class="ph-bold ph-stack"></i>
+              Lead vs Cycle Time Comparison
+            </div>
+          </div>
+          <div style="height: 400px;">
+            <canvas id="comparisonChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Throughput Chart Card -->
+        <div class="card glass" style="grid-column: 1 / -1; margin-top: 1rem;">
+          <div class="card-title">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <i class="ph-bold ph-chart-bar"></i>
+              Throughput (Items per Week) — Requirement Backlog
+            </div>
+          </div>
+          <div style="height: 300px;">
+            <canvas id="throughputChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Progress List Card -->
+        <div class="card glass" style="grid-column: 1 / -1; margin-top: 1rem;">
+          <div class="card-title" style="justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <i class="ph-bold ph-chart-line-up"></i>
+              Features & Portfolio
+            </div>
+            <div id="portfolio-status-filters" class="gantt-status-filters no-print">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+          <div id="progress-list"
+            style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
+            <!-- Will be populated by JS -->
+          </div>
+        </div>
+        <div class="card glass" style="grid-column: 1 / -1; margin-top: 1rem;">
+          <div class="card-title" style="justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <i class="ph-bold ph-projector-screen-chart"></i>
+              Hierarchical Gantt
+            </div>
+
+            <!-- Coluna de Controles à Direita -->
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.75rem; flex-grow: 1;">
+              <!-- Linha 1: Filtros de status -->
+              <div class="gantt-status-filters" style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; justify-content: flex-end;">
+                <label class="filter-item"><input type="checkbox" data-category="Backlog" checked> <span>Backlog</span></label>
+                <label class="filter-item"><input type="checkbox" data-category="InProgress" checked> <span>In Progress</span></label>
+                <label class="filter-item"><input type="checkbox" data-category="Completed" checked> <span>Done</span></label>
+                <label class="filter-item"><input type="checkbox" data-category="Removed"> <span>Removed</span></label>
               </div>
-              <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
-                <div class="gantt-status-filters" style="display: flex; gap: 0.75rem; align-items: center;">
-                   <label class="filter-item"><input type="checkbox" data-category="Backlog" checked> <span>Backlog</span></label>
-                   <label class="filter-item"><input type="checkbox" data-category="InProgress" checked> <span>In Progress</span></label>
-                   <label class="filter-item"><input type="checkbox" data-category="Completed" checked> <span>Done</span></label>
-                   <label class="filter-item"><input type="checkbox" data-category="Removed"> <span>Removed</span></label>
-                </div>
-                <div style="width: 1px; height: 24px; background: var(--border-glass); margin: 0 0.5rem;"></div>
+
+              <!-- Linha 2: Navegação de período + Select -->
+              <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; justify-content: flex-end;">
                 <div style="display: flex; align-items: center; gap: 0.5rem; background: var(--glass-bg); border-radius: 0.5rem; border: 1px solid var(--border-glass); padding: 0.25rem; flex-shrink: 0;">
-                  <button id="gantt-prev" class="glass" style="padding: 0.4rem; border-radius: 0.4rem; cursor: pointer; border: none; background: transparent; flex-shrink: 0; display: flex; align-items: center; justify-content: center;"><i class="ph-bold ph-caret-left"></i></button>
-                  <span id="gantt-current-period-label" style="font-weight: 600; font-size: 0.85rem; min-width: 200px; text-align: center; white-space: nowrap; flex-shrink: 0;">Carregando...</span>
-                  <button id="gantt-next" class="glass" style="padding: 0.4rem; border-radius: 0.4rem; cursor: pointer; border: none; background: transparent; flex-shrink: 0; display: flex; align-items: center; justify-content: center;"><i class="ph-bold ph-caret-right"></i></button>
+                  <button id="gantt-prev" class="glass" style="padding: 0.4rem; border-radius: 0.4rem; cursor: pointer; border: none; background: transparent; display: flex; align-items: center; justify-content: center;"><i class="ph-bold ph-caret-left"></i></button>
+                  <span id="gantt-current-period-label" style="font-weight: 600; font-size: 0.85rem; min-width: 200px; text-align: center; white-space: nowrap;">Carregando...</span>
+                  <button id="gantt-next" class="glass" style="padding: 0.4rem; border-radius: 0.4rem; cursor: pointer; border: none; background: transparent; display: flex; align-items: center; justify-content: center;"><i class="ph-bold ph-caret-right"></i></button>
                 </div>
-                <div style="width: 1px; height: 24px; background: var(--border-glass); margin: 0 0.5rem;"></div>
-                <select id="gantt-period" class="glass" style="padding: 0.5rem 0.75rem; font-size: 0.85rem; font-weight: 500; border-radius: 0.5rem; cursor: pointer; width: auto; flex-shrink: 0;">
+                <div style="width: 1px; height: 24px; background: var(--border-glass); margin: 0 0.25rem;"></div>
+                <select id="gantt-period" class="glass" style="padding: 0.5rem 0.75rem; font-size: 0.85rem; font-weight: 500; border-radius: 0.5rem; cursor: pointer; width: auto;">
                   <option value="total">Visão Geral (Auto)</option>
                   <option value="year">Anual</option>
                   <option value="trimester">Trimestral</option>
@@ -257,29 +277,30 @@
                 </select>
               </div>
             </div>
-            <div id="gantt-container" style="overflow-x: auto; padding-bottom: 1rem; position: relative;">
-                <!-- Custom Gantt implementation -->
+          </div>
+
+          <div id="gantt-container" style="overflow-x: auto; padding-bottom: 1rem; position: relative;">
+            <!-- Custom Gantt implementation -->
+          </div>
+
+          <div class="legend" id="gantt-legend" style="flex-direction: column; align-items: flex-start; gap: 1.25rem;">
+            <div class="legend-group">
+              <span class="legend-group-title">Classificação de Itens</span>
+              <div id="type-legend" style="display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center;">
+                <!-- Populated dynamically -->
+              </div>
             </div>
-            
-            <div class="legend" id="gantt-legend" style="flex-direction: column; align-items: flex-start; gap: 1.25rem;">
-                <div class="legend-group">
-                    <span class="legend-group-title">Classificação de Itens</span>
-                    <div id="type-legend" style="display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center;">
-                        <!-- Populated dynamically -->
-                    </div>
-                </div>
-                
-                <div class="legend-group">
-                    <span class="legend-group-title">Status de Entrega (Cor da Barra)</span>
-                    <div id="status-legend" style="display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center;">
-                        <!-- Populated dynamically -->
-                    </div>
-                </div>
+            <div class="legend-group">
+              <span class="legend-group-title">Status de Entrega (Cor da Barra)</span>
+              <div id="status-legend" style="display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center;">
+                <!-- Populated dynamically -->
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-    <script type="module" src="/src/main.js"></script>
-  </body>
+  <script type="module" src="/src/main.js"></script>
+</body>
+
 </html>
