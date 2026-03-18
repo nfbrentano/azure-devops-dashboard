@@ -1457,6 +1457,19 @@ function renderGantt(tree, depth = 0, parentSiblingsActive = []) {
     const { start: viewStart, end: viewEnd } = getGanttDates(periodValue, currentData.items);
     const totalMs = viewEnd - viewStart;
 
+    if (depth === 0) {
+        const periodLabel = document.getElementById('gantt-current-period-label');
+        if (periodLabel) {
+            if (periodValue === 'total') {
+                const minYear = viewStart.getFullYear();
+                const maxYear = viewEnd.getFullYear();
+                periodLabel.textContent = minYear === maxYear ? minYear : `${minYear} - ${maxYear}`;
+            } else {
+                periodLabel.textContent = `${viewStart.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })} - ${viewEnd.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })}`;
+            }
+        }
+    }
+
     let displayTree = tree;
     if (depth === 0) {
         const activeStatusCategories = Array.from(document.querySelectorAll('.gantt-status-filters input:checked'))
