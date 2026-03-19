@@ -7,8 +7,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Azure DevOps Metrics</title>
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
-  <script type="module" crossorigin src="/azure-devops-dashboard/assets/index-BaZ0zLOL.js"></script>
-  <link rel="stylesheet" crossorigin href="/azure-devops-dashboard/assets/index-CQbYQ7Ni.css">
+  <script type="module" crossorigin src="/azure-devops-dashboard/assets/index-BGKEN7R4.js"></script>
+  <link rel="stylesheet" crossorigin href="/azure-devops-dashboard/assets/index-6gUxY_cW.css">
 </head>
 
 <body>
@@ -20,10 +20,10 @@
         <button id="tab-items" class="tab-btn" data-i18n="tab-items"><i class="ph-bold ph-hourglass"></i> Item Details</button>
         <button id="tab-setup" class="tab-btn" data-i18n="tab-setup"><i class="ph-bold ph-gear"></i> Setup</button>
       </div>
-      <button id="lang-toggle" class="glass btn-icon-glass" title="Switch to English" style="margin-right: 0.5rem;">
+      <button id="lang-toggle" class="glass btn-icon-glass" title="Switch to English" data-i18n-aria="aria-lang-toggle" style="margin-right: 0.5rem;">
         <span style="font-weight: bold; font-size: 0.8rem;">EN</span>
       </button>
-      <button id="theme-toggle" class="glass btn-icon-glass theme-toggle-nav" title="Toggle Dark/Light Mode">
+      <button id="theme-toggle" class="glass btn-icon-glass theme-toggle-nav" title="Toggle Dark/Light Mode" data-i18n-aria="aria-theme-toggle">
         <i class="ph-bold ph-sun-dim"></i>
       </button>
     </nav>
@@ -34,7 +34,7 @@
 
       <select id="query-selector" class="glass header-select" title="Select Analytics Query"
         style="min-width: 250px;"></select>
-      <button id="refresh-btn" class="glass btn-icon-glass" title="Refresh Data" style="width: auto;"><i
+      <button id="refresh-btn" class="glass btn-icon-glass" title="Refresh Data" data-i18n-aria="aria-refresh" style="width: auto;"><i
           class="ph-bold ph-arrows-clockwise"></i></button>
     </div>
 
@@ -43,23 +43,40 @@
       <i class="ph-fill ph-chart-line-up"
         style="font-size: 3rem; color: var(--primary); margin-bottom: 2rem; display: block;"></i>
       <h2 data-i18n="setup-title">Azure DevOps Dashboard</h2>
-      <p data-i18n="setup-subtitle" style="color: var(--text-muted); margin-bottom: 2rem;">Conecte sua conta para visualizar métricas</p>
+      <p class="setup-subtitle" data-i18n="setup-subtitle">Insira suas credenciais para visualizar o dashboard</p>
+            
+            <!-- Security Warning -->
+            <div class="security-warning" style="margin-bottom: 1.5rem; padding: 0.75rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 8px; display: flex; gap: 0.75rem; align-items: start;">
+                <i class="ph-fill ph-warning-octagon" style="color: #ef4444; font-size: 1.25rem;"></i>
+                <div style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;">
+                    <strong style="color: #ef4444; display: block; margin-bottom: 0.25rem;">Segurança para GitHub Pages</strong>
+                    Como esta aplicação é estática, o seu PAT será enviado diretamente do navegador para o Azure. Use um PAT de curta duração por segurança.
+                </div>
+            </div>
 
-      <form id="setup-form">
-        <div class="form-group">
-          <label data-i18n="label-org">Organização</label>
-          <input type="text" id="org" placeholder="ex: minha-empresa" required>
-        </div>
-        <div class="form-group">
-          <label data-i18n="label-project">Projeto</label>
-          <input type="text" id="project" placeholder="ex: meu-projeto" required>
-        </div>
-        <div class="form-group">
-          <label data-i18n="label-pat">Personal Access Token (PAT)</label>
-          <input type="password" id="pat" placeholder="Seu Token do Azure" required>
-        </div>
-        <button type="submit" data-i18n="btn-connect">Conectar e Carregar Consultas</button>
-      </form>
+            <form id="setup-form">
+                <div class="form-group">
+                    <label for="org" data-i18n="label-org">Organização</label>
+                    <input type="text" id="org" placeholder="ex: minha-org" required>
+                </div>
+                <div class="form-group">
+                    <label for="project" data-i18n="label-project">Projeto</label>
+                    <input type="text" id="project" placeholder="ex: meu-projeto" required>
+                </div>
+                <div class="form-group">
+                    <label for="pat" data-i18n="label-pat">Personal Access Token (PAT)</label>
+                    <input type="password" id="pat" placeholder="Seu Token do Azure DevOps" required>
+                </div>
+                <div class="form-group">
+                    <label for="security-password" data-i18n="label-security-password">Senha de Segurança</label>
+                    <input type="password" id="security-password" placeholder="Usada para criptografar seus dados" required>
+                </div>
+                <div class="form-group" style="flex-direction: row; align-items: center; gap: 0.5rem; cursor: pointer;">
+                    <input type="checkbox" id="save-credentials" style="width: auto;">
+                    <label for="save-credentials" style="margin-bottom: 0; cursor: pointer; font-size: 0.85rem;" data-i18n="label-save-credentials">Salvar credenciais neste navegador</label>
+                </div>
+                <button type="submit" data-i18n="btn-setup">Acessar Dashboard</button>
+            </form>
 
       <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-glass);">
         <button id="logout-btn" class="glass btn-danger-glass" data-i18n="btn-logout"><i class="ph-bold ph-sign-out"></i> Sair da
@@ -130,8 +147,8 @@
     <div id="items-view" class="hidden">
       <header>
         <div>
-          <h1>Item Details & Aging</h1>
-          <p style="color: var(--text-muted); margin-top: 0.5rem;">Análise detalhada de inatividade e saúde dos itens
+          <h1 data-i18n="items-view-title">Item Details & Aging</h1>
+          <p style="color: var(--text-muted); margin-top: 0.5rem;" data-i18n="items-view-subtitle">Análise detalhada de inatividade e saúde dos itens
           </p>
         </div>
       </header>
@@ -266,9 +283,9 @@
               <!-- Linha 2: Navegação de período + Select -->
               <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; justify-content: flex-end;">
                 <div style="display: flex; align-items: center; gap: 0.5rem; background: var(--glass-bg); border-radius: 0.5rem; border: 1px solid var(--border-glass); padding: 0.25rem; flex-shrink: 0;">
-                  <button id="gantt-prev" class="glass" style="padding: 0.4rem; border-radius: 0.4rem; cursor: pointer; border: none; background: transparent; display: flex; align-items: center; justify-content: center;"><i class="ph-bold ph-caret-left"></i></button>
+                  <button id="gantt-prev" class="glass" data-i18n-aria="aria-gantt-prev" style="padding: 0.4rem; border-radius: 0.4rem; cursor: pointer; border: none; background: transparent; display: flex; align-items: center; justify-content: center;"><i class="ph-bold ph-caret-left"></i></button>
                   <span id="gantt-current-period-label" style="font-weight: 600; font-size: 0.85rem; min-width: 200px; text-align: center; white-space: nowrap;">Carregando...</span>
-                  <button id="gantt-next" class="glass" style="padding: 0.4rem; border-radius: 0.4rem; cursor: pointer; border: none; background: transparent; display: flex; align-items: center; justify-content: center;"><i class="ph-bold ph-caret-right"></i></button>
+                   <button id="gantt-next" class="glass" data-i18n-aria="aria-gantt-next" style="padding: 0.4rem; border-radius: 0.4rem; cursor: pointer; border: none; background: transparent; display: flex; align-items: center; justify-content: center;"><i class="ph-bold ph-caret-right"></i></button>
                 </div>
                 <div style="width: 1px; height: 24px; background: var(--border-glass); margin: 0 0.25rem;"></div>
                 <select id="gantt-period" class="glass" style="padding: 0.5rem 0.75rem; font-size: 0.85rem; font-weight: 500; border-radius: 0.5rem; cursor: pointer; width: auto;">
@@ -304,6 +321,26 @@
         </div>
       </div>
     </div>
+    <!-- Unlock Modal -->
+    <div id="unlock-view" class="view hidden">
+        <div class="setup-card">
+            <div class="logo">
+                <i class="ph-fill ph-lock-key" style="font-size: 3rem; color: var(--primary); margin-bottom: 2rem; display: block;"></i>
+            </div>
+            <h2 data-i18n="unlock-title">Dashboard Bloqueado</h2>
+            <p class="setup-subtitle" data-i18n="unlock-subtitle">Insira sua senha de segurança para desbloquear</p>
+            <form id="unlock-form">
+                <div class="form-group">
+                    <input type="password" id="unlock-password" placeholder="Sua senha de segurança" required>
+                </div>
+                <button type="submit" data-i18n="btn-unlock">Desbloquear</button>
+                <div style="text-align: center; margin-top: 1rem;">
+                    <button type="button" id="forgot-password-btn" class="glass" style="font-size: 0.85rem; color: var(--primary); border: none; background: none; cursor: pointer;" data-i18n="link-logout">Limpar dados e sair</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 </body>
 
 </html>
