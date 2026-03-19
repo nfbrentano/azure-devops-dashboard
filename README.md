@@ -1,46 +1,48 @@
-# Azure DevOps Dashboard
+# 📊 Azure DevOps Analytics Dashboard
 
-A powerful visualization tool for Azure DevOps work items, featuring custom Gantt charts and real-time project tracking. This branch is hosted on **GitHub Pages** for seamless embedding in Google Sites.
+A premium, high-performance visualization tool for Azure DevOps, designed for clarity, security, and deep project insights. Built as a static application, it is perfectly suited for hosting on **GitHub Pages** and embedding in Google Sites.
 
-## How to Acess
+## 🚀 Key Features
 
-To embed this dashboard in your Google Site:
+- **Dynamic Gantt Chart**: interactive timeline for Epics, Features, and Stories.
+- **Activity Heatmap**: Visualize work frequency and team velocity over time.
+- **Performance Analytics**: Real-time Lead Time and Cycle Time charts for process optimization.
+- **Deep Backlog Analysis**: Detailed item view with "Aging" tracking and status hierarchy mapping.
+- **Multi-language Support**: Full Internationalization (i18n) for English and Portuguese (PT-BR).
+- **Responsive Design**: Optimized for everything from large monitors to mobile viewports.
 
-1.  **Deployment**: The dashboard is hosted on GitHub Pages.
-2.  **Paste the following URL:** [azure-devops-dashboard](https://nfbrentano.github.io/azure-devops-dashboard/)
+## 🔒 Security First (Static Hosting Optimization)
 
+This dashboard uses a unique **client-side security model** designed for static environments like GitHub Pages:
 
-## Setup Instructions
+1.  **AES-GCM Encryption**: Your Personal Access Token (PAT) is encrypted with 256-bit AES-GCM using the browser's Web Crypto API.
+2.  **User-Provided Password**: Encryption keys are derived from a password *you* provide. No plain-text tokens are ever stored.
+3.  **Encrypted Persistence**: Choose to save your credentials in `localStorage` (secured by your password) or keep them in-memory for the session.
+4.  **Zero-Backend**: All processing happens in your browser. Your data never touches a third-party server.
 
-To use this dashboard, you will need a Personal Access Token (PAT) and your organization/project identifiers.
+## 🛠️ Setup Instructions
 
-### 1. Generating a Personal Access Token (PAT)
+To use this dashboard, you need a Personal Access Token (PAT) from Azure DevOps.
 
-1.  Log in to your [Azure DevOps](https://dev.azure.com/) account.
-2.  In the top right corner, click on **User Settings** (the icon next to your profile picture) and select **Personal Access Tokens**.
-3.  Click **+ New Token**.
-4.  Enter a name for the token (e.g., "Azure Dashboard").
-5.  Select the **Organization** where you want to use the token.
-6.  Set the **Expiration** date (e.g., 90 days).
-7.  Under **Scopes**, select **Custom defined**.
-8.  Find **Work Items** and select **Read**.
-9.  Click **Create**.
-10. **CRITICAL**: Copy the token and save it somewhere safe. You will not be able to see it again.
+### 1. Generating your PAT
+1.  Log in to [Azure DevOps](https://dev.azure.com/).
+2.  Go to **User Settings** (top right) > **Personal Access Tokens**.
+3.  Click **+ New Token** and name it "Analytics Dashboard".
+4.  Set **Scopes** to `Custom defined` and grant **Work Items: Read**.
+5.  **Copy the token**: You will need it for the initial setup.
 
-### 2. Identifying Organization and Project Information
+### 2. Connection Details
+- **Organization**: Found in your URL (`dev.azure.com/{organization}`).
+- **Project**: Found in your URL after the organization name.
 
-You can find these details directly from your browser's address bar when viewing your project:
+## 💻 Tech Stack
 
-**Format 1:** `https://dev.azure.com/{organization}/{project}`
-- **Organization**: The value after `dev.azure.com/`.
-- **Project**: The value after the organization name.
+- **Core**: Vanilla JavaScript (ES6+), HTML5, CSS3.
+- **Build**: Vite (Fast HMR & Optimized Production Bundles).
+- **Icons**: Phosphor Icons.
+- **Charts**: Custom SVG/Canvas implementation for maximum performance.
+- **Security**: Web Crypto API (SubtleCrypto).
 
-**Format 2 (Legacy):** `https://{organization}.visualstudio.com/{project}`
-- **Organization**: The subdomain before `.visualstudio.com`.
-- **Project**: The value after the domain.
+## 📄 License
 
-## Features
-
-- **Gantt Chart**: Visual representation of work item schedules.
-- **Backlog View**: Detailed list of work items with status indicators.
-- **Hierarchy Mapping**: Visualize relationships between Epics, Features, and Stories.
+This project is licensed under the **MIT License**. See the `LICENSE` file for details.
