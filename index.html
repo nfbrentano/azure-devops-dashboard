@@ -18,10 +18,10 @@
         <button id="tab-items" class="tab-btn" data-i18n="tab-items"><i class="ph-bold ph-hourglass"></i> Item Details</button>
         <button id="tab-setup" class="tab-btn" data-i18n="tab-setup"><i class="ph-bold ph-gear"></i> Setup</button>
       </div>
-      <button id="lang-toggle" class="glass btn-icon-glass" title="Switch to English" style="margin-right: 0.5rem;">
+      <button id="lang-toggle" class="glass btn-icon-glass" title="Switch to English" data-i18n-aria="aria-lang-toggle" style="margin-right: 0.5rem;">
         <span style="font-weight: bold; font-size: 0.8rem;">EN</span>
       </button>
-      <button id="theme-toggle" class="glass btn-icon-glass theme-toggle-nav" title="Toggle Dark/Light Mode">
+      <button id="theme-toggle" class="glass btn-icon-glass theme-toggle-nav" title="Toggle Dark/Light Mode" data-i18n-aria="aria-theme-toggle">
         <i class="ph-bold ph-sun-dim"></i>
       </button>
     </nav>
@@ -32,7 +32,7 @@
 
       <select id="query-selector" class="glass header-select" title="Select Analytics Query"
         style="min-width: 250px;"></select>
-      <button id="refresh-btn" class="glass btn-icon-glass" title="Refresh Data" style="width: auto;"><i
+      <button id="refresh-btn" class="glass btn-icon-glass" title="Refresh Data" data-i18n-aria="aria-refresh" style="width: auto;"><i
           class="ph-bold ph-arrows-clockwise"></i></button>
     </div>
 
@@ -264,9 +264,9 @@
               <!-- Linha 2: Navegação de período + Select -->
               <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; justify-content: flex-end;">
                 <div style="display: flex; align-items: center; gap: 0.5rem; background: var(--glass-bg); border-radius: 0.5rem; border: 1px solid var(--border-glass); padding: 0.25rem; flex-shrink: 0;">
-                  <button id="gantt-prev" class="glass" style="padding: 0.4rem; border-radius: 0.4rem; cursor: pointer; border: none; background: transparent; display: flex; align-items: center; justify-content: center;"><i class="ph-bold ph-caret-left"></i></button>
+                  <button id="gantt-prev" class="glass" data-i18n-aria="aria-gantt-prev" style="padding: 0.4rem; border-radius: 0.4rem; cursor: pointer; border: none; background: transparent; display: flex; align-items: center; justify-content: center;"><i class="ph-bold ph-caret-left"></i></button>
                   <span id="gantt-current-period-label" style="font-weight: 600; font-size: 0.85rem; min-width: 200px; text-align: center; white-space: nowrap;">Carregando...</span>
-                  <button id="gantt-next" class="glass" style="padding: 0.4rem; border-radius: 0.4rem; cursor: pointer; border: none; background: transparent; display: flex; align-items: center; justify-content: center;"><i class="ph-bold ph-caret-right"></i></button>
+                   <button id="gantt-next" class="glass" data-i18n-aria="aria-gantt-next" style="padding: 0.4rem; border-radius: 0.4rem; cursor: pointer; border: none; background: transparent; display: flex; align-items: center; justify-content: center;"><i class="ph-bold ph-caret-right"></i></button>
                 </div>
                 <div style="width: 1px; height: 24px; background: var(--border-glass); margin: 0 0.25rem;"></div>
                 <select id="gantt-period" class="glass" style="padding: 0.5rem 0.75rem; font-size: 0.85rem; font-weight: 500; border-radius: 0.5rem; cursor: pointer; width: auto;">

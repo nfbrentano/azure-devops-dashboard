@@ -142,6 +142,14 @@ function applyTranslations() {
         }
     });
 
+    // Apply translations to ARIA labels
+    document.querySelectorAll('[data-i18n-aria]').forEach(el => {
+        const key = el.getAttribute('data-i18n-aria');
+        if (lang[key]) {
+            el.setAttribute('aria-label', lang[key]);
+        }
+    });
+
     langToggle.title = lang['lang-toggle-title'];
     langToggle.querySelector('span').textContent = state.currentLanguage === 'pt-br' ? 'EN' : 'PT';
     themeToggle.title = lang['theme-toggle-title'];
