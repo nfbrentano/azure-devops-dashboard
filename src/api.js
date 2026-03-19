@@ -3,11 +3,13 @@
  */
 import { showToast } from './utils.js';
 
+const getAuthHeader = (pat) => `Basic ${btoa(':' + pat)}`;
+
 export async function fetchQueries(config) {
     const url = `https://dev.azure.com/${config.org}/${config.project}/_apis/wit/queries?$depth=2&api-version=6.0`;
     try {
         const response = await fetch(url, {
-            headers: { 'Authorization': `Basic ${btoa(':' + config.pat)}` },
+            headers: { 'Authorization': getAuthHeader(config.pat) },
             cache: 'no-store'
         });
         if (!response.ok) return null;
@@ -35,12 +37,12 @@ export async function fetchQueries(config) {
 export async function fetchFullDetails(config, ids) {
     const chunkSize = 200;
     let allItems = [];
-    const auth = btoa(':' + config.pat);
+    const auth = getAuthHeader(config.pat);
     for (let i = 0; i < ids.length; i += chunkSize) {
         const chunk = ids.slice(i, i + chunkSize);
         const url = `https://dev.azure.com/${config.org}/${config.project}/_apis/wit/workitems?ids=${chunk.join(',')}&$expand=all&api-version=6.0`;
         const response = await fetch(url, {
-            headers: { 'Authorization': `Basic ${auth}` },
+            headers: { 'Authorization': auth },
             cache: 'no-store'
         });
         const data = await response.json();
@@ -51,11 +53,11 @@ export async function fetchFullDetails(config, ids) {
 
 export async function fetchMetadata(config, workItemMetadata, renderLegends) {
     try {
-        const auth = btoa(':' + config.pat);
+        const auth = getAuthHeader(config.pat);
         
         // 1. Fetch Work Item Types (Colors and names)
         const typesUrl = `https://dev.azure.com/${config.org}/${config.project}/_apis/wit/workitemtypes?api-version=6.0`;
-        const typesResp = await fetch(typesUrl, { headers: { 'Authorization': `Basic ${auth}` }, cache: 'no-store' });
+        const typesResp = await fetch(typesUrl, { headers: { 'Authorization': auth }, cache: 'no-store' });
         const typesData = await typesResp.json();
         
         const typePromises = typesData.value.map(async (type) => {
@@ -79,7 +81,7 @@ export async function fetchMetadata(config, workItemMetadata, renderLegends) {
         for (const type of typesData.value) {
             try {
                 const statesUrl = `https://dev.azure.com/${config.org}/${config.project}/_apis/wit/workitemtypes/${type.name}/states?api-version=6.0`;
-                const statesResp = await fetch(statesUrl, { headers: { 'Authorization': `Basic ${auth}` }, cache: 'no-store' });
+                const statesResp = await fetch(statesUrl, { headers: { 'Authorization': auth }, cache: 'no-store' });
                 if (!statesResp.ok) continue;
                 const statesData = await statesResp.json();
                 
@@ -98,13 +100,13 @@ export async function fetchMetadata(config, workItemMetadata, renderLegends) {
 
         // 3. Fetch Backlog Configurations
         const teamsUrl = `https://dev.azure.com/${config.org}/${config.project}/_apis/teams?api-version=6.0-preview.3`;
-        const teamsResp = await fetch(teamsUrl, { headers: { 'Authorization': `Basic ${auth}` }, cache: 'no-store' });
+        const teamsResp = await fetch(teamsUrl, { headers: { 'Authorization': auth }, cache: 'no-store' });
         const teamsData = await teamsResp.json();
         
         if (teamsData.value && teamsData.value.length > 0) {
             const teamId = teamsData.value[0].id;
             const backlogsUrl = `https://dev.azure.com/${config.org}/${config.project}/${teamId}/_apis/work/backlogs?api-version=6.0-preview.1`;
-            const backlogsResp = await fetch(backlogsUrl, { headers: { 'Authorization': `Basic ${auth}` }, cache: 'no-store' });
+            const backlogsResp = await fetch(backlogsUrl, { headers: { 'Authorization': auth }, cache: 'no-store' });
             const backlogsData = await backlogsResp.json();
             
             workItemMetadata.backlogs = backlogsData.value.map(b => ({
@@ -122,7 +124,7 @@ export async function fetchMetadata(config, workItemMetadata, renderLegends) {
 
 export async function getBase64Image(url, auth) {
     try {
-        const resp = await fetch(url, { headers: { 'Authorization': `Basic ${auth}` } });
+        const resp = await fetch(url, { headers: { 'Authorization': auth } });
         if (!resp.ok) return null;
         const blob = await resp.blob();
         return new Promise((resolve) => {
