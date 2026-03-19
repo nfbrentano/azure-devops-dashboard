@@ -22,9 +22,9 @@ import {
 import { renderGantt } from './gantt.js';
 import { renderActivityHeatmap } from './heatmap.js';
 
-// Initialize state-dependent values
-if (state.azureConfig && state.azureConfig.pat) {
-    state.azureConfig.pat = decryptPAT(state.azureConfig.pat);
+// Handle initial state and automatic data loading if config exists
+if (state.azureConfig.org && state.azureConfig.project && state.azureConfig.pat) {
+    state.azureConfig.pat = await decryptPAT(state.azureConfig.pat);
 }
 
 // DOM Elements
@@ -87,8 +87,10 @@ setupForm.addEventListener('submit', async (e) => {
     const queries = await fetchQueries(config);
     if (queries) {
         state.azureConfig = config;
-        const safeConfig = { ...config, pat: encryptPAT(config.pat) };
-        localStorage.setItem('azure_config', JSON.stringify(safeConfig));
+        if (config.pat) {
+            const safeConfig = { ...config, pat: await encryptPAT(config.pat) };
+            localStorage.setItem('azure_config', JSON.stringify(safeConfig));
+        }
         showDashboard(queries);
     } else {
         showToast(translations[state.currentLanguage]['msg-auth-failed'], 'error');

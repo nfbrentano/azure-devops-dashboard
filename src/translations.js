@@ -64,7 +64,9 @@ export const translations = {
         'aria-lang-toggle': 'Switch language to Portuguese',
         'aria-refresh': 'Refresh data from Azure DevOps',
         'aria-gantt-prev': 'Previous period',
-        'aria-gantt-next': 'Next period'
+        'aria-gantt-next': 'Next period',
+        'items-view-title': 'Item Details & Aging',
+        'items-view-subtitle': 'Detailed analysis of item inactivity and health'
     },
     'pt-br': {
         'tab-dashboard': 'Painel',
@@ -127,6 +129,8 @@ export const translations = {
         'aria-lang-toggle': 'Alterar idioma para Inglês',
         'aria-refresh': 'Atualizar dados do Azure DevOps',
         'aria-gantt-prev': 'Período anterior',
-        'aria-gantt-next': 'Próximo período'
+        'aria-gantt-next': 'Próximo período',
+        'items-view-title': 'Detalhes de Itens e Envelhecimento',
+        'items-view-subtitle': 'Análise detalhada de inatividade e saúde dos itens'
     }
 };

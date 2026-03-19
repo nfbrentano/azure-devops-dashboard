@@ -2,15 +2,85 @@
  * Utility functions for Azure DevOps Dashboard
  */
 
-export function encryptPAT(pat) {
-    if (!pat) return pat;
-    return btoa(pat.split('').map(c => String.fromCharCode(c.charCodeAt(0) ^ 42)).join(''));
+// Encryption constants
+const ENCRYPTION_SECRET = 'azure-devops-dashboard-secret-2026';
+const SALT = new Uint8Array([71, 101, 109, 105, 110, 105, 32, 65, 105, 32, 82, 111, 99, 107, 115, 33]); // 'Gemini Ai Rocks!'
+
+async function getEncryptionKey() {
+    const encoder = new TextEncoder();
+    const baseKey = await crypto.subtle.importKey(
+        'raw', 
+        encoder.encode(ENCRYPTION_SECRET), 
+        'PBKDF2', 
+        false, 
+        ['deriveKey']
+    );
+    return crypto.subtle.deriveKey(
+        {
+            name: 'PBKDF2',
+            salt: SALT,
+            iterations: 100000,
+            hash: 'SHA-256'
+        },
+        baseKey,
+        { name: 'AES-GCM', length: 256 },
+        false,
+        ['encrypt', 'decrypt']
+    );
 }
 
-export function decryptPAT(enc) {
-    if (!enc) return enc;
+export async function encryptPAT(pat) {
+    if (!pat) return pat;
     try {
-        return atob(enc).split('').map(c => String.fromCharCode(c.charCodeAt(0) ^ 42)).join('');
+        const key = await getEncryptionKey();
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        const encoder = new TextEncoder();
+        const encrypted = await crypto.subtle.encrypt(
+            { name: 'AES-GCM', iv },
+            key,
+            encoder.encode(pat)
+        );
+        
+        const ivBase64 = btoa(String.fromCharCode(...iv));
+        const encryptedBase64 = btoa(String.fromCharCode(...new Uint8Array(encrypted)));
+        return `${ivBase64}:${encryptedBase64}`;
+    } catch (e) {
+        console.error('Encryption failed:', e);
+        return pat;
+    }
+}
+
+export async function decryptPAT(enc) {
+    if (!enc) return enc;
+    
+    // Check if it's the new format (base64:base64)
+    if (enc.includes(':')) {
+        try {
+            const [ivBase64, encryptedBase64] = enc.split(':');
+            const iv = new Uint8Array(atob(ivBase64).split('').map(c => c.charCodeAt(0)));
+            const encrypted = new Uint8Array(atob(encryptedBase64).split('').map(c => c.charCodeAt(0)));
+            const key = await getEncryptionKey();
+            
+            const decrypted = await crypto.subtle.decrypt(
+                { name: 'AES-GCM', iv },
+                key,
+                encrypted
+            );
+            return new TextDecoder().decode(decrypted);
+        } catch (e) {
+            console.error('Decryption failed, falling back to original:', e);
+            return enc;
+        }
+    }
+
+    // Backward compatibility with XOR(42) + base64
+    try {
+        const xorDecoded = atob(enc).split('').map(c => String.fromCharCode(c.charCodeAt(0) ^ 42)).join('');
+        // If it looks like a PAT (mostly alphanumeric), it's probably correct
+        if (/^[a-z0-9]+$/i.test(xorDecoded)) {
+            return xorDecoded;
+        }
+        return enc;
     } catch {
         return enc;
     }
@@ -61,7 +131,7 @@ export function getItemIcon(type, workItemMetadata) {
         color: meta?.color || '#64748b',
         iconData: meta?.iconData || null
     };
-
+ 
     if (t === 'epic') return { ...base, icon: 'ph-fill ph-crown', iconClass: 'icon-epic' };
     if (t === 'feature') return { ...base, icon: 'ph-fill ph-trophy', iconClass: 'icon-feature' };
     if (t.includes('requirement') || t === 'user story' || t === 'product backlog item' || t === 'issue') {
