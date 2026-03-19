@@ -1596,7 +1596,10 @@ function renderGantt(tree, depth = 0, parentSiblingsActive = []) {
         const state = fields['System.State'];
         const iconInfo = getItemIcon(fields['System.WorkItemType']);
         const statusInfo = getStatusInfo(state);
-
+ 
+        const hasMissingDates = !fields['Microsoft.VSTS.Scheduling.StartDate'] || !fields['Microsoft.VSTS.Scheduling.TargetDate'];
+        const missingDatesWarning = hasMissingDates ? `<i class="ph ph-warning-circle missing-dates-warning" title="${translations[currentLanguage]['gantt-missing-dates-tooltip']}"></i>` : '';
+ 
         const itemStart = new Date(fields['Microsoft.VSTS.Scheduling.StartDate'] || fields['System.CreatedDate']);
         const itemEnd = new Date(fields['Microsoft.VSTS.Scheduling.TargetDate'] || fields['Microsoft.VSTS.Common.ClosedDate'] || new Date());
 
@@ -1634,6 +1637,7 @@ function renderGantt(tree, depth = 0, parentSiblingsActive = []) {
                 ${treeLinesHtml}
                 <a href="${getWorkItemUrl(item.id)}" target="_blank" class="item-link" style="flex: 1; overflow: hidden; text-overflow: ellipsis;">
                     ${iconHtml}
+                    ${missingDatesWarning}
                     <span style="overflow: hidden; text-overflow: ellipsis;">${fields['System.Title']}</span>
                 </a>
                 <div class="status-indicator">

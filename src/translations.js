@@ -87,7 +87,8 @@ export const translations = {
         'label-number-of-items': 'Number of Items',
         'label-days-inactive': 'Days Inactive',
         'label-days-since-update': 'Days Since Last Update',
-        'label-items': 'Items'
+        'label-items': 'Items',
+        'gantt-missing-dates-tooltip': 'Missing Start or Target Date. Showing estimates.'
     },
     'pt-br': {
         // Nav Tabs
@@ -177,6 +178,7 @@ export const translations = {
         'label-number-of-items': 'Número de Itens',
         'label-days-inactive': 'Dias Inativo',
         'label-days-since-update': 'Dias desde a última atualização',
-        'label-items': 'Itens'
+        'label-items': 'Itens',
+        'gantt-missing-dates-tooltip': 'Data de Início ou Alvo ausente. Exibindo estimativas.'
     }
 };

@@ -713,6 +713,15 @@ button:active { transform: scale(0.98); }
 .icon-task { color: var(--color-task); }
 .icon-bug { color: var(--color-bug); }
 
+.missing-dates-warning {
+    color: #f59e0b; /* Amber 500 */
+    font-size: 1.1rem;
+    margin-right: 0.25rem;
+    cursor: help;
+    flex-shrink: 0;
+    filter: drop-shadow(0 0 2px rgba(245, 158, 11, 0.3));
+}
+ 
 .item-link {
     text-decoration: none;
     color: inherit;
