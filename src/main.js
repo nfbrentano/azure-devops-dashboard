@@ -9,10 +9,10 @@ import { translations } from './translations.js';
 import { state } from './state.js';
 import { 
     showLoading, showToast, encryptPAT, decryptPAT,
-    getItemIcon, getStatusInfo
+    getItemIcon, getStatusInfo, updateLoadingProgress
 } from './utils.js';
 import { 
-    fetchQueries, fetchFullDetails, fetchMetadata, buildTree 
+    fetchQueries, fetchFullDetails, fetchMetadata, buildTree, fetchWithRetry, getAuthHeader 
 } from './api.js';
 import { 
     renderCharts, renderThroughputChart, renderAgingChart, 
@@ -281,14 +281,14 @@ function populateQueries(queries) {
 
 async function loadQueryData(queryId) {
     if (!queryId) return;
-    const itemCards = document.querySelectorAll('.card.glass');
-    const loaders = Array.from(itemCards).map(card => showLoading(card));
+    
+    showLoading(true, 0);
 
     try {
         const url = `https://dev.azure.com/${state.azureConfig.org}/${state.azureConfig.project}/_apis/wit/wiql/${queryId}?api-version=6.0`;
-        const response = await fetch(url, {
-            headers: { 'Authorization': `Basic ${btoa(':' + state.azureConfig.pat)}` },
-            cache: 'no-store'
+        const response = await fetchWithRetry(url, {
+            headers: { 'Authorization': getAuthHeader(state.azureConfig.pat) },
+            cache: 'no-cache'
         });
         const result = await response.json();
         
@@ -301,10 +301,13 @@ async function loadQueryData(queryId) {
         
         if (ids.length === 0) {
             showToast(translations[state.currentLanguage]['msg-no-items'], 'error');
+            showLoading(false);
             return;
         }
 
-        const items = await fetchFullDetails(state.azureConfig, ids);
+        const items = await fetchFullDetails(state.azureConfig, ids, (p) => {
+            updateLoadingProgress(p);
+        });
         const tree = buildTree(items, state.workItemMetadata);
         state.currentData = { items, tree };
 
@@ -318,7 +321,7 @@ async function loadQueryData(queryId) {
     } catch (e) {
         showToast(e.message || 'Error loading data', 'error');
     } finally {
-        loaders.forEach(l => l.remove());
+        showLoading(false);
     }
 }
 

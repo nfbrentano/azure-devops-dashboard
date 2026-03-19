@@ -3,9 +3,9 @@
  */
 import { showToast } from './utils.js';
 
-const getAuthHeader = (pat) => `Basic ${btoa(':' + pat)}`;
+export const getAuthHeader = (pat) => `Basic ${btoa(':' + pat)}`;
 
-async function fetchWithRetry(url, options = {}, maxRetries = 3, initialDelay = 1000) {
+export async function fetchWithRetry(url, options = {}, maxRetries = 3, initialDelay = 1000) {
     let delay = initialDelay;
     for (let i = 0; i < maxRetries; i++) {
         try {
@@ -61,11 +61,17 @@ export async function fetchQueries(config) {
     }
 }
 
-export async function fetchFullDetails(config, ids) {
+export async function fetchFullDetails(config, ids, onProgress = null) {
     const chunkSize = 200;
     let allItems = [];
     const auth = getAuthHeader(config.pat);
-    for (let i = 0; i < ids.length; i += chunkSize) {
+    const total = ids.length;
+    
+    for (let i = 0; i < total; i += chunkSize) {
+        if (onProgress) {
+            onProgress((i / total) * 100);
+        }
+        
         const chunk = ids.slice(i, i + chunkSize);
         const url = `https://dev.azure.com/${config.org}/${config.project}/_apis/wit/workitems?ids=${chunk.join(',')}&$expand=all&api-version=6.0`;
         const response = await fetchWithRetry(url, {
@@ -75,6 +81,11 @@ export async function fetchFullDetails(config, ids) {
         const data = await response.json();
         allItems = allItems.concat(data.value);
     }
+    
+    if (onProgress) {
+        onProgress(100);
+    }
+    
     return allItems;
 }
 

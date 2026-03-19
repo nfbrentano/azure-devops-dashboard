@@ -523,7 +523,7 @@ button:active { transform: scale(0.98); }
 }
 
 
-/* Progress Items */
+/* Progress Items in Cards */
 .progress-item {
     display: flex;
     flex-direction: column;
@@ -556,7 +556,21 @@ button:active { transform: scale(0.98); }
     height: 100%;
     background: var(--primary);
     border-radius: 4px;
-    transition: width 1s ease-out;
+    transition: width 0.4s ease-out;
+}
+
+/* Global Loading Progress Bar (Overlay) */
+.progress-bar-container {
+    width: 100%;
+    max-width: 300px;
+    margin-top: 1.5rem;
+}
+
+.progress-text {
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
 }
 
 /* Gantt Chart */

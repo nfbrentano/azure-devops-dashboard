@@ -157,13 +157,38 @@ export function calculateProgress(item, workItemMetadata) {
     return Math.floor((completedChildren / totalChildren) * 100);
 }
 
-export function showLoading(container) {
-    const overlay = document.createElement('div');
-    overlay.className = 'loading-overlay';
-    overlay.innerHTML = '<i class="ph ph-circle-notch spinning" style="font-size: 2rem; color: var(--primary);"></i>';
-    container.style.position = 'relative';
-    container.appendChild(overlay);
-    return overlay;
+export function showLoading(show = true, progress = null) {
+    const loading = document.getElementById('loading');
+    if (!loading) return;
+    
+    if (show) {
+        loading.classList.remove('hidden');
+        if (progress !== null) {
+            updateLoadingProgress(progress);
+        }
+    } else {
+        loading.classList.add('hidden');
+        updateLoadingProgress(0); // Reset for next time
+    }
+}
+
+export function updateLoadingProgress(percentage) {
+    const container = document.getElementById('loading-progress-container');
+    const fill = document.getElementById('loading-progress-fill');
+    const text = document.getElementById('loading-progress-text');
+    
+    if (!container || !fill || !text) return;
+    
+    if (percentage > 0) {
+        container.classList.remove('hidden');
+        const p = Math.min(100, Math.max(0, percentage));
+        fill.style.width = `${p}%`;
+        text.textContent = `${Math.round(p)}%`;
+    } else {
+        container.classList.add('hidden');
+        fill.style.width = '0%';
+        text.textContent = '0%';
+    }
 }
 
 export function showToast(message, type = 'error') {
