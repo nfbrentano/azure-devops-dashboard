@@ -1,6 +1,7 @@
 // Imports
 import './style.css';
 import Chart from 'chart.js/auto';
+import { translations } from './translations.js';
 
 // Config Encryption
 function encryptPAT(pat) {
@@ -34,6 +35,7 @@ let heatmapData = null; // Store for responsive re-renders
 let heatmapResizeObserver = null;
 let ganttOffset = 0; 
 let currentTheme = localStorage.getItem('theme') || 'dark';
+let currentLanguage = localStorage.getItem('language') || 'pt-br';
 let workItemMetadata = {
     types: {},
     backlogs: [],
@@ -52,6 +54,7 @@ const itemsView = document.getElementById('items-view');
 const logoutBtn = document.getElementById('logout-btn');
 const refreshBtn = document.getElementById('refresh-btn');
 const themeToggle = document.getElementById('theme-toggle');
+const langToggle = document.getElementById('lang-toggle');
 const ganttPeriod = document.getElementById('gantt-period');
 const ganttPrev = document.getElementById('gantt-prev');
 const ganttNext = document.getElementById('gantt-next');
@@ -63,9 +66,10 @@ const tabItems = document.getElementById('tab-items');
 const tabSetup = document.getElementById('tab-setup');
 const tabsNav = document.querySelector('.tabs-nav');
 
-// Apply Theme on Load
+// Apply Theme and Language on Load
 document.documentElement.setAttribute('data-theme', currentTheme);
 updateThemeIcon();
+applyTranslations();
 
 // Initialize
 if (azureConfig) {
@@ -109,7 +113,7 @@ setupForm.addEventListener('submit', async (e) => {
         localStorage.setItem('azure_config', JSON.stringify(safeConfig));
         showDashboard(queries);
     } else {
-        alert('Falha ao conectar. Verifique seu PAT e configurações.');
+        alert(translations[currentLanguage]['msg-auth-failed']);
     }
 });
 
@@ -137,6 +141,65 @@ function updateThemeIcon() {
     } else {
         icon.className = 'ph ph-moon-stars';
     }
+}
+
+langToggle.addEventListener('click', () => {
+    currentLanguage = currentLanguage === 'pt-br' ? 'en' : 'pt-br';
+    localStorage.setItem('language', currentLanguage);
+    applyTranslations();
+    
+    // Refresh charts and lists to match language
+    if (currentData.items.length > 0) {
+        processAnalytics(currentData.items, currentData.tree);
+    }
+    if (azureConfig) {
+        fetchQueries(azureConfig).then(queries => populateQueries(queries));
+    }
+});
+
+function applyTranslations() {
+    const lang = translations[currentLanguage];
+    
+    // Update elements with data-i18n
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (lang[key]) {
+            // Keep the icon if it exists
+            const icon = el.querySelector('i, img');
+            if (icon) {
+                // If it's a button or header with an icon, preserve the icon and update the text node
+                let foundTextNode = false;
+                Array.from(el.childNodes).forEach(node => {
+                    if (node.nodeType === Node.TEXT_NODE && node.textContent.trim() !== '') {
+                        node.textContent = ' ' + lang[key];
+                        foundTextNode = true;
+                    }
+                });
+                if (!foundTextNode) {
+                    el.appendChild(document.createTextNode(' ' + lang[key]));
+                }
+            } else {
+                el.innerHTML = lang[key];
+            }
+        }
+    });
+
+    // Update placeholders and titles
+    langToggle.title = lang['lang-toggle-title'];
+    langToggle.querySelector('span').textContent = currentLanguage === 'pt-br' ? 'EN' : 'PT';
+    themeToggle.title = lang['theme-toggle-title'];
+    refreshBtn.title = lang['refresh-btn-title'];
+    querySelector.setAttribute('title', lang['query-selector-placeholder']);
+    
+    document.getElementById('org').placeholder = currentLanguage === 'pt-br' ? 'ex: minha-empresa' : 'ex: my-company';
+    document.getElementById('project').placeholder = currentLanguage === 'pt-br' ? 'ex: meu-projeto' : 'ex: my-project';
+    document.getElementById('pat').placeholder = currentLanguage === 'pt-br' ? 'Seu Token do Azure' : 'Your Azure Token';
+
+    // Update Gantt period label and legends if needed
+    if (currentData.tree.length > 0) {
+        renderGantt(currentData.tree);
+    }
+    renderLegends(currentData.items);
 }
 
 querySelector.addEventListener('change', (e) => {
@@ -309,11 +372,12 @@ function renderLegends(activeItems = []) {
     }
 
     // 1. Render Status Legend (Grouped by Category)
+    const lang = translations[currentLanguage];
     const categories = {
-        'Proposed': { label: 'Backlog', class: 'bg-backlog' },
-        'InProgress': { label: 'In Progress', class: 'bg-inprogress' },
-        'Completed': { label: 'Done', class: 'bg-done' },
-        'Removed': { label: 'Removed', class: 'bg-removed' }
+        'Proposed': { label: lang['status-backlog'], class: 'bg-backlog' },
+        'InProgress': { label: lang['status-inprogress'], class: 'bg-inprogress' },
+        'Completed': { label: lang['status-done'], class: 'bg-done' },
+        'Removed': { label: lang['status-removed'], class: 'bg-removed' }
     };
 
     statusLegend.innerHTML = '';
@@ -388,7 +452,8 @@ function renderLegends(activeItems = []) {
 
 function populateQueries(queries) {
     const currentVal = querySelector.value;
-    querySelector.innerHTML = '<option value="">Selecionar Consulta...</option>';
+    const lang = translations[currentLanguage];
+    querySelector.innerHTML = `<option value="">${lang['query-selector-placeholder']}</option>`;
     queries.sort((a, b) => a.name.localeCompare(b.name)).forEach(q => {
         const option = document.createElement('option');
         option.value = q.id;
@@ -459,7 +524,7 @@ async function loadQueryData(queryId) {
         }
         
         if (ids.length === 0) {
-            alert('Nenhum item encontrado nesta consulta.');
+            alert(translations[currentLanguage]['msg-no-items']);
             return;
         }
 
@@ -471,7 +536,9 @@ async function loadQueryData(queryId) {
         const activeNameEl = document.getElementById('active-query-name');
         if (activeNameEl) {
             const selectedOption = querySelector.options[querySelector.selectedIndex];
-            activeNameEl.textContent = `Consulta: ${selectedOption ? selectedOption.text : 'Carregada'}`;
+            const labelQuery = translations[currentLanguage]['label-query'];
+            const labelLoaded = translations[currentLanguage]['msg-loading'].replace('...', '');
+            activeNameEl.textContent = `${labelQuery}: ${selectedOption ? selectedOption.text : labelLoaded}`;
         }
 
         processAnalytics(items, tree);
@@ -784,7 +851,7 @@ function processAnalytics(items, tree) {
 
         throughputData.push({
             label: `W${weeksCount - i}`,
-            range: `${startOfWeek.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })} - ${endOfWeek.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}`,
+            range: `${startOfWeek.toLocaleDateString(currentLanguage, { day: 'numeric', month: 'short' })} - ${endOfWeek.toLocaleDateString(currentLanguage, { day: 'numeric', month: 'short' })}`,
             count: count
         });
     }
@@ -816,7 +883,7 @@ function renderCharts(labels, leadTimes, cycleTimes) {
                 beginAtZero: true, 
                 grid: { color: gridColor }, 
                 ticks: { color: textColor },
-                title: { display: true, text: 'Dias', color: textColor }
+                title: { display: true, text: translations[currentLanguage]['label-days'], color: textColor }
             },
             x: { 
                 grid: { display: false }, 
@@ -850,7 +917,7 @@ function renderCharts(labels, leadTimes, cycleTimes) {
             labels: labels,
             datasets: [
                 {
-                    label: 'Lead Time',
+                    label: translations[currentLanguage]['metric-lead-time-title'],
                     data: leadTimes,
                     borderColor: '#6366f1',
                     backgroundColor: 'rgba(99, 102, 241, 0.1)',
@@ -860,7 +927,7 @@ function renderCharts(labels, leadTimes, cycleTimes) {
                     pointHoverRadius: 6
                 },
                 {
-                    label: 'Cycle Time',
+                    label: translations[currentLanguage]['metric-cycle-time-title'],
                     data: cycleTimes,
                     borderColor: '#10b981',
                     backgroundColor: 'rgba(16, 185, 129, 0.1)',
@@ -887,7 +954,7 @@ function renderThroughputChart(throughputData) {
         data: {
             labels: throughputData.map(d => d.label),
             datasets: [{
-                label: 'Itens Entregues',
+                label: translations[currentLanguage]['label-delivered-items'],
                 data: throughputData.map(d => d.count),
                 backgroundColor: '#3b82f6',
                 borderRadius: 6,
@@ -902,7 +969,7 @@ function renderThroughputChart(throughputData) {
                     beginAtZero: true, 
                     grid: { color: gridColor }, 
                     ticks: { color: textColor, stepSize: 1 },
-                    title: { display: true, text: 'Quantidade', color: textColor }
+                    title: { display: true, text: translations[currentLanguage]['label-quantity'], color: textColor }
                 },
                 x: { 
                     grid: { display: false }, 
@@ -914,7 +981,7 @@ function renderThroughputChart(throughputData) {
                 tooltip: {
                     callbacks: {
                         title: (items) => throughputData[items[0].dataIndex].range,
-                        label: (item) => `Entregues: ${item.raw} itens`
+                        label: (item) => `${translations[currentLanguage]['label-delivered']}: ${item.raw} ${translations[currentLanguage]['tab-dashboard'].toLowerCase() === 'dashboard' ? 'items' : 'itens'}`
                     }
                 }
             }
@@ -932,7 +999,7 @@ function renderAgingChart(agingData) {
     if (!agingData || agingData.length === 0) {
         container.innerHTML = `<div id="aging-empty-msg" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); gap: 1rem;">
             <i class="ph-bold ph-ghost" style="font-size: 3rem; opacity: 0.5;"></i>
-            <p>Nenhum item em execução (In Progress) encontrado para esta consulta.</p>
+            <p>${translations[currentLanguage]['msg-aging-empty']}</p>
         </div>`;
         return;
     }
@@ -960,7 +1027,7 @@ function renderAgingChart(agingData) {
         data: {
             labels,
             datasets: [{
-                label: 'Days Inactive',
+                label: translations[currentLanguage]['label-days-inactive'],
                 data: values,
                 backgroundColor: values.map(v => v > 15 ? '#ef4444' : (v > 7 ? '#f59e0b' : '#3b82f6')),
                 borderRadius: 4
@@ -975,7 +1042,7 @@ function renderAgingChart(agingData) {
                     beginAtZero: true, 
                     grid: { color: gridColor }, 
                     ticks: { color: textColor },
-                    title: { display: true, text: 'Days Since Last Update', color: textColor }
+                    title: { display: true, text: translations[currentLanguage]['label-days-since-update'], color: textColor }
                 },
                 y: { 
                     grid: { display: false }, 
@@ -988,7 +1055,7 @@ function renderAgingChart(agingData) {
                     callbacks: {
                         label: (context) => {
                             const item = agingData[context.dataIndex];
-                            return `Days Inactive: ${item.age} | ${item.state}`;
+                            return `${translations[currentLanguage]['label-days-inactive']}: ${item.age} | ${item.state}`;
                         }
                     }
                 }
@@ -1018,7 +1085,7 @@ function renderAssigneeChart(workloadData) {
     if (names.length === 0) {
         container.innerHTML = `<div id="assignee-empty-msg" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); gap: 1rem;">
             <i class="ph-bold ph-ghost" style="font-size: 3rem; opacity: 0.5;"></i>
-            <p>Nenhum responsável encontrado para os itens da consulta.</p>
+            <p>${translations[currentLanguage]['msg-assignee-empty']}</p>
         </div>`;
         return;
     }
@@ -1039,7 +1106,7 @@ function renderAssigneeChart(workloadData) {
         data: {
             labels: names,
             datasets: [{
-                label: 'Work Items Count',
+                label: translations[currentLanguage]['label-items-count'],
                 data: counts,
                 backgroundColor: '#8b5cf6',
                 borderRadius: 4
@@ -1054,7 +1121,7 @@ function renderAssigneeChart(workloadData) {
                     beginAtZero: true, 
                     grid: { color: gridColor }, 
                     ticks: { color: textColor, stepSize: 1 },
-                    title: { display: true, text: 'Number of Items', color: textColor }
+                    title: { display: true, text: translations[currentLanguage]['label-number-of-items'], color: textColor }
                 },
                 y: { 
                     grid: { display: false }, 
@@ -1065,7 +1132,7 @@ function renderAssigneeChart(workloadData) {
                 legend: { display: false },
                 tooltip: {
                     callbacks: {
-                        label: (context) => `Items: ${context.raw}`
+                        label: (context) => `${translations[currentLanguage]['label-items']}: ${context.raw}`
                     }
                 }
             }
@@ -1083,7 +1150,7 @@ function renderCFDChart(cfdSeries) {
     if (!cfdSeries || cfdSeries.length === 0) {
         container.innerHTML = `<div id="cfd-empty-msg" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); gap: 1rem;">
             <i class="ph-bold ph-ghost" style="font-size: 3rem; opacity: 0.5;"></i>
-            <p>Dados insuficientes para gerar o CFD.</p>
+            <p>${translations[currentLanguage]['msg-cfd-empty']}</p>
         </div>`;
         return;
     }
@@ -1099,7 +1166,7 @@ function renderCFDChart(cfdSeries) {
     const gridColor = isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)';
     const textColor = isLight ? '#64748b' : '#94a3b8';
 
-    const labels = cfdSeries.map(d => d.date.toLocaleDateString(undefined, { day: 'numeric', month: 'short' }));
+    const labels = cfdSeries.map(d => d.date.toLocaleDateString(currentLanguage, { day: 'numeric', month: 'short' }));
     
     charts.cfd = new Chart(canvas, {
         type: 'line',
@@ -1107,7 +1174,7 @@ function renderCFDChart(cfdSeries) {
             labels,
             datasets: [
                 {
-                    label: 'Done',
+                    label: translations[currentLanguage]['status-done'],
                     data: cfdSeries.map(d => d.Done),
                     backgroundColor: '#10b981',
                     borderColor: '#10b981',
@@ -1116,7 +1183,7 @@ function renderCFDChart(cfdSeries) {
                     tension: 0.3
                 },
                 {
-                    label: 'In Progress',
+                    label: translations[currentLanguage]['status-inprogress'],
                     data: cfdSeries.map(d => d.InProgress),
                     backgroundColor: '#0078d4',
                     borderColor: '#0078d4',
@@ -1125,7 +1192,7 @@ function renderCFDChart(cfdSeries) {
                     tension: 0.3
                 },
                 {
-                    label: 'Backlog',
+                    label: translations[currentLanguage]['status-backlog'],
                     data: cfdSeries.map(d => d.Proposed),
                     backgroundColor: '#b2b2b2',
                     borderColor: '#b2b2b2',
@@ -1218,7 +1285,7 @@ function renderActivityHeatmap() {
             monthLabel.style.left = `${weekIdx * 26}px`; // 22px cell + 4px gap
             monthLabel.style.fontSize = '0.9rem';
             monthLabel.style.color = 'var(--text-muted)';
-            monthLabel.textContent = firstDay.toLocaleString('default', { month: 'short' });
+            monthLabel.textContent = firstDay.toLocaleString(currentLanguage, { month: 'short' });
             monthsRow.appendChild(monthLabel);
         }
     });
@@ -1231,7 +1298,11 @@ function renderActivityHeatmap() {
     // Day Labels
     const daysCol = document.createElement('div');
     daysCol.className = 'heatmap-labels-days';
-    ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].forEach((day, i) => {
+    const dayNames = currentLanguage === 'pt-br' 
+        ? ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+        : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        
+    dayNames.forEach((day, i) => {
         const d = document.createElement('div');
         d.textContent = i % 2 === 0 ? day : '';
         d.style.height = '22px';
@@ -1261,7 +1332,8 @@ function renderActivityHeatmap() {
             if (count > 10) level = 4;
             
             dayEl.classList.add(`heatmap-l${level}`);
-            dayEl.title = `${day.toLocaleDateString()}: ${count} entregas`;
+            const labelDelivered = translations[currentLanguage]['label-delivered'].toLowerCase();
+            dayEl.title = `${day.toLocaleDateString(currentLanguage)}: ${count} ${labelDelivered}`;
             grid.appendChild(dayEl);
         });
         if (week.length < 7) {
@@ -1343,7 +1415,7 @@ function renderProgress(items) {
     });
 
     if (filteredItems.length === 0) {
-        progressList.innerHTML = '<div style="text-align: center; opacity: 0.5; font-size: 0.8rem; padding: 1rem;">Nenhuma Feature/Epic ativa encontrada.</div>';
+        progressList.innerHTML = `<div style="text-align: center; opacity: 0.5; font-size: 0.8rem; padding: 1rem;">${translations[currentLanguage]['msg-portfolio-empty']}</div>`;
         return;
     }
 
@@ -1471,7 +1543,7 @@ function renderGantt(tree, depth = 0, parentSiblingsActive = []) {
                 const maxYear = viewEnd.getFullYear();
                 periodLabel.textContent = minYear === maxYear ? minYear : `${minYear} - ${maxYear}`;
             } else {
-                periodLabel.textContent = `${viewStart.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })} - ${viewEnd.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })}`;
+                periodLabel.textContent = `${viewStart.toLocaleDateString(currentLanguage, { day: '2-digit', month: 'short', year: 'numeric' })} - ${viewEnd.toLocaleDateString(currentLanguage, { day: '2-digit', month: 'short', year: 'numeric' })}`;
             }
         }
     }
@@ -1485,7 +1557,7 @@ function renderGantt(tree, depth = 0, parentSiblingsActive = []) {
         
         ganttContainer.innerHTML = '';
         if (displayTree.length === 0) {
-            ganttContainer.innerHTML = '<div style="text-align: center; opacity: 0.5; padding: 2rem;">Nenhuma tarefa encontrada neste período.</div>';
+            ganttContainer.innerHTML = `<div style="text-align: center; opacity: 0.5; padding: 2rem;">${translations[currentLanguage]['msg-gantt-empty']}</div>`;
             return;
         }
 
@@ -1504,7 +1576,7 @@ function renderGantt(tree, depth = 0, parentSiblingsActive = []) {
             const milestone = document.createElement('div');
             milestone.className = 'timeline-milestone';
             const mDate = new Date(viewStart.getTime() + (totalMs / steps) * i);
-            milestone.textContent = (periodValue === 'year' || periodValue === 'total') ? mDate.toLocaleString('default', { month: 'short', year: '2-digit' }) : mDate.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+            milestone.textContent = (periodValue === 'year' || periodValue === 'total') ? mDate.toLocaleString(currentLanguage, { month: 'short', year: '2-digit' }) : mDate.toLocaleDateString(currentLanguage, { day: 'numeric', month: 'short' });
             timeline.appendChild(milestone);
         }
         ganttContainer.appendChild(header);
