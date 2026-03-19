@@ -66,6 +66,13 @@ export function applyTranslations(options) {
             el.setAttribute('aria-label', lang[key]);
         }
     });
+    
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        if (lang[key]) {
+            el.setAttribute('placeholder', lang[key]);
+        }
+    });
 
     if (langToggle) {
         langToggle.title = lang['lang-toggle-title'];
@@ -77,12 +84,6 @@ export function applyTranslations(options) {
     if (refreshBtn) refreshBtn.title = lang['refresh-btn-title'];
     if (querySelector) {
         querySelector.setAttribute('title', lang['query-selector-placeholder']);
-        const orgInput = document.getElementById('org');
-        const projInput = document.getElementById('project');
-        const patInput = document.getElementById('pat');
-        if (orgInput) orgInput.placeholder = currentLanguage === 'pt-br' ? 'ex: minha-empresa' : 'ex: my-company';
-        if (projInput) projInput.placeholder = currentLanguage === 'pt-br' ? 'ex: meu-projeto' : 'ex: my-project';
-        if (patInput) patInput.placeholder = currentLanguage === 'pt-br' ? 'Seu Token do Azure' : 'Your Azure Token';
     }
 
     if (currentData.tree.length > 0 && callRenderGantt) callRenderGantt();

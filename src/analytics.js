@@ -42,7 +42,7 @@ export function processAnalytics(items, tree, options = {}) {
         if (statusInfo.label === 'In Progress' && !iconInfo.isPortfolio && !isNaN(changedDate)) {
             agingData.push({
                 id: item.id,
-                title: f['System.Title'] || 'No Title',
+                title: f['System.Title'] || translations[currentLanguage]['label-no-title'],
                 age: Math.max(0, Math.floor((now - changedDate) / (1000 * 60 * 60 * 24))),
                 state: stateName
             });
@@ -50,7 +50,7 @@ export function processAnalytics(items, tree, options = {}) {
 
         if (!iconInfo.isPortfolio) {
             let assignee = f['System.AssignedTo'];
-            let name = assignee?.displayName || assignee?.uniqueName || (typeof assignee === 'string' ? assignee : 'Unassigned');
+            let name = assignee?.displayName || assignee?.uniqueName || (typeof assignee === 'string' ? assignee : translations[currentLanguage]['label-unassigned']);
             assigneeWorkload[name] = (assigneeWorkload[name] || 0) + 1;
         }
     });
@@ -99,7 +99,7 @@ export function processAnalytics(items, tree, options = {}) {
             if (closed >= startOfWeek && closed <= endOfWeek) count++;
         });
         throughputData.push({
-            label: `W${12 - i}`,
+            label: `${translations[currentLanguage]['label-week-short']}${12 - i}`,
             range: `${startOfWeek.toLocaleDateString(currentLanguage, { day: 'numeric', month: 'short' })} - ${endOfWeek.toLocaleDateString(currentLanguage, { day: 'numeric', month: 'short' })}`,
             count: count
         });

@@ -113,7 +113,7 @@ const handlers = {
             state.azureConfig.pat = decryptedPat;
             showDashboard();
         } else {
-            showToast(translations[state.currentLanguage]['msg-invalid-password'] || 'Senha incorreta', 'error');
+            showToast(translations[state.currentLanguage]['msg-invalid-password'], 'error');
         }
     },
 
@@ -218,8 +218,8 @@ async function loadQueryData(queryId) {
         }
 
         runAnalytics();
-    } catch (e) {
-        showToast(e.message || 'Error loading data', 'error');
+    } catch {
+        showToast(translations[state.currentLanguage]['msg-error-loading'], 'error');
         showEmptyState(true);
     } finally {
         showLoading(false);

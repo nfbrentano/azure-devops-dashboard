@@ -73,9 +73,7 @@ export function renderActivityHeatmap(heatmapData, currentLanguage, translations
 
     const daysCol = document.createElement('div');
     daysCol.className = 'heatmap-labels-days';
-    const dayNames = currentLanguage === 'pt-br' 
-        ? ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
-        : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const dayNames = translations[currentLanguage]['heatmap-days'].split(',');
         
     dayNames.forEach((day, i) => {
         const d = document.createElement('div');

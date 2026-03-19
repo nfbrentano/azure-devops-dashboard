@@ -2,6 +2,8 @@
  * Azure DevOps API interaction logic
  */
 import { showToast } from './utils.js';
+import { translations } from './translations.js';
+import { state } from './state.js';
 
 export const getAuthHeader = (pat) => `Basic ${btoa(':' + pat)}`;
 
@@ -55,8 +57,9 @@ export async function fetchQueries(config) {
         
         flatten(data.value);
         return allQueries;
-    } catch (e) {
-        showToast(e.message || 'Error fetching queries', 'error');
+    } catch {
+        const errMsg = translations[state.currentLanguage]['msg-error-loading'];
+        showToast(errMsg, 'error');
         return null;
     }
 }
@@ -96,9 +99,10 @@ export async function fetchFullDetails(config, ids, onProgress = null) {
     }
     
     if (failedChunks > 0) {
+        const lang = translations[state.currentLanguage];
         const msg = failedChunks === 1 
-            ? 'Uma parte dos dados não pôde ser carregada. Dados parciais exibidos.'
-            : `${failedChunks} partes dos dados falharam ao carregar. Dados parciais exibidos.`;
+            ? lang['msg-partial-data-single']
+            : lang['msg-partial-data-multiple'].replace('{count}', failedChunks);
         showToast(msg, 'warning');
     }
     
@@ -176,7 +180,7 @@ export async function fetchMetadata(config, workItemMetadata, renderLegends) {
 
         if (renderLegends) renderLegends();
     } catch {
-        showToast('Failed to fetch Azure DevOps metadata', 'error');
+        showToast(translations[state.currentLanguage]['msg-metadata-failed'], 'error');
     }
 }
 

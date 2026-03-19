@@ -47,33 +47,33 @@
             <div class="security-warning" style="margin-bottom: 1.5rem; padding: 0.75rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 8px; display: flex; gap: 0.75rem; align-items: start;">
                 <i class="ph-fill ph-warning-octagon" style="color: #ef4444; font-size: 1.25rem;"></i>
                 <div style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;">
-                    <strong style="color: #ef4444; display: block; margin-bottom: 0.25rem;">Segurança para GitHub Pages</strong>
-                    Como esta aplicação é estática, o seu PAT será enviado diretamente do navegador para o Azure. Use um PAT de curta duração por segurança.
+                    <strong style="color: #ef4444; display: block; margin-bottom: 0.25rem;" data-i18n="setup-security-warning-title">Segurança para GitHub Pages</strong>
+                    <span data-i18n="setup-security-warning-text">Como esta aplicação é estática, o seu PAT será enviado diretamente do navegador para o Azure. Use um PAT de curta duração por segurança.</span>
                 </div>
             </div>
 
             <form id="setup-form">
                 <div class="form-group">
                     <label for="org" data-i18n="label-org">Organização</label>
-                    <input type="text" id="org" placeholder="ex: minha-org" required>
+                    <input type="text" id="org" data-i18n-placeholder="placeholder-org" placeholder="ex: minha-org" required>
                 </div>
                 <div class="form-group">
                     <label for="project" data-i18n="label-project">Projeto</label>
-                    <input type="text" id="project" placeholder="ex: meu-projeto" required>
+                    <input type="text" id="project" data-i18n-placeholder="placeholder-project" placeholder="ex: meu-projeto" required>
                 </div>
                 <div class="form-group">
                     <label for="pat" data-i18n="label-pat">Personal Access Token (PAT)</label>
-                    <input type="password" id="pat" placeholder="Seu Token do Azure DevOps" required>
+                    <input type="password" id="pat" data-i18n-placeholder="placeholder-pat" placeholder="Seu Token do Azure DevOps" required>
                 </div>
                 <div class="form-group">
                     <label for="security-password" data-i18n="label-security-password">Senha de Segurança</label>
-                    <input type="password" id="security-password" placeholder="Usada para criptografar seus dados" required>
+                    <input type="password" id="security-password" data-i18n-placeholder="placeholder-security-password" placeholder="Usada para criptografar seus dados" required>
                 </div>
                 <div class="form-group" style="flex-direction: row; align-items: center; gap: 0.5rem; cursor: pointer;">
                     <input type="checkbox" id="save-credentials" style="width: auto;">
                     <label for="save-credentials" style="margin-bottom: 0; cursor: pointer; font-size: 0.85rem;" data-i18n="label-save-credentials">Salvar credenciais neste navegador</label>
                 </div>
-                <button type="submit" data-i18n="btn-setup">Acessar Dashboard</button>
+                <button type="submit" data-i18n="btn-connect-load">Acessar Dashboard</button>
             </form>
 
       <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-glass);">
@@ -296,7 +296,7 @@
               <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; justify-content: flex-end;">
                 <div style="display: flex; align-items: center; gap: 0.5rem; background: var(--glass-bg); border-radius: 0.5rem; border: 1px solid var(--border-glass); padding: 0.25rem; flex-shrink: 0;">
                   <button id="gantt-prev" class="glass" data-i18n-aria="aria-gantt-prev" style="padding: 0.4rem; border-radius: 0.4rem; cursor: pointer; border: none; background: transparent; display: flex; align-items: center; justify-content: center;"><i class="ph-bold ph-caret-left"></i></button>
-                  <span id="gantt-current-period-label" style="font-weight: 600; font-size: 0.85rem; min-width: 200px; text-align: center; white-space: nowrap;">Carregando...</span>
+                  <span id="gantt-current-period-label" data-i18n="loading-label" style="font-weight: 600; font-size: 0.85rem; min-width: 200px; text-align: center; white-space: nowrap;">Carregando...</span>
                    <button id="gantt-next" class="glass" data-i18n-aria="aria-gantt-next" style="padding: 0.4rem; border-radius: 0.4rem; cursor: pointer; border: none; background: transparent; display: flex; align-items: center; justify-content: center;"><i class="ph-bold ph-caret-right"></i></button>
                 </div>
                 <div style="width: 1px; height: 24px; background: var(--border-glass); margin: 0 0.25rem;"></div>
@@ -343,7 +343,7 @@
             <p class="setup-subtitle" data-i18n="unlock-subtitle">Insira sua senha de segurança para desbloquear</p>
             <form id="unlock-form">
                 <div class="form-group">
-                    <input type="password" id="unlock-password" placeholder="Sua senha de segurança" required>
+                    <input type="password" id="unlock-password" data-i18n-placeholder="placeholder-unlock-password" placeholder="Sua senha de segurança" required>
                 </div>
                 <button type="submit" data-i18n="btn-unlock">Desbloquear</button>
                 <div style="text-align: center; margin-top: 1rem;">
