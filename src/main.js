@@ -22,9 +22,24 @@ import {
 import { renderGantt } from './gantt.js';
 import { renderActivityHeatmap } from './heatmap.js';
 
-// Handle initial state and automatic data loading if config exists
-if (state.azureConfig.org && state.azureConfig.project && state.azureConfig.pat) {
-    state.azureConfig.pat = await decryptPAT(state.azureConfig.pat);
+// Initialize application
+async function initApp() {
+    // Handle initial state and automatic data loading if config exists
+    if (state.azureConfig.org && state.azureConfig.project && state.azureConfig.pat) {
+        state.azureConfig.pat = await decryptPAT(state.azureConfig.pat);
+    }
+
+    // Apply Theme and Language on Load
+    document.documentElement.setAttribute('data-theme', state.currentTheme);
+    updateThemeIcon();
+    applyTranslations();
+
+    // Initialize View
+    if (state.azureConfig && state.azureConfig.org) {
+        showDashboard();
+    } else {
+        switchTab('setup');
+    }
 }
 
 // DOM Elements
@@ -49,17 +64,8 @@ const tabDashboard = document.getElementById('tab-dashboard');
 const tabItems = document.getElementById('tab-items');
 const tabSetup = document.getElementById('tab-setup');
 
-// Apply Theme and Language on Load
-document.documentElement.setAttribute('data-theme', state.currentTheme);
-updateThemeIcon();
-applyTranslations();
-
-// Initialize
-if (state.azureConfig) {
-    showDashboard();
-} else {
-    switchTab('setup');
-}
+// Run initialization
+initApp();
 
 // Tab Switching
 function switchTab(tabId) {
