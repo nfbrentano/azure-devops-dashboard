@@ -5,12 +5,39 @@ import { showToast } from './utils.js';
 
 const getAuthHeader = (pat) => `Basic ${btoa(':' + pat)}`;
 
+async function fetchWithRetry(url, options = {}, maxRetries = 3, initialDelay = 1000) {
+    let delay = initialDelay;
+    for (let i = 0; i < maxRetries; i++) {
+        try {
+            const response = await fetch(url, options);
+            
+            // Retry on rate limit (429) or server errors (5xx)
+            if (response.status === 429 || (response.status >= 500 && response.status <= 504)) {
+                if (i === maxRetries - 1) return response;
+                
+                const retryAfter = response.headers.get('Retry-After');
+                const waitTime = retryAfter ? parseInt(retryAfter) * 1000 : delay;
+                
+                await new Promise(res => setTimeout(res, waitTime));
+                delay *= 2; // Exponential backoff
+                continue;
+            }
+            
+            return response;
+        } catch (e) {
+            if (i === maxRetries - 1) throw e;
+            await new Promise(res => setTimeout(res, delay));
+            delay *= 2;
+        }
+    }
+}
+
 export async function fetchQueries(config) {
     const url = `https://dev.azure.com/${config.org}/${config.project}/_apis/wit/queries?$depth=2&api-version=6.0`;
     try {
-        const response = await fetch(url, {
+        const response = await fetchWithRetry(url, {
             headers: { 'Authorization': getAuthHeader(config.pat) },
-            cache: 'no-store'
+            cache: 'no-cache'
         });
         if (!response.ok) return null;
         const data = await response.json();
@@ -41,9 +68,9 @@ export async function fetchFullDetails(config, ids) {
     for (let i = 0; i < ids.length; i += chunkSize) {
         const chunk = ids.slice(i, i + chunkSize);
         const url = `https://dev.azure.com/${config.org}/${config.project}/_apis/wit/workitems?ids=${chunk.join(',')}&$expand=all&api-version=6.0`;
-        const response = await fetch(url, {
+        const response = await fetchWithRetry(url, {
             headers: { 'Authorization': auth },
-            cache: 'no-store'
+            cache: 'no-cache'
         });
         const data = await response.json();
         allItems = allItems.concat(data.value);
@@ -57,7 +84,7 @@ export async function fetchMetadata(config, workItemMetadata, renderLegends) {
         
         // 1. Fetch Work Item Types (Colors and names)
         const typesUrl = `https://dev.azure.com/${config.org}/${config.project}/_apis/wit/workitemtypes?api-version=6.0`;
-        const typesResp = await fetch(typesUrl, { headers: { 'Authorization': auth }, cache: 'no-store' });
+        const typesResp = await fetchWithRetry(typesUrl, { headers: { 'Authorization': auth } });
         const typesData = await typesResp.json();
         
         const typePromises = typesData.value.map(async (type) => {
@@ -81,7 +108,7 @@ export async function fetchMetadata(config, workItemMetadata, renderLegends) {
         for (const type of typesData.value) {
             try {
                 const statesUrl = `https://dev.azure.com/${config.org}/${config.project}/_apis/wit/workitemtypes/${type.name}/states?api-version=6.0`;
-                const statesResp = await fetch(statesUrl, { headers: { 'Authorization': auth }, cache: 'no-store' });
+                const statesResp = await fetchWithRetry(statesUrl, { headers: { 'Authorization': auth } });
                 if (!statesResp.ok) continue;
                 const statesData = await statesResp.json();
                 
@@ -100,13 +127,13 @@ export async function fetchMetadata(config, workItemMetadata, renderLegends) {
 
         // 3. Fetch Backlog Configurations
         const teamsUrl = `https://dev.azure.com/${config.org}/${config.project}/_apis/teams?api-version=6.0-preview.3`;
-        const teamsResp = await fetch(teamsUrl, { headers: { 'Authorization': auth }, cache: 'no-store' });
+        const teamsResp = await fetchWithRetry(teamsUrl, { headers: { 'Authorization': auth } });
         const teamsData = await teamsResp.json();
         
         if (teamsData.value && teamsData.value.length > 0) {
             const teamId = teamsData.value[0].id;
             const backlogsUrl = `https://dev.azure.com/${config.org}/${config.project}/${teamId}/_apis/work/backlogs?api-version=6.0-preview.1`;
-            const backlogsResp = await fetch(backlogsUrl, { headers: { 'Authorization': auth }, cache: 'no-store' });
+            const backlogsResp = await fetchWithRetry(backlogsUrl, { headers: { 'Authorization': auth } });
             const backlogsData = await backlogsResp.json();
             
             workItemMetadata.backlogs = backlogsData.value.map(b => ({
@@ -124,7 +151,7 @@ export async function fetchMetadata(config, workItemMetadata, renderLegends) {
 
 export async function getBase64Image(url, auth) {
     try {
-        const resp = await fetch(url, { headers: { 'Authorization': auth } });
+        const resp = await fetchWithRetry(url, { headers: { 'Authorization': auth } });
         if (!resp.ok) return null;
         const blob = await resp.blob();
         return new Promise((resolve) => {
