@@ -148,6 +148,11 @@ const handlers = {
     },
 
     handleRefresh: async () => {
+        if (!state.azureConfig || !state.azureConfig.org || !state.azureConfig.project || !state.azureConfig.pat) {
+            showToast(translations[state.currentLanguage]['msg-missing-config'], 'error');
+            switchTab('setup', elements);
+            return;
+        }
         if (elements.refreshBtn.classList.contains('spinning') || !elements.querySelector.value) return;
         elements.refreshBtn.classList.add('spinning');
         await loadQueryData(elements.querySelector.value);
