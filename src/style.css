@@ -1026,6 +1026,11 @@ button:active { transform: scale(0.98); }
 }
 
 /* Heatmap Responsiveness */
+:root {
+    --heatmap-cell-size: 22px;
+    --heatmap-gap: 4px;
+}
+
 .heatmap-scroll-wrapper {
     scrollbar-width: thin;
     scrollbar-color: var(--border-glass) transparent;

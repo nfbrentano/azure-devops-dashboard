@@ -57,7 +57,7 @@ export function renderActivityHeatmap(heatmapData, currentLanguage, translations
             lastMonth = firstDay.getMonth();
             const monthLabel = document.createElement('div');
             monthLabel.style.position = 'absolute';
-            monthLabel.style.left = `${weekIdx * (22 + 4)}px`; // Cell size (22) + gap (4)
+            monthLabel.style.left = `calc(${weekIdx} * (var(--heatmap-cell-size) + var(--heatmap-gap)))`;
             monthLabel.style.fontSize = '0.8rem';
             monthLabel.style.color = 'var(--text-muted)';
             monthLabel.style.whiteSpace = 'nowrap';
@@ -80,8 +80,8 @@ export function renderActivityHeatmap(heatmapData, currentLanguage, translations
     dayNames.forEach((day, i) => {
         const d = document.createElement('div');
         d.textContent = i % 2 === 0 ? day : '';
-        d.style.height = '22px';
-        d.style.lineHeight = '22px';
+        d.style.height = 'var(--heatmap-cell-size)';
+        d.style.lineHeight = 'var(--heatmap-cell-size)';
         d.style.fontSize = '0.75rem';
         daysCol.appendChild(d);
     });
@@ -91,8 +91,8 @@ export function renderActivityHeatmap(heatmapData, currentLanguage, translations
     grid.className = 'heatmap-grid';
     grid.style.display = 'grid';
     grid.style.gridAutoFlow = 'column';
-    grid.style.gridTemplateRows = 'repeat(7, 22px)';
-    grid.style.gap = '4px';
+    grid.style.gridTemplateRows = 'repeat(7, var(--heatmap-cell-size))';
+    grid.style.gap = 'var(--heatmap-gap)';
     
     weeks.forEach(week => {
         week.forEach(day => {
@@ -101,8 +101,8 @@ export function renderActivityHeatmap(heatmapData, currentLanguage, translations
             
             const dayEl = document.createElement('div');
             dayEl.className = 'heatmap-day';
-            dayEl.style.width = '22px';
-            dayEl.style.height = '22px';
+            dayEl.style.width = 'var(--heatmap-cell-size)';
+            dayEl.style.height = 'var(--heatmap-cell-size)';
             dayEl.style.borderRadius = '3px';
             
             let level = 0;
@@ -121,8 +121,8 @@ export function renderActivityHeatmap(heatmapData, currentLanguage, translations
         if (week.length < 7) {
             for (let i = week.length; i < 7; i++) {
                 const spacer = document.createElement('div');
-                spacer.style.width = '22px';
-                spacer.style.height = '22px';
+                spacer.style.width = 'var(--heatmap-cell-size)';
+                spacer.style.height = 'var(--heatmap-cell-size)';
                 grid.appendChild(spacer);
             }
         }
