@@ -3,14 +3,13 @@
  */
 
 // Encryption constants
-const ENCRYPTION_SECRET = 'azure-devops-dashboard-secret-2026';
 const SALT = new Uint8Array([71, 101, 109, 105, 110, 105, 32, 65, 105, 32, 82, 111, 99, 107, 115, 33]); // 'Gemini Ai Rocks!'
 
-async function getEncryptionKey() {
+async function getEncryptionKey(password) {
     const encoder = new TextEncoder();
     const baseKey = await crypto.subtle.importKey(
         'raw', 
-        encoder.encode(ENCRYPTION_SECRET), 
+        encoder.encode(password), 
         'PBKDF2', 
         false, 
         ['deriveKey']
@@ -29,10 +28,10 @@ async function getEncryptionKey() {
     );
 }
 
-export async function encryptPAT(pat) {
-    if (!pat) return pat;
+export async function encryptPAT(pat, password) {
+    if (!pat || !password) return pat;
     try {
-        const key = await getEncryptionKey();
+        const key = await getEncryptionKey(password);
         const iv = crypto.getRandomValues(new Uint8Array(12));
         const encoder = new TextEncoder();
         const encrypted = await crypto.subtle.encrypt(
@@ -50,16 +49,17 @@ export async function encryptPAT(pat) {
     }
 }
 
-export async function decryptPAT(enc) {
+export async function decryptPAT(enc, password) {
     if (!enc) return enc;
     
     // Check if it's the new format (base64:base64)
     if (enc.includes(':')) {
+        if (!password) return null; // Need password for new format
         try {
             const [ivBase64, encryptedBase64] = enc.split(':');
             const iv = new Uint8Array(atob(ivBase64).split('').map(c => c.charCodeAt(0)));
             const encrypted = new Uint8Array(atob(encryptedBase64).split('').map(c => c.charCodeAt(0)));
-            const key = await getEncryptionKey();
+            const key = await getEncryptionKey(password);
             
             const decrypted = await crypto.subtle.decrypt(
                 { name: 'AES-GCM', iv },
@@ -68,15 +68,14 @@ export async function decryptPAT(enc) {
             );
             return new TextDecoder().decode(decrypted);
         } catch (e) {
-            console.error('Decryption failed, falling back to original:', e);
-            return enc;
+            console.error('Decryption failed:', e);
+            return null;
         }
     }
 
-    // Backward compatibility with XOR(42) + base64
+    // Backward compatibility with XOR(42) + base64 (only if no password is provided/needed)
     try {
         const xorDecoded = atob(enc).split('').map(c => String.fromCharCode(c.charCodeAt(0) ^ 42)).join('');
-        // If it looks like a PAT (mostly alphanumeric), it's probably correct
         if (/^[a-z0-9]+$/i.test(xorDecoded)) {
             return xorDecoded;
         }

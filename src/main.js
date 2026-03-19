@@ -22,30 +22,12 @@ import {
 import { renderGantt } from './gantt.js';
 import { renderActivityHeatmap } from './heatmap.js';
 
-// Initialize application
-async function initApp() {
-    // Handle initial state and automatic data loading if config exists
-    if (state.azureConfig.org && state.azureConfig.project && state.azureConfig.pat) {
-        state.azureConfig.pat = await decryptPAT(state.azureConfig.pat);
-    }
-
-    // Apply Theme and Language on Load
-    document.documentElement.setAttribute('data-theme', state.currentTheme);
-    updateThemeIcon();
-    applyTranslations();
-
-    // Initialize View
-    if (state.azureConfig && state.azureConfig.org) {
-        showDashboard();
-    } else {
-        switchTab('setup');
-    }
-}
-
 // DOM Elements
 const setupView = document.getElementById('setup-view');
+const unlockView = document.getElementById('unlock-view');
 const dashboardView = document.getElementById('dashboard-view');
 const setupForm = document.getElementById('setup-form');
+const unlockForm = document.getElementById('unlock-form');
 const querySelector = document.getElementById('query-selector');
 const progressList = document.getElementById('progress-list');
 const ganttContainer = document.getElementById('gantt-container');
@@ -58,6 +40,29 @@ const ganttPeriod = document.getElementById('gantt-period');
 const ganttPrev = document.getElementById('gantt-prev');
 const ganttNext = document.getElementById('gantt-next');
 const dataControls = document.getElementById('data-controls');
+const forgotPasswordBtn = document.getElementById('forgot-password-btn');
+
+// Initialize application
+async function initApp() {
+    // Apply Theme and Language on Load
+    document.documentElement.setAttribute('data-theme', state.currentTheme);
+    updateThemeIcon();
+    applyTranslations();
+
+    // Check for saved config
+    if (state.azureConfig.org && state.azureConfig.project && state.azureConfig.pat) {
+        // If it looks like a new format (encrypted), show unlock view
+        if (state.azureConfig.pat.includes(':')) {
+            switchTab('unlock');
+        } else {
+            // Legacy XOR format - try to decrypt without password (old secret)
+            state.azureConfig.pat = await decryptPAT(state.azureConfig.pat);
+            showDashboard();
+        }
+    } else {
+        switchTab('setup');
+    }
+}
 
 // Tab Elements
 const tabDashboard = document.getElementById('tab-dashboard');
@@ -75,7 +80,12 @@ function switchTab(tabId) {
     dashboardView.classList.toggle('hidden', tabId !== 'dashboard');
     itemsView.classList.toggle('hidden', tabId !== 'items');
     setupView.classList.toggle('hidden', tabId !== 'setup');
-    dataControls.classList.toggle('hidden', tabId === 'setup');
+    unlockView.classList.toggle('hidden', tabId !== 'unlock');
+    dataControls.classList.toggle('hidden', tabId === 'setup' || tabId === 'unlock');
+    
+    // Hide tabs if in setup or unlock
+    const tabs = document.querySelector('.tabs');
+    if (tabs) tabs.style.display = (tabId === 'setup' || tabId === 'unlock') ? 'none' : 'flex';
 }
 
 tabDashboard.addEventListener('click', () => switchTab('dashboard'));
@@ -89,18 +99,41 @@ setupForm.addEventListener('submit', async (e) => {
         project: document.getElementById('project').value,
         pat: document.getElementById('pat').value
     };
+    const password = document.getElementById('security-password').value;
+    const save = document.getElementById('save-credentials').checked;
     
     const queries = await fetchQueries(config);
     if (queries) {
         state.azureConfig = config;
-        if (config.pat) {
-            const safeConfig = { ...config, pat: await encryptPAT(config.pat) };
+        if (save) {
+            const safeConfig = { ...config, pat: await encryptPAT(config.pat, password) };
             localStorage.setItem('azure_config', JSON.stringify(safeConfig));
+        } else {
+            localStorage.removeItem('azure_config');
         }
         showDashboard(queries);
     } else {
         showToast(translations[state.currentLanguage]['msg-auth-failed'], 'error');
     }
+});
+
+unlockForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const password = document.getElementById('unlock-password').value;
+    const decryptedPat = await decryptPAT(state.azureConfig.pat, password);
+    
+    if (decryptedPat) {
+        state.azureConfig.pat = decryptedPat;
+        showDashboard();
+    } else {
+        showToast(translations[state.currentLanguage]['msg-invalid-password'] || 'Senha incorreta', 'error');
+    }
+});
+
+forgotPasswordBtn.addEventListener('click', () => {
+    localStorage.removeItem('azure_config');
+    state.azureConfig = { org: '', project: '', pat: '' };
+    switchTab('setup');
 });
 
 logoutBtn.addEventListener('click', () => {

@@ -41,23 +41,40 @@
       <i class="ph-fill ph-chart-line-up"
         style="font-size: 3rem; color: var(--primary); margin-bottom: 2rem; display: block;"></i>
       <h2 data-i18n="setup-title">Azure DevOps Dashboard</h2>
-      <p data-i18n="setup-subtitle" style="color: var(--text-muted); margin-bottom: 2rem;">Conecte sua conta para visualizar métricas</p>
+      <p class="setup-subtitle" data-i18n="setup-subtitle">Insira suas credenciais para visualizar o dashboard</p>
+            
+            <!-- Security Warning -->
+            <div class="security-warning" style="margin-bottom: 1.5rem; padding: 0.75rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 8px; display: flex; gap: 0.75rem; align-items: start;">
+                <i class="ph-fill ph-warning-octagon" style="color: #ef4444; font-size: 1.25rem;"></i>
+                <div style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;">
+                    <strong style="color: #ef4444; display: block; margin-bottom: 0.25rem;">Segurança para GitHub Pages</strong>
+                    Como esta aplicação é estática, o seu PAT será enviado diretamente do navegador para o Azure. Use um PAT de curta duração por segurança.
+                </div>
+            </div>
 
-      <form id="setup-form">
-        <div class="form-group">
-          <label data-i18n="label-org">Organização</label>
-          <input type="text" id="org" placeholder="ex: minha-empresa" required>
-        </div>
-        <div class="form-group">
-          <label data-i18n="label-project">Projeto</label>
-          <input type="text" id="project" placeholder="ex: meu-projeto" required>
-        </div>
-        <div class="form-group">
-          <label data-i18n="label-pat">Personal Access Token (PAT)</label>
-          <input type="password" id="pat" placeholder="Seu Token do Azure" required>
-        </div>
-        <button type="submit" data-i18n="btn-connect">Conectar e Carregar Consultas</button>
-      </form>
+            <form id="setup-form">
+                <div class="form-group">
+                    <label for="org" data-i18n="label-org">Organização</label>
+                    <input type="text" id="org" placeholder="ex: minha-org" required>
+                </div>
+                <div class="form-group">
+                    <label for="project" data-i18n="label-project">Projeto</label>
+                    <input type="text" id="project" placeholder="ex: meu-projeto" required>
+                </div>
+                <div class="form-group">
+                    <label for="pat" data-i18n="label-pat">Personal Access Token (PAT)</label>
+                    <input type="password" id="pat" placeholder="Seu Token do Azure DevOps" required>
+                </div>
+                <div class="form-group">
+                    <label for="security-password" data-i18n="label-security-password">Senha de Segurança</label>
+                    <input type="password" id="security-password" placeholder="Usada para criptografar seus dados" required>
+                </div>
+                <div class="form-group" style="flex-direction: row; align-items: center; gap: 0.5rem; cursor: pointer;">
+                    <input type="checkbox" id="save-credentials" style="width: auto;">
+                    <label for="save-credentials" style="margin-bottom: 0; cursor: pointer; font-size: 0.85rem;" data-i18n="label-save-credentials">Salvar credenciais neste navegador</label>
+                </div>
+                <button type="submit" data-i18n="btn-setup">Acessar Dashboard</button>
+            </form>
 
       <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-glass);">
         <button id="logout-btn" class="glass btn-danger-glass" data-i18n="btn-logout"><i class="ph-bold ph-sign-out"></i> Sair da
@@ -302,6 +319,26 @@
         </div>
       </div>
     </div>
+    <!-- Unlock Modal -->
+    <div id="unlock-view" class="view hidden">
+        <div class="setup-card">
+            <div class="logo">
+                <i class="ph-fill ph-lock-key" style="font-size: 3rem; color: var(--primary); margin-bottom: 2rem; display: block;"></i>
+            </div>
+            <h2 data-i18n="unlock-title">Dashboard Bloqueado</h2>
+            <p class="setup-subtitle" data-i18n="unlock-subtitle">Insira sua senha de segurança para desbloquear</p>
+            <form id="unlock-form">
+                <div class="form-group">
+                    <input type="password" id="unlock-password" placeholder="Sua senha de segurança" required>
+                </div>
+                <button type="submit" data-i18n="btn-unlock">Desbloquear</button>
+                <div style="text-align: center; margin-top: 1rem;">
+                    <button type="button" id="forgot-password-btn" class="glass" style="font-size: 0.85rem; color: var(--primary); border: none; background: none; cursor: pointer;" data-i18n="link-logout">Limpar dados e sair</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
   <script type="module" src="/src/main.js"></script>
 </body>
 
