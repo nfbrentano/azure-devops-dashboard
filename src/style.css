@@ -1024,3 +1024,29 @@ button:active { transform: scale(0.98); }
         transform: scale(0.95);
     }
 }
+
+/* Heatmap Responsiveness */
+.heatmap-scroll-wrapper {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-glass) transparent;
+}
+
+.heatmap-scroll-wrapper::-webkit-scrollbar {
+    height: 6px;
+}
+
+.heatmap-scroll-wrapper::-webkit-scrollbar-thumb {
+    background-color: var(--border-glass);
+    border-radius: 10px;
+}
+
+.heatmap-day {
+    transition: transform 0.1s ease, filter 0.2s ease;
+    cursor: pointer;
+}
+
+.heatmap-day:hover {
+    transform: scale(1.15);
+    filter: brightness(1.2);
+    z-index: 10;
+}

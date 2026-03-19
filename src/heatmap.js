@@ -8,10 +8,19 @@ export function renderActivityHeatmap(heatmapData, currentLanguage, translations
     
     container.innerHTML = '';
     
+    // Create scrollable wrapper
+    const scrollWrapper = document.createElement('div');
+    scrollWrapper.className = 'heatmap-scroll-wrapper';
+    scrollWrapper.style.overflowX = 'auto';
+    scrollWrapper.style.width = '100%';
+    scrollWrapper.style.paddingBottom = '0.5rem';
+
     const heatmapWrapper = document.createElement('div');
-    heatmapWrapper.style.display = 'flex';
+    heatmapWrapper.className = 'heatmap-content-wrapper';
+    heatmapWrapper.style.display = 'inline-flex';
     heatmapWrapper.style.flexDirection = 'column';
     heatmapWrapper.style.gap = '0.75rem';
+    heatmapWrapper.style.minWidth = 'min-content';
 
     const now = new Date();
     const startDate = new Date();
@@ -33,12 +42,13 @@ export function renderActivityHeatmap(heatmapData, currentLanguage, translations
     }
     if (currentWeek.length > 0) weeks.push(currentWeek);
 
+    // Months Row
     const monthsRow = document.createElement('div');
     monthsRow.className = 'heatmap-labels-months';
     monthsRow.style.display = 'flex';
     monthsRow.style.position = 'relative';
     monthsRow.style.height = '1.5rem';
-    monthsRow.style.marginLeft = '58px'; 
+    monthsRow.style.marginLeft = '50px'; // Matching daysCol width
 
     let lastMonth = -1;
     weeks.forEach((week, weekIdx) => {
@@ -47,9 +57,10 @@ export function renderActivityHeatmap(heatmapData, currentLanguage, translations
             lastMonth = firstDay.getMonth();
             const monthLabel = document.createElement('div');
             monthLabel.style.position = 'absolute';
-            monthLabel.style.left = `${weekIdx * 26}px`; 
-            monthLabel.style.fontSize = '0.9rem';
+            monthLabel.style.left = `${weekIdx * (22 + 4)}px`; // Cell size (22) + gap (4)
+            monthLabel.style.fontSize = '0.8rem';
             monthLabel.style.color = 'var(--text-muted)';
+            monthLabel.style.whiteSpace = 'nowrap';
             monthLabel.textContent = firstDay.toLocaleString(currentLanguage, { month: 'short' });
             monthsRow.appendChild(monthLabel);
         }
@@ -58,7 +69,7 @@ export function renderActivityHeatmap(heatmapData, currentLanguage, translations
 
     const mainRow = document.createElement('div');
     mainRow.style.display = 'flex';
-    mainRow.style.gap = '0.75rem';
+    mainRow.style.gap = '8px';
 
     const daysCol = document.createElement('div');
     daysCol.className = 'heatmap-labels-days';
@@ -71,12 +82,15 @@ export function renderActivityHeatmap(heatmapData, currentLanguage, translations
         d.textContent = i % 2 === 0 ? day : '';
         d.style.height = '22px';
         d.style.lineHeight = '22px';
+        d.style.fontSize = '0.75rem';
         daysCol.appendChild(d);
     });
     mainRow.appendChild(daysCol);
 
     const grid = document.createElement('div');
     grid.className = 'heatmap-grid';
+    grid.style.display = 'grid';
+    grid.style.gridAutoFlow = 'column';
     grid.style.gridTemplateRows = 'repeat(7, 22px)';
     grid.style.gap = '4px';
     
@@ -87,6 +101,9 @@ export function renderActivityHeatmap(heatmapData, currentLanguage, translations
             
             const dayEl = document.createElement('div');
             dayEl.className = 'heatmap-day';
+            dayEl.style.width = '22px';
+            dayEl.style.height = '22px';
+            dayEl.style.borderRadius = '3px';
             
             let level = 0;
             if (count > 0) level = 1;
@@ -99,6 +116,8 @@ export function renderActivityHeatmap(heatmapData, currentLanguage, translations
             dayEl.title = `${day.toLocaleDateString(currentLanguage)}: ${count} ${labelDelivered}`;
             grid.appendChild(dayEl);
         });
+        
+        // Filler for partial weeks
         if (week.length < 7) {
             for (let i = week.length; i < 7; i++) {
                 const spacer = document.createElement('div');
@@ -111,5 +130,6 @@ export function renderActivityHeatmap(heatmapData, currentLanguage, translations
 
     mainRow.appendChild(grid);
     heatmapWrapper.appendChild(mainRow);
-    container.appendChild(heatmapWrapper);
+    scrollWrapper.appendChild(heatmapWrapper);
+    container.appendChild(scrollWrapper);
 }
