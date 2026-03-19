@@ -8,8 +8,8 @@ import './style.css';
 import { translations } from './translations.js';
 import { state } from './state.js';
 import { 
-    encryptPAT, decryptPAT, getWorkItemUrl, getStatusInfo, 
-    getItemIcon, calculateProgress, showLoading, showToast 
+    showLoading, showToast, encryptPAT, decryptPAT,
+    getItemIcon, getStatusInfo
 } from './utils.js';
 import { 
     fetchQueries, fetchFullDetails, fetchMetadata, buildTree 

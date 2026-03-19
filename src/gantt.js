@@ -27,29 +27,34 @@ export function getGanttDates(period, items = [], ganttOffset) {
     }
 
     switch(period) {
-        case 'week':
+        case 'week': {
             start.setDate(now.getDate() - now.getDay() + (ganttOffset * 7));
             end = new Date(start);
             end.setDate(start.getDate() + 7);
             break;
-        case 'month':
+        }
+        case 'month': {
             start = new Date(now.getFullYear(), now.getMonth() + ganttOffset, 1);
             end = new Date(start.getFullYear(), start.getMonth() + 1, 1);
             break;
-        case 'bimester':
+        }
+        case 'bimester': {
             const bIndex = Math.floor(now.getMonth() / 2) + ganttOffset;
             start = new Date(now.getFullYear(), bIndex * 2, 1);
             end = new Date(now.getFullYear(), (bIndex + 1) * 2, 1);
             break;
-        case 'trimester':
+        }
+        case 'trimester': {
             const tIndex = Math.floor(now.getMonth() / 3) + ganttOffset;
             start = new Date(now.getFullYear(), tIndex * 3, 1);
             end = new Date(now.getFullYear(), (tIndex + 1) * 3, 1);
             break;
-        case 'year':
+        }
+        case 'year': {
             start = new Date(now.getFullYear() + ganttOffset, 0, 1);
             end = new Date(start.getFullYear() + 1, 0, 1);
             break;
+        }
     }
     return { start, end };
 }
