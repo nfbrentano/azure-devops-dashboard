@@ -573,6 +573,43 @@ button:active { transform: scale(0.98); }
     color: var(--text-muted);
 }
 
+/* Empty State */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    text-align: center;
+    margin-top: 2rem;
+    border: 1px dashed var(--border-glass);
+    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+[data-theme="light"] .empty-state {
+    background: rgba(0, 0, 0, 0.01);
+}
+
+.empty-state i {
+    font-size: 4rem;
+    color: var(--primary);
+    margin-bottom: 1.5rem;
+    opacity: 0.8;
+}
+
+.empty-state h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+    color: var(--text-muted);
+    font-size: 1rem;
+    max-width: 400px;
+}
+
 /* Gantt Chart */
 .gantt-header {
     display: flex;

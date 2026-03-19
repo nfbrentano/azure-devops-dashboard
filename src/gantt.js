@@ -95,8 +95,7 @@ export function renderGantt(tree, context) {
         currentLanguage, 
         translations, 
         workItemMetadata, 
-        ganttContainer, 
-        azureConfig 
+        ganttContainer 
     } = context;
 
     const periodValue = ganttPeriod.value;

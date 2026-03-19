@@ -71,8 +71,9 @@ export const translations = {
         'aria-refresh': 'Refresh data from Azure DevOps',
         'aria-gantt-prev': 'Previous period',
         'aria-gantt-next': 'Next period',
-        'items-view-title': 'Item Details & Aging',
-        'items-view-subtitle': 'Detailed analysis of item inactivity and health'
+        'items-view-subtitle': 'Detailed analysis of item inactivity and health',
+        'empty-state-title': 'No items found',
+        'empty-state-desc': 'The selected query returned no work items. Please check your query or try a different one.'
     },
     'pt-br': {
         'tab-dashboard': 'Painel',
@@ -136,7 +137,8 @@ export const translations = {
         'aria-refresh': 'Atualizar dados do Azure DevOps',
         'aria-gantt-prev': 'Período anterior',
         'aria-gantt-next': 'Próximo período',
-        'items-view-title': 'Detalhes de Itens e Envelhecimento',
-        'items-view-subtitle': 'Análise detalhada de inatividade e saúde dos itens'
+        'items-view-subtitle': 'Análise detalhada de inatividade e saúde dos itens',
+        'empty-state-title': 'Nenhum item encontrado',
+        'empty-state-desc': 'A consulta selecionada não retornou nenhum item de trabalho. Por favor, verifique sua consulta ou tente outra.'
     }
 };

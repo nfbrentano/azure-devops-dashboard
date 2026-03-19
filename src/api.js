@@ -66,20 +66,40 @@ export async function fetchFullDetails(config, ids, onProgress = null) {
     let allItems = [];
     const auth = getAuthHeader(config.pat);
     const total = ids.length;
+    let failedChunks = 0;
     
     for (let i = 0; i < total; i += chunkSize) {
         if (onProgress) {
             onProgress((i / total) * 100);
         }
         
-        const chunk = ids.slice(i, i + chunkSize);
-        const url = `https://dev.azure.com/${config.org}/${config.project}/_apis/wit/workitems?ids=${chunk.join(',')}&$expand=all&api-version=6.0`;
-        const response = await fetchWithRetry(url, {
-            headers: { 'Authorization': auth },
-            cache: 'no-cache'
-        });
-        const data = await response.json();
-        allItems = allItems.concat(data.value);
+        try {
+            const chunk = ids.slice(i, i + chunkSize);
+            const url = `https://dev.azure.com/${config.org}/${config.project}/_apis/wit/workitems?ids=${chunk.join(',')}&$expand=all&api-version=6.0`;
+            const response = await fetchWithRetry(url, {
+                headers: { 'Authorization': auth },
+                cache: 'no-cache'
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status} fetching chunk ${i/chunkSize + 1}`);
+            }
+            
+            const data = await response.json();
+            if (data && data.value) {
+                allItems = allItems.concat(data.value);
+            }
+        } catch (e) {
+            console.error(`Error loading chunk starting at index ${i}:`, e);
+            failedChunks++;
+        }
+    }
+    
+    if (failedChunks > 0) {
+        const msg = failedChunks === 1 
+            ? 'Uma parte dos dados não pôde ser carregada. Dados parciais exibidos.'
+            : `${failedChunks} partes dos dados falharam ao carregar. Dados parciais exibidos.`;
+        showToast(msg, 'warning');
     }
     
     if (onProgress) {
@@ -133,7 +153,7 @@ export async function fetchMetadata(config, workItemMetadata, renderLegends) {
                         };
                     }
                 });
-            } catch (e) { /* ignore types that don't exist */ }
+            } catch { /* ignore types that don't exist */ }
         }
 
         // 3. Fetch Backlog Configurations
@@ -155,7 +175,7 @@ export async function fetchMetadata(config, workItemMetadata, renderLegends) {
         }
 
         if (renderLegends) renderLegends();
-    } catch (e) {
+    } catch {
         showToast('Failed to fetch Azure DevOps metadata', 'error');
     }
 }
@@ -170,7 +190,7 @@ export async function getBase64Image(url, auth) {
             reader.onloadend = () => resolve(reader.result);
             reader.readAsDataURL(blob);
         });
-    } catch (e) {
+    } catch {
         return null;
     }
 }
