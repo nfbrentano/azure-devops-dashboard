@@ -1,11 +1,12 @@
 /**
  * Main Entry Point for Azure DevOps Dashboard
- * Refactored into modules for better maintainability.
+ * Refactored into modules and centralized state.
  */
 
 // Imports
 import './style.css';
 import { translations } from './translations.js';
+import { state } from './state.js';
 import { 
     encryptPAT, decryptPAT, getWorkItemUrl, getStatusInfo, 
     getItemIcon, calculateProgress, showLoading 
@@ -21,28 +22,10 @@ import {
 import { renderGantt } from './gantt.js';
 import { renderActivityHeatmap } from './heatmap.js';
 
-// State
-let azureConfig = JSON.parse(localStorage.getItem('azure_config')) || null;
-if (azureConfig && azureConfig.pat) {
-    azureConfig.pat = decryptPAT(azureConfig.pat);
+// Initialize state-dependent values
+if (state.azureConfig && state.azureConfig.pat) {
+    state.azureConfig.pat = decryptPAT(state.azureConfig.pat);
 }
-let currentData = { items: [], tree: [] };
-let charts = {
-    comparison: null,
-    aging: null,
-    assignee: null,
-    cfd: null,
-    throughput: null
-};
-let heatmapData = null; 
-let ganttOffset = 0; 
-let currentTheme = localStorage.getItem('theme') || 'dark';
-let currentLanguage = localStorage.getItem('language') || 'pt-br';
-let workItemMetadata = {
-    types: {},
-    backlogs: [],
-    states: {} 
-};
 
 // DOM Elements
 const setupView = document.getElementById('setup-view');
@@ -67,12 +50,12 @@ const tabItems = document.getElementById('tab-items');
 const tabSetup = document.getElementById('tab-setup');
 
 // Apply Theme and Language on Load
-document.documentElement.setAttribute('data-theme', currentTheme);
+document.documentElement.setAttribute('data-theme', state.currentTheme);
 updateThemeIcon();
 applyTranslations();
 
 // Initialize
-if (azureConfig) {
+if (state.azureConfig) {
     showDashboard();
 } else {
     switchTab('setup');
@@ -103,12 +86,12 @@ setupForm.addEventListener('submit', async (e) => {
     
     const queries = await fetchQueries(config);
     if (queries) {
-        azureConfig = config;
+        state.azureConfig = config;
         const safeConfig = { ...config, pat: encryptPAT(config.pat) };
         localStorage.setItem('azure_config', JSON.stringify(safeConfig));
         showDashboard(queries);
     } else {
-        alert(translations[currentLanguage]['msg-auth-failed']);
+        alert(translations[state.currentLanguage]['msg-auth-failed']);
     }
 });
 
@@ -118,28 +101,28 @@ logoutBtn.addEventListener('click', () => {
 });
 
 themeToggle.addEventListener('click', () => {
-    currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', currentTheme);
-    localStorage.setItem('theme', currentTheme);
+    state.currentTheme = state.currentTheme === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', state.currentTheme);
+    localStorage.setItem('theme', state.currentTheme);
     updateThemeIcon();
-    if (querySelector.value) processAnalytics(currentData.items, currentData.tree);
+    if (querySelector.value) processAnalytics(state.currentData.items, state.currentData.tree);
 });
 
 function updateThemeIcon() {
     const icon = themeToggle.querySelector('i');
-    icon.className = currentTheme === 'dark' ? 'ph ph-sun-dim' : 'ph ph-moon-stars';
+    icon.className = state.currentTheme === 'dark' ? 'ph ph-sun-dim' : 'ph ph-moon-stars';
 }
 
 langToggle.addEventListener('click', () => {
-    currentLanguage = currentLanguage === 'pt-br' ? 'en' : 'pt-br';
-    localStorage.setItem('language', currentLanguage);
+    state.currentLanguage = state.currentLanguage === 'pt-br' ? 'en' : 'pt-br';
+    localStorage.setItem('language', state.currentLanguage);
     applyTranslations();
-    if (currentData.items.length > 0) processAnalytics(currentData.items, currentData.tree);
-    if (azureConfig) fetchQueries(azureConfig).then(queries => populateQueries(queries));
+    if (state.currentData.items.length > 0) processAnalytics(state.currentData.items, state.currentData.tree);
+    if (state.azureConfig) fetchQueries(state.azureConfig).then(queries => populateQueries(queries));
 });
 
 function applyTranslations() {
-    const lang = translations[currentLanguage];
+    const lang = translations[state.currentLanguage];
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         if (lang[key]) {
@@ -160,21 +143,21 @@ function applyTranslations() {
     });
 
     langToggle.title = lang['lang-toggle-title'];
-    langToggle.querySelector('span').textContent = currentLanguage === 'pt-br' ? 'EN' : 'PT';
+    langToggle.querySelector('span').textContent = state.currentLanguage === 'pt-br' ? 'EN' : 'PT';
     themeToggle.title = lang['theme-toggle-title'];
     refreshBtn.title = lang['refresh-btn-title'];
     querySelector.setAttribute('title', lang['query-selector-placeholder']);
     
-    document.getElementById('org').placeholder = currentLanguage === 'pt-br' ? 'ex: minha-empresa' : 'ex: my-company';
-    document.getElementById('project').placeholder = currentLanguage === 'pt-br' ? 'ex: meu-projeto' : 'ex: my-project';
-    document.getElementById('pat').placeholder = currentLanguage === 'pt-br' ? 'Seu Token do Azure' : 'Your Azure Token';
+    document.getElementById('org').placeholder = state.currentLanguage === 'pt-br' ? 'ex: minha-empresa' : 'ex: my-company';
+    document.getElementById('project').placeholder = state.currentLanguage === 'pt-br' ? 'ex: meu-projeto' : 'ex: my-project';
+    document.getElementById('pat').placeholder = state.currentLanguage === 'pt-br' ? 'Seu Token do Azure' : 'Your Azure Token';
 
-    if (currentData.tree.length > 0) callRenderGantt();
-    renderLegends(currentData.items, workItemMetadata, translations, currentLanguage);
+    if (state.currentData.tree.length > 0) callRenderGantt();
+    renderLegends(state.currentData.items, state.workItemMetadata, translations, state.currentLanguage);
 }
 
 querySelector.addEventListener('change', (e) => {
-    ganttOffset = 0;
+    state.ganttOffset = 0;
     loadQueryData(e.target.value);
 });
 
@@ -186,50 +169,56 @@ refreshBtn.addEventListener('click', async () => {
 });
 
 ganttPeriod.addEventListener('change', () => {
-    ganttOffset = 0;
+    state.ganttOffset = 0;
     const isTotal = ganttPeriod.value === 'total';
     ganttPrev.disabled = ganttNext.disabled = isTotal;
     ganttPrev.style.opacity = ganttNext.style.opacity = isTotal ? '0.3' : '1';
-    if (currentData.tree.length > 0) callRenderGantt();
+    if (state.currentData.tree.length > 0) callRenderGantt();
 });
 
 ganttPrev.addEventListener('click', () => {
     if (ganttPeriod.value === 'total') return;
-    ganttOffset--;
+    state.ganttOffset--;
     callRenderGantt();
 });
 
 ganttNext.addEventListener('click', () => {
     if (ganttPeriod.value === 'total') return;
-    ganttOffset++;
+    state.ganttOffset++;
     callRenderGantt();
 });
 
 document.querySelectorAll('.gantt-status-filters input').forEach(cb => {
     cb.addEventListener('change', () => {
-        if (currentData.tree.length > 0) callRenderGantt();
+        if (state.currentData.tree.length > 0) callRenderGantt();
     });
 });
 
 async function showDashboard(initialQueries = null) {
     switchTab('dashboard');
-    if (Object.keys(workItemMetadata.types).length === 0) {
-        await fetchMetadata(azureConfig, workItemMetadata, () => renderLegends(currentData?.items || [], workItemMetadata, translations, currentLanguage));
+    if (Object.keys(state.workItemMetadata.types).length === 0) {
+        await fetchMetadata(state.azureConfig, state.workItemMetadata, () => renderLegends(state.currentData?.items || [], state.workItemMetadata, translations, state.currentLanguage));
     }
-    const queries = initialQueries || await fetchQueries(azureConfig);
+    const queries = initialQueries || await fetchQueries(state.azureConfig);
     populateQueries(queries);
 }
 
 function callRenderGantt() {
-    renderGantt(currentData.tree, {
-        ganttPeriod, currentData, ganttOffset, currentLanguage, 
-        translations, workItemMetadata, ganttContainer, azureConfig
+    renderGantt(state.currentData.tree, {
+        ganttPeriod, 
+        currentData: state.currentData, 
+        ganttOffset: state.ganttOffset, 
+        currentLanguage: state.currentLanguage, 
+        translations, 
+        workItemMetadata: state.workItemMetadata, 
+        ganttContainer, 
+        azureConfig: state.azureConfig
     });
 }
 
 function populateQueries(queries) {
     const currentVal = querySelector.value;
-    const lang = translations[currentLanguage];
+    const lang = translations[state.currentLanguage];
     querySelector.innerHTML = `<option value="">${lang['query-selector-placeholder']}</option>`;
     queries.sort((a, b) => a.name.localeCompare(b.name)).forEach(q => {
         const option = document.createElement('option');
@@ -246,9 +235,9 @@ async function loadQueryData(queryId) {
     const loaders = Array.from(itemCards).map(card => showLoading(card));
 
     try {
-        const url = `https://dev.azure.com/${azureConfig.org}/${azureConfig.project}/_apis/wit/wiql/${queryId}?api-version=6.0`;
+        const url = `https://dev.azure.com/${state.azureConfig.org}/${state.azureConfig.project}/_apis/wit/wiql/${queryId}?api-version=6.0`;
         const response = await fetch(url, {
-            headers: { 'Authorization': `Basic ${btoa(':' + azureConfig.pat)}` },
+            headers: { 'Authorization': `Basic ${btoa(':' + state.azureConfig.pat)}` },
             cache: 'no-store'
         });
         const result = await response.json();
@@ -261,18 +250,18 @@ async function loadQueryData(queryId) {
         }
         
         if (ids.length === 0) {
-            alert(translations[currentLanguage]['msg-no-items']);
+            alert(translations[state.currentLanguage]['msg-no-items']);
             return;
         }
 
-        const items = await fetchFullDetails(azureConfig, ids);
-        const tree = buildTree(items, workItemMetadata);
-        currentData = { items, tree };
+        const items = await fetchFullDetails(state.azureConfig, ids);
+        const tree = buildTree(items, state.workItemMetadata);
+        state.currentData = { items, tree };
 
         const activeNameEl = document.getElementById('active-query-name');
         if (activeNameEl) {
             const selectedOption = querySelector.options[querySelector.selectedIndex];
-            activeNameEl.textContent = `${translations[currentLanguage]['label-query']}: ${selectedOption ? selectedOption.text : ''}`;
+            activeNameEl.textContent = `${translations[state.currentLanguage]['label-query']}: ${selectedOption ? selectedOption.text : ''}`;
         }
 
         processAnalytics(items, tree);
@@ -293,7 +282,7 @@ function processAnalytics(items, tree) {
         const createdDate = new Date(f['System.CreatedDate']);
         const activatedDate = f['Microsoft.VSTS.Common.ActivatedDate'] ? new Date(f['Microsoft.VSTS.Common.ActivatedDate']) : null;
         const closedDate = f['Microsoft.VSTS.Common.ClosedDate'] ? new Date(f['Microsoft.VSTS.Common.ClosedDate']) : null;
-        const state = f['System.State'];
+        const stateName = f['System.State'];
         const changedDate = new Date(f['System.ChangedDate']);
 
         if (closedDate && !isNaN(closedDate)) {
@@ -302,16 +291,16 @@ function processAnalytics(items, tree) {
             labels.push(`ID ${item.id}`);
         }
 
-        const statusInfo = getStatusInfo(state, workItemMetadata);
+        const statusInfo = getStatusInfo(stateName, state.workItemMetadata);
         const type = f['System.WorkItemType']?.toLowerCase();
-        const iconInfo = getItemIcon(type, workItemMetadata);
+        const iconInfo = getItemIcon(type, state.workItemMetadata);
         
         if (statusInfo.label === 'In Progress' && !iconInfo.isPortfolio && !isNaN(changedDate)) {
             agingData.push({
                 id: item.id,
                 title: f['System.Title'] || 'No Title',
                 age: Math.max(0, Math.floor((now - changedDate) / (1000 * 60 * 60 * 24))),
-                state: state
+                state: stateName
             });
         }
 
@@ -329,7 +318,7 @@ function processAnalytics(items, tree) {
         const counts = { date: d, Proposed: 0, InProgress: 0, Done: 0 };
         items.forEach(item => {
             const f = item.fields;
-            if (getItemIcon(f['System.WorkItemType'], workItemMetadata).isPortfolio) return;
+            if (getItemIcon(f['System.WorkItemType'], state.workItemMetadata).isPortfolio) return;
             const created = new Date(f['System.CreatedDate']);
             const activated = f['Microsoft.VSTS.Common.ActivatedDate'] ? new Date(f['Microsoft.VSTS.Common.ActivatedDate']) : null;
             const closed = f['Microsoft.VSTS.Common.ClosedDate'] ? new Date(f['Microsoft.VSTS.Common.ClosedDate']) : null;
@@ -342,17 +331,17 @@ function processAnalytics(items, tree) {
         cfdSeries.push(counts);
     }
 
-    heatmapData = {};
+    state.heatmapData = {};
     items.forEach(item => {
         const closedDate = item.fields['Microsoft.VSTS.Common.ClosedDate'];
         if (closedDate) {
             const dateStr = new Date(closedDate).toISOString().split('T')[0];
-            heatmapData[dateStr] = (heatmapData[dateStr] || 0) + 1;
+            state.heatmapData[dateStr] = (state.heatmapData[dateStr] || 0) + 1;
         }
     });
 
     const throughputData = [];
-    const requirementBacklogTypes = workItemMetadata.backlogs.find(b => b.name.toLowerCase().includes('requirement'))?.workItemTypes || [];
+    const requirementBacklogTypes = state.workItemMetadata.backlogs.find(b => b.name.toLowerCase().includes('requirement'))?.workItemTypes || [];
     for (let i = 11; i >= 0; i--) {
         const startOfWeek = new Date(now); startOfWeek.setDate(now.getDate() - now.getDay() - (i * 7)); startOfWeek.setHours(0, 0, 0, 0);
         const endOfWeek = new Date(startOfWeek); endOfWeek.setDate(startOfWeek.getDate() + 6); endOfWeek.setHours(23, 59, 59, 999);
@@ -367,19 +356,19 @@ function processAnalytics(items, tree) {
         });
         throughputData.push({
             label: `W${12 - i}`,
-            range: `${startOfWeek.toLocaleDateString(currentLanguage, { day: 'numeric', month: 'short' })} - ${endOfWeek.toLocaleDateString(currentLanguage, { day: 'numeric', month: 'short' })}`,
+            range: `${startOfWeek.toLocaleDateString(state.currentLanguage, { day: 'numeric', month: 'short' })} - ${endOfWeek.toLocaleDateString(state.currentLanguage, { day: 'numeric', month: 'short' })}`,
             count: count
         });
     }
 
-    renderCharts(labels, leadTimes, cycleTimes, charts, currentTheme, currentLanguage, translations, azureConfig);
-    renderAgingChart(agingData, charts, currentTheme, currentLanguage, translations, azureConfig);
-    renderAssigneeChart(assigneeWorkload, charts, currentTheme, currentLanguage, translations);
-    renderCFDChart(cfdSeries, charts, currentTheme, currentLanguage, translations);
-    renderActivityHeatmap(heatmapData, currentLanguage, translations);
-    renderThroughputChart(throughputData, charts, currentTheme, currentLanguage, translations);
-    renderPortfolioFilters(items, workItemMetadata, translations, currentLanguage, () => renderProgress(items, progressList, translations, currentLanguage, workItemMetadata, azureConfig));
-    renderProgress(items, progressList, translations, currentLanguage, workItemMetadata, azureConfig);
+    renderCharts(labels, leadTimes, cycleTimes, state.charts, state.currentTheme, state.currentLanguage, translations, state.azureConfig);
+    renderAgingChart(agingData, state.charts, state.currentTheme, state.currentLanguage, translations, state.azureConfig);
+    renderAssigneeChart(assigneeWorkload, state.charts, state.currentTheme, state.currentLanguage, translations);
+    renderCFDChart(cfdSeries, state.charts, state.currentTheme, state.currentLanguage, translations);
+    renderActivityHeatmap(state.heatmapData, state.currentLanguage, translations);
+    renderThroughputChart(throughputData, state.charts, state.currentTheme, state.currentLanguage, translations);
+    renderPortfolioFilters(items, state.workItemMetadata, translations, state.currentLanguage, () => renderProgress(items, progressList, translations, state.currentLanguage, state.workItemMetadata, state.azureConfig));
+    renderProgress(items, progressList, translations, state.currentLanguage, state.workItemMetadata, state.azureConfig);
     callRenderGantt();
-    renderLegends(items, workItemMetadata, translations, currentLanguage);
+    renderLegends(items, state.workItemMetadata, translations, state.currentLanguage);
 }
