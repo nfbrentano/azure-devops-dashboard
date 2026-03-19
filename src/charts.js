@@ -118,7 +118,7 @@ export function renderThroughputChart(throughputData, charts, currentTheme, curr
                 tooltip: {
                     callbacks: {
                         title: (items) => throughputData[items[0].dataIndex].range,
-                        label: (item) => `${translations[currentLanguage]['label-delivered']}: ${item.raw} ${translations[currentLanguage]['tab-dashboard'].toLowerCase() === 'dashboard' ? 'items' : 'itens'}`
+                        label: (item) => `${translations[currentLanguage]['label-delivered']}: ${item.raw} ${translations[currentLanguage]['label-items']}`
                     }
                 }
             }

@@ -123,6 +123,7 @@ langToggle.addEventListener('click', () => {
 
 function applyTranslations() {
     const lang = translations[state.currentLanguage];
+    document.documentElement.lang = state.currentLanguage.split('-')[0]; // Set HTML lang attribute (e.g., 'en' or 'pt')
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         if (lang[key]) {
