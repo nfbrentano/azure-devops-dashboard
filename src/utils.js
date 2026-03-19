@@ -96,3 +96,49 @@ export function showLoading(container) {
     container.appendChild(overlay);
     return overlay;
 }
+
+export function showToast(message, type = 'error') {
+    let container = document.querySelector('.toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    
+    let icon = 'ph-info';
+    let color = 'var(--primary)';
+    
+    if (type === 'error') {
+        icon = 'ph-fill ph-x-circle';
+        color = '#ef4444';
+    } else if (type === 'success') {
+        icon = 'ph-fill ph-check-circle';
+        color = '#10b981';
+    } else if (type === 'info') {
+        icon = 'ph-fill ph-info';
+        color = '#3b82f6';
+    }
+    
+    toast.innerHTML = `
+        <i class="${icon}" style="color: ${color}; font-size: 1.25rem; flex-shrink: 0;"></i>
+        <span>${message}</span>
+    `;
+
+    container.appendChild(toast);
+
+    // Auto remove after 5 seconds
+    const timeout = setTimeout(() => {
+        toast.style.animation = 'toast-fade-out 0.3s ease-in forwards';
+        setTimeout(() => toast.remove(), 301);
+    }, 5000);
+
+    // Allow manual dismiss on click
+    toast.addEventListener('click', () => {
+        clearTimeout(timeout);
+        toast.style.animation = 'toast-fade-out 0.2s ease-in forwards';
+        setTimeout(() => toast.remove(), 201);
+    });
+}

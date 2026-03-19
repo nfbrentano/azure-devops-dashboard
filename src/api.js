@@ -1,6 +1,7 @@
 /**
  * Azure DevOps API interaction logic
  */
+import { showToast } from './utils.js';
 
 export async function fetchQueries(config) {
     const url = `https://dev.azure.com/${config.org}/${config.project}/_apis/wit/queries?$depth=2&api-version=6.0`;
@@ -26,7 +27,7 @@ export async function fetchQueries(config) {
         flatten(data.value);
         return allQueries;
     } catch (e) {
-        console.error('Error fetching queries:', e.message || 'Error occurred');
+        showToast(e.message || 'Error fetching queries', 'error');
         return null;
     }
 }
@@ -115,7 +116,7 @@ export async function fetchMetadata(config, workItemMetadata, renderLegends) {
 
         if (renderLegends) renderLegends();
     } catch (e) {
-        console.error('Failed to fetch Azure DevOps metadata:', e.message || 'Error occurred');
+        showToast('Failed to fetch Azure DevOps metadata', 'error');
     }
 }
 

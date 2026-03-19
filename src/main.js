@@ -9,7 +9,7 @@ import { translations } from './translations.js';
 import { state } from './state.js';
 import { 
     encryptPAT, decryptPAT, getWorkItemUrl, getStatusInfo, 
-    getItemIcon, calculateProgress, showLoading 
+    getItemIcon, calculateProgress, showLoading, showToast 
 } from './utils.js';
 import { 
     fetchQueries, fetchFullDetails, fetchMetadata, buildTree 
@@ -91,7 +91,7 @@ setupForm.addEventListener('submit', async (e) => {
         localStorage.setItem('azure_config', JSON.stringify(safeConfig));
         showDashboard(queries);
     } else {
-        alert(translations[state.currentLanguage]['msg-auth-failed']);
+        showToast(translations[state.currentLanguage]['msg-auth-failed'], 'error');
     }
 });
 
@@ -250,7 +250,7 @@ async function loadQueryData(queryId) {
         }
         
         if (ids.length === 0) {
-            alert(translations[state.currentLanguage]['msg-no-items']);
+            showToast(translations[state.currentLanguage]['msg-no-items'], 'error');
             return;
         }
 
@@ -266,7 +266,7 @@ async function loadQueryData(queryId) {
 
         processAnalytics(items, tree);
     } catch (e) {
-        console.error('Error loading data:', e.message || 'Error occurred');
+        showToast(e.message || 'Error loading data', 'error');
     } finally {
         loaders.forEach(l => l.remove());
     }
