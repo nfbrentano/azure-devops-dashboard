@@ -95,23 +95,57 @@ export function processAnalytics(items, tree, options = {}) {
 
     const throughputData = [];
     const requirementBacklogTypes = workItemMetadata.backlogs.find(b => b.name.toLowerCase().includes('requirement'))?.workItemTypes || [];
-    for (let i = 11; i >= 0; i--) {
-        const startOfWeek = new Date(now); startOfWeek.setDate(now.getDate() - now.getDay() - (i * 7)); startOfWeek.setHours(0, 0, 0, 0);
-        const endOfWeek = new Date(startOfWeek); endOfWeek.setDate(startOfWeek.getDate() + 6); endOfWeek.setHours(23, 59, 59, 999);
-        let count = 0;
-        items.forEach(item => {
-            const closedDateStr = item.fields['Microsoft.VSTS.Common.ClosedDate'];
-            if (!closedDateStr) return;
-            const type = item.fields['System.WorkItemType']?.toLowerCase();
-            if (!(requirementBacklogTypes.includes(type) || ['user story', 'product backlog item', 'requirement', 'issue'].includes(type))) return;
-            const closed = new Date(closedDateStr);
-            if (closed >= startOfWeek && closed <= endOfWeek) count++;
-        });
-        throughputData.push({
-            label: `${translations[currentLanguage]['label-week-short']}${12 - i}`,
-            range: `${startOfWeek.toLocaleDateString(currentLanguage, { day: 'numeric', month: 'short' })} - ${endOfWeek.toLocaleDateString(currentLanguage, { day: 'numeric', month: 'short' })}`,
-            count: count
-        });
+    
+    // Find earliest completion date for requirement-level items
+    let earliestClosedDate = null;
+    items.forEach(item => {
+        const closedDateStr = item.fields['Microsoft.VSTS.Common.ClosedDate'];
+        if (!closedDateStr) return;
+        const type = item.fields['System.WorkItemType']?.toLowerCase();
+        if (!(requirementBacklogTypes.includes(type) || ['user story', 'product backlog item', 'requirement', 'issue'].includes(type))) return;
+        
+        const closed = new Date(closedDateStr);
+        if (!earliestClosedDate || closed < earliestClosedDate) earliestClosedDate = closed;
+    });
+
+    if (earliestClosedDate) {
+        // Find the absolute start of the week for the first completion
+        const firstWeekStart = new Date(earliestClosedDate);
+        firstWeekStart.setDate(earliestClosedDate.getDate() - earliestClosedDate.getDay());
+        firstWeekStart.setHours(0, 0, 0, 0);
+
+        // Find the absolute start of the current week
+        const currentWeekStart = new Date(now);
+        currentWeekStart.setDate(now.getDate() - now.getDay());
+        currentWeekStart.setHours(0, 0, 0, 0);
+
+        const diffDays = Math.ceil((currentWeekStart - firstWeekStart) / (1000 * 60 * 60 * 24));
+        const numWeeks = Math.max(1, Math.floor(diffDays / 7) + 1);
+
+        for (let i = 0; i < numWeeks; i++) {
+            const startOfWeek = new Date(firstWeekStart);
+            startOfWeek.setDate(firstWeekStart.getDate() + (i * 7));
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(startOfWeek.getDate() + 6);
+            endOfWeek.setHours(23, 59, 59, 999);
+
+            let count = 0;
+            items.forEach(item => {
+                const closedDateStr = item.fields['Microsoft.VSTS.Common.ClosedDate'];
+                if (!closedDateStr) return;
+                const type = item.fields['System.WorkItemType']?.toLowerCase();
+                if (!(requirementBacklogTypes.includes(type) || ['user story', 'product backlog item', 'requirement', 'issue'].includes(type))) return;
+                
+                const closed = new Date(closedDateStr);
+                if (closed >= startOfWeek && closed <= endOfWeek) count++;
+            });
+
+            throughputData.push({
+                label: `${translations[currentLanguage]['label-week-short']}${i + 1}`,
+                range: `${startOfWeek.toLocaleDateString(currentLanguage, { day: 'numeric', month: 'short' })} - ${endOfWeek.toLocaleDateString(currentLanguage, { day: 'numeric', month: 'short' })}`,
+                count: count
+            });
+        }
     }
 
     // Rendering via charts.js
