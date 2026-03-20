@@ -67,7 +67,7 @@ async function initApp() {
     };
     applyTranslations(uiOptions);
 
-    if (state.azureConfig.org && state.azureConfig.project && state.azureConfig.pat) {
+    if (state.azureConfig?.org && state.azureConfig?.project && state.azureConfig?.pat) {
         if (state.azureConfig.pat.includes(':')) {
             switchTab('unlock', elements);
         } else {
