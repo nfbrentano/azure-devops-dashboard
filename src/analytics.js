@@ -20,6 +20,7 @@ export function processAnalytics(items, tree, options = {}) {
     const leadTimes = [], cycleTimes = [], labels = [], agingData = [];
     const assigneeWorkload = {};
     const boardColumnWIP = {};
+    const kpis = { total: items.length, backlog: 0, inprogress: 0, doneRemoved: 0 };
     const now = new Date();
 
     items.forEach(item => {
@@ -30,13 +31,17 @@ export function processAnalytics(items, tree, options = {}) {
         const stateName = f['System.State'];
         const changedDate = new Date(f['System.ChangedDate']);
 
+        const statusInfo = getStatusInfo(stateName, workItemMetadata);
+        if (statusInfo.label === 'Backlog') kpis.backlog++;
+        else if (statusInfo.label === 'In Progress') kpis.inprogress++;
+        else if (statusInfo.label === 'Done' || statusInfo.label === 'Removed') kpis.doneRemoved++;
+
         if (closedDate && !isNaN(closedDate)) {
             leadTimes.push(((closedDate - createdDate) / (1000 * 60 * 60 * 24)).toFixed(1));
             cycleTimes.push(activatedDate ? ((closedDate - activatedDate) / (1000 * 60 * 60 * 24)).toFixed(1) : 0);
             labels.push(`ID ${item.id}`);
         }
 
-        const statusInfo = getStatusInfo(stateName, workItemMetadata);
         const type = f['System.WorkItemType']?.toLowerCase();
         const iconInfo = getItemIcon(type, workItemMetadata);
         
@@ -123,4 +128,10 @@ export function processAnalytics(items, tree, options = {}) {
     
     if (callRenderGantt) callRenderGantt();
     renderLegends(items, workItemMetadata, translations, currentLanguage);
+
+    // Update KPIs
+    document.getElementById('kpi-total').textContent = kpis.total;
+    document.getElementById('kpi-backlog').textContent = kpis.backlog;
+    document.getElementById('kpi-inprogress').textContent = kpis.inprogress;
+    document.getElementById('kpi-done').textContent = kpis.doneRemoved;
 }
