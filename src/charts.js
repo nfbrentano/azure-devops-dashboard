@@ -275,6 +275,73 @@ export function renderAssigneeChart(workloadData, charts, currentTheme, currentL
     });
 }
 
+export function renderWIPChart(boardColumnData, charts, currentTheme, currentLanguage, translations) {
+    let canvas = document.getElementById('wipChart');
+    const container = canvas?.parentElement;
+    if (!container) return;
+
+    if (charts.wip) charts.wip.destroy();
+
+    const columns = Object.keys(boardColumnData);
+    const counts = columns.map(col => boardColumnData[col]);
+
+    if (columns.length === 0) {
+        container.innerHTML = `<div id="wip-empty-msg" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); gap: 1rem;">
+            <i class="ph-bold ph-ghost" style="font-size: 3rem; opacity: 0.5;"></i>
+            <p>${translations[currentLanguage]['msg-wip-empty']}</p>
+        </div>`;
+        return;
+    }
+
+    if (document.getElementById('wip-empty-msg')) {
+        container.innerHTML = '<canvas id="wipChart"></canvas>';
+        canvas = document.getElementById('wipChart');
+    }
+
+    if (!canvas) return;
+
+    const isLight = currentTheme === 'light';
+    const gridColor = isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)';
+    const textColor = isLight ? '#64748b' : '#94a3b8';
+
+    charts.wip = new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels: columns,
+            datasets: [{
+                label: translations[currentLanguage]['label-items-count'],
+                data: counts,
+                backgroundColor: '#f59e0b',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { 
+                    beginAtZero: true, 
+                    grid: { color: gridColor }, 
+                    ticks: { color: textColor, stepSize: 1 },
+                    title: { display: true, text: translations[currentLanguage]['label-quantity'], color: textColor }
+                },
+                x: { 
+                    grid: { display: false }, 
+                    ticks: { color: textColor } 
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (context) => `${translations[currentLanguage]['label-items']}: ${context.raw}`
+                    }
+                }
+            }
+        }
+    });
+}
+
 export function renderCFDChart(cfdSeries, charts, currentTheme, currentLanguage, translations) {
     let canvas = document.getElementById('cfdChart');
     const container = document.querySelector('#items-view .dashboard-grid .card.glass[style*="grid-column: 1 / -1"] div[style*="height: 500px"]');

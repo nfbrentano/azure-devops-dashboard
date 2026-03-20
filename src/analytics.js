@@ -6,7 +6,7 @@ import { translations } from './translations.js';
 import { getItemIcon, getStatusInfo } from './utils.js';
 import { 
     renderCharts, renderThroughputChart, renderAgingChart, 
-    renderAssigneeChart, renderCFDChart, renderPortfolioFilters, 
+    renderAssigneeChart, renderWIPChart, renderCFDChart, renderPortfolioFilters, 
     renderProgress, renderLegends 
 } from './charts.js';
 import { renderActivityHeatmap } from './heatmap.js';
@@ -19,6 +19,7 @@ export function processAnalytics(items, tree, options = {}) {
 
     const leadTimes = [], cycleTimes = [], labels = [], agingData = [];
     const assigneeWorkload = {};
+    const boardColumnWIP = {};
     const now = new Date();
 
     items.forEach(item => {
@@ -52,6 +53,9 @@ export function processAnalytics(items, tree, options = {}) {
             let assignee = f['System.AssignedTo'];
             let name = assignee?.displayName || assignee?.uniqueName || (typeof assignee === 'string' ? assignee : translations[currentLanguage]['label-unassigned']);
             assigneeWorkload[name] = (assigneeWorkload[name] || 0) + 1;
+
+            const boardColumn = f['System.BoardColumn'] || f['System.State'];
+            boardColumnWIP[boardColumn] = (boardColumnWIP[boardColumn] || 0) + 1;
         }
     });
 
@@ -109,6 +113,7 @@ export function processAnalytics(items, tree, options = {}) {
     renderCharts(labels, leadTimes, cycleTimes, charts, currentTheme, currentLanguage, translations, azureConfig);
     renderAgingChart(agingData, charts, currentTheme, currentLanguage, translations, azureConfig);
     renderAssigneeChart(assigneeWorkload, charts, currentTheme, currentLanguage, translations);
+    renderWIPChart(boardColumnWIP, charts, currentTheme, currentLanguage, translations);
     renderCFDChart(cfdSeries, charts, currentTheme, currentLanguage, translations);
     renderActivityHeatmap(state.heatmapData, currentLanguage, translations);
     
