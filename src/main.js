@@ -78,110 +78,110 @@ async function initApp() {
         switchTab('setup', elements);
     }
 
+    const handlers = {
+        handleTabSwitch: (tabId) => switchTab(tabId, elements),
+        
+        handleAuth: async (e) => {
+            e.preventDefault();
+            const config = {
+                org: document.getElementById('org').value,
+                project: document.getElementById('project').value,
+                pat: document.getElementById('pat').value
+            };
+            const password = document.getElementById('security-password').value;
+            const save = document.getElementById('save-credentials').checked;
+            
+            const queries = await fetchQueries(config);
+            if (queries) {
+                state.azureConfig = config;
+                if (save) {
+                    const safeConfig = { ...config, pat: await encryptPAT(config.pat, password) };
+                    localStorage.setItem('azure_config', JSON.stringify(safeConfig));
+                } else {
+                    localStorage.removeItem('azure_config');
+                }
+                showDashboard(queries);
+            } else {
+                showToast(translations[state.currentLanguage]['msg-auth-failed'], 'error');
+            }
+        },
+
+        handleUnlock: async (e) => {
+            e.preventDefault();
+            const password = document.getElementById('unlock-password').value;
+            const decryptedPat = await decryptPAT(state.azureConfig.pat, password);
+            
+            if (decryptedPat) {
+                state.azureConfig.pat = decryptedPat;
+                showDashboard();
+            } else {
+                showToast(translations[state.currentLanguage]['msg-invalid-password'], 'error');
+            }
+        },
+
+        handleThemeToggle: () => {
+            state.currentTheme = state.currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', state.currentTheme);
+            localStorage.setItem('theme', state.currentTheme);
+            updateThemeIcon(elements.themeToggle, state.currentTheme);
+            if (elements.querySelector.value) runAnalytics();
+        },
+
+        handleLangToggle: () => {
+            state.currentLanguage = state.currentLanguage === 'pt-br' ? 'en' : 'pt-br';
+            localStorage.setItem('language', state.currentLanguage);
+            applyTranslations({
+                currentLanguage: state.currentLanguage,
+                currentData: state.currentData,
+                workItemMetadata: state.workItemMetadata,
+                langToggle: elements.langToggle,
+                themeToggle: elements.themeToggle,
+                refreshBtn: elements.refreshBtn,
+                querySelector: elements.querySelector,
+                callRenderGantt
+            });
+            if (state.currentData.items.length > 0) runAnalytics();
+            if (state.azureConfig) fetchQueries(state.azureConfig).then(queries => populateQueries(queries, elements.querySelector, state.currentLanguage));
+        },
+
+        handleQueryChange: (e) => {
+            state.ganttOffset = 0;
+            loadQueryData(e.target.value);
+        },
+
+        handleRefresh: async () => {
+            if (!state.azureConfig || !state.azureConfig.org || !state.azureConfig.project || !state.azureConfig.pat) {
+                showToast(translations[state.currentLanguage]['msg-missing-config'], 'error');
+                switchTab('setup', elements);
+                return;
+            }
+            if (elements.refreshBtn.classList.contains('spinning') || !elements.querySelector.value) return;
+            elements.refreshBtn.classList.add('spinning');
+            await loadQueryData(elements.querySelector.value);
+            elements.refreshBtn.classList.remove('spinning');
+        },
+
+        handleGanttPeriodChange: () => {
+            state.ganttOffset = 0;
+            const isTotal = elements.ganttPeriod.value === 'total';
+            elements.ganttPrev.disabled = elements.ganttNext.disabled = isTotal;
+            elements.ganttPrev.style.opacity = elements.ganttNext.style.opacity = isTotal ? '0.3' : '1';
+            if (state.currentData.tree.length > 0) callRenderGantt();
+        },
+
+        handleGanttNav: (dir) => {
+            if (elements.ganttPeriod.value === 'total') return;
+            state.ganttOffset += dir;
+            callRenderGantt();
+        },
+
+        handleGanttFilterChange: () => {
+            if (state.currentData.tree.length > 0) callRenderGantt();
+        }
+    };
+
     initEvents(elements, handlers);
 }
-
-const handlers = {
-    handleTabSwitch: (tabId) => switchTab(tabId, elements),
-    
-    handleAuth: async (e) => {
-        e.preventDefault();
-        const config = {
-            org: document.getElementById('org').value,
-            project: document.getElementById('project').value,
-            pat: document.getElementById('pat').value
-        };
-        const password = document.getElementById('security-password').value;
-        const save = document.getElementById('save-credentials').checked;
-        
-        const queries = await fetchQueries(config);
-        if (queries) {
-            state.azureConfig = config;
-            if (save) {
-                const safeConfig = { ...config, pat: await encryptPAT(config.pat, password) };
-                localStorage.setItem('azure_config', JSON.stringify(safeConfig));
-            } else {
-                localStorage.removeItem('azure_config');
-            }
-            showDashboard(queries);
-        } else {
-            showToast(translations[state.currentLanguage]['msg-auth-failed'], 'error');
-        }
-    },
-
-    handleUnlock: async (e) => {
-        e.preventDefault();
-        const password = document.getElementById('unlock-password').value;
-        const decryptedPat = await decryptPAT(state.azureConfig.pat, password);
-        
-        if (decryptedPat) {
-            state.azureConfig.pat = decryptedPat;
-            showDashboard();
-        } else {
-            showToast(translations[state.currentLanguage]['msg-invalid-password'], 'error');
-        }
-    },
-
-    handleThemeToggle: () => {
-        state.currentTheme = state.currentTheme === 'dark' ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-theme', state.currentTheme);
-        localStorage.setItem('theme', state.currentTheme);
-        updateThemeIcon(elements.themeToggle, state.currentTheme);
-        if (elements.querySelector.value) runAnalytics();
-    },
-
-    handleLangToggle: () => {
-        state.currentLanguage = state.currentLanguage === 'pt-br' ? 'en' : 'pt-br';
-        localStorage.setItem('language', state.currentLanguage);
-        applyTranslations({
-            currentLanguage: state.currentLanguage,
-            currentData: state.currentData,
-            workItemMetadata: state.workItemMetadata,
-            langToggle: elements.langToggle,
-            themeToggle: elements.themeToggle,
-            refreshBtn: elements.refreshBtn,
-            querySelector: elements.querySelector,
-            callRenderGantt
-        });
-        if (state.currentData.items.length > 0) runAnalytics();
-        if (state.azureConfig) fetchQueries(state.azureConfig).then(queries => populateQueries(queries, elements.querySelector, state.currentLanguage));
-    },
-
-    handleQueryChange: (e) => {
-        state.ganttOffset = 0;
-        loadQueryData(e.target.value);
-    },
-
-    handleRefresh: async () => {
-        if (!state.azureConfig || !state.azureConfig.org || !state.azureConfig.project || !state.azureConfig.pat) {
-            showToast(translations[state.currentLanguage]['msg-missing-config'], 'error');
-            switchTab('setup', elements);
-            return;
-        }
-        if (elements.refreshBtn.classList.contains('spinning') || !elements.querySelector.value) return;
-        elements.refreshBtn.classList.add('spinning');
-        await loadQueryData(elements.querySelector.value);
-        elements.refreshBtn.classList.remove('spinning');
-    },
-
-    handleGanttPeriodChange: () => {
-        state.ganttOffset = 0;
-        const isTotal = elements.ganttPeriod.value === 'total';
-        elements.ganttPrev.disabled = elements.ganttNext.disabled = isTotal;
-        elements.ganttPrev.style.opacity = elements.ganttNext.style.opacity = isTotal ? '0.3' : '1';
-        if (state.currentData.tree.length > 0) callRenderGantt();
-    },
-
-    handleGanttNav: (dir) => {
-        if (elements.ganttPeriod.value === 'total') return;
-        state.ganttOffset += dir;
-        callRenderGantt();
-    },
-
-    handleGanttFilterChange: () => {
-        if (state.currentData.tree.length > 0) callRenderGantt();
-    }
-};
 
 async function showDashboard(initialQueries = null) {
     switchTab('dashboard', elements);
@@ -230,8 +230,8 @@ async function loadQueryData(queryId) {
         const items = await fetchFullDetails(state.azureConfig, ids, (p) => {
             updateLoadingProgress(p);
         });
-        const tree = buildTree(items, state.workItemMetadata);
-        state.currentData = { items, tree };
+        const { roots, nodes } = buildTree(items, state.workItemMetadata);
+        state.currentData = { items: nodes, tree: roots };
 
         const activeNameEl = document.getElementById('active-query-name');
         if (activeNameEl) {

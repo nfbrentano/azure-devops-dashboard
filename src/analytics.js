@@ -27,7 +27,8 @@ export function processAnalytics(items, tree, options = {}) {
         const f = item.fields;
         const createdDate = new Date(f['System.CreatedDate']);
         const activatedDate = f['Microsoft.VSTS.Common.ActivatedDate'] ? new Date(f['Microsoft.VSTS.Common.ActivatedDate']) : null;
-        const closedDate = f['Microsoft.VSTS.Common.ClosedDate'] ? new Date(f['Microsoft.VSTS.Common.ClosedDate']) : null;
+        const closedDateStr = f['Microsoft.VSTS.Common.ClosedDate'] || f['System.ClosedDate'];
+        const closedDate = closedDateStr ? new Date(closedDateStr) : null;
         const stateName = f['System.State'];
         const changedDate = new Date(f['System.ChangedDate']);
 
@@ -86,9 +87,10 @@ export function processAnalytics(items, tree, options = {}) {
 
     state.heatmapData = {};
     items.forEach(item => {
-        const closedDate = item.fields['Microsoft.VSTS.Common.ClosedDate'];
-        if (closedDate) {
-            const dateStr = new Date(closedDate).toISOString().split('T')[0];
+        const f = item.fields;
+        const closedDateStr = f['Microsoft.VSTS.Common.ClosedDate'] || f['System.ClosedDate'];
+        if (closedDateStr) {
+            const dateStr = new Date(closedDateStr).toISOString().split('T')[0];
             state.heatmapData[dateStr] = (state.heatmapData[dateStr] || 0) + 1;
         }
     });
@@ -99,7 +101,8 @@ export function processAnalytics(items, tree, options = {}) {
     // Find earliest completion date for requirement-level items
     let earliestClosedDate = null;
     items.forEach(item => {
-        const closedDateStr = item.fields['Microsoft.VSTS.Common.ClosedDate'];
+        const f = item.fields;
+        const closedDateStr = f['Microsoft.VSTS.Common.ClosedDate'] || f['System.ClosedDate'];
         if (!closedDateStr) return;
         const type = item.fields['System.WorkItemType']?.toLowerCase();
         if (!(requirementBacklogTypes.includes(type) || ['user story', 'product backlog item', 'requirement', 'issue'].includes(type))) return;
@@ -131,7 +134,8 @@ export function processAnalytics(items, tree, options = {}) {
 
             let count = 0;
             items.forEach(item => {
-                const closedDateStr = item.fields['Microsoft.VSTS.Common.ClosedDate'];
+                const f = item.fields;
+                const closedDateStr = f['Microsoft.VSTS.Common.ClosedDate'] || f['System.ClosedDate'];
                 if (!closedDateStr) return;
                 const type = item.fields['System.WorkItemType']?.toLowerCase();
                 if (!(requirementBacklogTypes.includes(type) || ['user story', 'product backlog item', 'requirement', 'issue'].includes(type))) return;

@@ -200,33 +200,34 @@ export async function getBase64Image(url, auth) {
 }
 
 export function buildTree(items, workItemMetadata) {
-    const itemMap = new Map();
-    items.forEach(item => {
-        item.children = [];
-        itemMap.set(item.id, item);
+    const nodeMap = new Map();
+    const nodes = items.map(item => {
+        const node = { ...item, children: [] };
+        nodeMap.set(node.id, node);
+        return node;
     });
 
     const roots = [];
-    items.forEach(item => {
-        const parentIdField = item.fields['System.Parent']?.id || item.fields['System.Parent'];
+    nodes.forEach(node => {
+        const parentIdField = node.fields['System.Parent']?.id || node.fields['System.Parent'];
         let parentId = parentIdField ? parseInt(parentIdField) : null;
 
         if (!parentId) {
-            const parentRelation = item.relations?.find(r => r.rel === 'System.LinkTypes.Hierarchy-Reverse');
+            const parentRelation = node.relations?.find(r => r.rel === 'System.LinkTypes.Hierarchy-Reverse');
             if (parentRelation) {
                 parentId = parseInt(parentRelation.url.split('/').pop());
             }
         }
 
         if (parentId) {
-            const parent = itemMap.get(parentId);
+            const parent = nodeMap.get(parentId);
             if (parent) {
-                parent.children.push(item);
+                parent.children.push(node);
             } else {
-                roots.push(item);
+                roots.push(node);
             }
         } else {
-            roots.push(item);
+            roots.push(node);
         }
     });
 
@@ -260,5 +261,5 @@ export function buildTree(items, workItemMetadata) {
     };
     roots.forEach(sortChildren);
 
-    return roots;
+    return { roots, nodes };
 }

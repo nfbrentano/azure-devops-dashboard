@@ -38,6 +38,10 @@
   --color-bug: #cc293d;
   
   --gantt-label-width: clamp(250px, 45vw, 600px); /* Increased for info */
+  
+  /* Heatmap Variables */
+  --heatmap-cell-size: 18px;
+  --heatmap-gap: 5px;
 }
 
 /* Light Theme Overrides */
@@ -53,6 +57,10 @@
                  radial-gradient(at 50% 0%, hsla(225,39%,90%,1) 0, transparent 50%), 
                  radial-gradient(at 100% 0%, hsla(339,49%,90%,1) 0, transparent 50%);
   --status-removed: #0f172a;
+  
+  /* Heatmap Light Theme */
+  --heatmap-cell-size: 18px;
+  --heatmap-gap: 5px;
 }
 
 body {

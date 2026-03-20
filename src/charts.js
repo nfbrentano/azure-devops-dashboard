@@ -128,7 +128,8 @@ export function renderThroughputChart(throughputData, charts, currentTheme, curr
 
 export function renderAgingChart(agingData, charts, currentTheme, currentLanguage, translations, azureConfig) {
     let canvas = document.getElementById('agingChart');
-    const container = document.querySelector('#items-view .dashboard-grid .card.glass div[style*="height: 500px"]');
+    if (!canvas) return;
+    const container = canvas.parentElement;
     if (!container) return;
 
     if (charts.aging) charts.aging.destroy();
@@ -208,8 +209,8 @@ export function renderAgingChart(agingData, charts, currentTheme, currentLanguag
 
 export function renderAssigneeChart(workloadData, charts, currentTheme, currentLanguage, translations) {
     let canvas = document.getElementById('assigneeChart');
-    const allContainers = document.querySelectorAll('#items-view .dashboard-grid .card.glass div[style*="height: 500px"]');
-    const container = allContainers[1] || allContainers[0]?.parentElement?.querySelector('.card.glass:last-child div[style*="height: 500px"]');
+    if (!canvas) return;
+    const container = canvas.parentElement;
     if (!container) return;
 
     if (charts.assignee) charts.assignee.destroy();
@@ -344,7 +345,8 @@ export function renderWIPChart(boardColumnData, charts, currentTheme, currentLan
 
 export function renderCFDChart(cfdSeries, charts, currentTheme, currentLanguage, translations) {
     let canvas = document.getElementById('cfdChart');
-    const container = document.querySelector('#items-view .dashboard-grid .card.glass[style*="grid-column: 1 / -1"] div[style*="height: 500px"]');
+    if (!canvas) return;
+    const container = canvas.parentElement;
     if (!container) return;
 
     if (charts.cfd) charts.cfd.destroy();
