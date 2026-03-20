@@ -18,7 +18,7 @@
         <button id="tab-items" class="tab-btn" data-i18n="tab-items"><i class="ph-bold ph-hourglass"></i> Item Details</button>
         <button id="tab-setup" class="tab-btn" data-i18n="tab-setup"><i class="ph-bold ph-gear"></i> Setup</button>
       </div>
-      <button id="lang-toggle" class="glass btn-icon-glass" title="Switch to English" data-i18n-aria="aria-lang-toggle" style="margin-right: 0.5rem;">
+      <button id="lang-toggle" class="glass btn-icon-glass" title="Switch to English" data-i18n-aria="aria-lang-toggle">
         <span style="font-weight: bold; font-size: 0.8rem;">EN</span>
       </button>
       <button id="theme-toggle" class="glass btn-icon-glass theme-toggle-nav" title="Toggle Dark/Light Mode" data-i18n-aria="aria-theme-toggle">
@@ -27,12 +27,9 @@
     </nav>
 
     <!-- Global Data Header (Visible in Dashboard and Items) -->
-    <div id="data-controls" class="hidden no-print"
-      style="padding: 1rem 5% 0 5%; display: flex; justify-content: flex-end; align-items: center; gap: 1rem;">
-
-      <select id="query-selector" class="glass header-select" title="Select Analytics Query"
-        style="min-width: 250px;"></select>
-      <button id="refresh-btn" class="glass btn-icon-glass" title="Refresh Data" data-i18n-aria="aria-refresh" style="width: auto;"><i
+    <div id="data-controls" class="hidden no-print data-controls">
+      <select id="query-selector" class="glass header-select" title="Select Analytics Query"></select>
+      <button id="refresh-btn" class="glass btn-icon-glass refresh-btn" title="Refresh Data" data-i18n-aria="aria-refresh"><i
           class="ph-bold ph-arrows-clockwise"></i></button>
     </div>
 
@@ -160,14 +157,14 @@
 
       <div id="items-content" class="dashboard-grid">
         <!-- Comparison Chart Card -->
-        <div class="card glass" style="grid-column: 1 / -1; margin-top: 1rem;">
+        <div class="card glass full-width">
           <div class="card-title">
-            <div style="display: flex; align-items: center; gap: 0.75rem;" data-i18n="chart-comparison-title">
+            <div class="card-title-content" data-i18n="chart-comparison-title">
               <i class="ph-bold ph-stack"></i>
               Lead vs Cycle Time Comparison
             </div>
           </div>
-          <div style="height: 400px;">
+          <div class="chart-container-md">
             <canvas id="comparisonChart"></canvas>
           </div>
         </div>
@@ -180,7 +177,7 @@
               Work Item Aging (In Progress)
             </div>
           </div>
-          <div style="height: 500px;">
+          <div class="chart-container-lg">
             <canvas id="agingChart"></canvas>
           </div>
         </div>
@@ -193,33 +190,33 @@
               Workload by Assignee
             </div>
           </div>
-          <div style="height: 500px;">
+          <div class="chart-container-lg">
             <canvas id="assigneeChart"></canvas>
           </div>
         </div>
 
         <!-- WIP by Kanban Column Chart -->
-        <div class="card glass" style="grid-column: 1 / -1;">
+        <div class="card glass full-width">
           <div class="card-title">
-            <div style="flex: 1; display: flex; align-items: center; gap: 0.75rem;" data-i18n="chart-wip-title">
+            <div class="card-title-content" data-i18n="chart-wip-title">
               <i class="ph-bold ph-columns"></i>
               WIP by Kanban Column
             </div>
           </div>
-          <div style="height: 400px;">
+          <div class="chart-container-md">
             <canvas id="wipChart"></canvas>
           </div>
         </div>
 
         <!-- Cumulative Flow Diagram (CFD) -->
-        <div class="card glass" style="grid-column: 1 / -1;">
+        <div class="card glass full-width">
           <div class="card-title">
-            <div style="flex: 1; display: flex; align-items: center; gap: 0.75rem;" data-i18n="chart-cfd-title">
+            <div class="card-title-content" data-i18n="chart-cfd-title">
               <i class="ph-bold ph-chart-line-up"></i>
               Cumulative Flow Diagram (CFD)
             </div>
           </div>
-          <div style="height: 500px;">
+          <div class="chart-container-lg">
             <canvas id="cfdChart"></canvas>
           </div>
         </div>
@@ -300,7 +297,7 @@
               Throughput (Items per Week) — Requirement Backlog
             </div>
           </div>
-          <div style="height: 300px;">
+          <div class="chart-container-sm">
             <canvas id="throughputChart"></canvas>
           </div>
         </div>
@@ -316,8 +313,7 @@
               <!-- Populated dynamically -->
             </div>
           </div>
-          <div id="progress-list"
-            style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
+          <div id="progress-list" class="portfolio-grid">
             <!-- Will be populated by JS -->
           </div>
         </div>
@@ -339,14 +335,14 @@
               </div>
 
               <!-- Linha 2: Navegação de período + Select -->
-              <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; justify-content: flex-end;">
-                <div style="display: flex; align-items: center; gap: 0.5rem; background: var(--glass-bg); border-radius: 0.5rem; border: 1px solid var(--border-glass); padding: 0.25rem; flex-shrink: 0;">
-                  <button id="gantt-prev" class="glass" data-i18n-aria="aria-gantt-prev" style="padding: 0.4rem; border-radius: 0.4rem; cursor: pointer; border: none; background: transparent; display: flex; align-items: center; justify-content: center;"><i class="ph-bold ph-caret-left"></i></button>
-                  <span id="gantt-current-period-label" data-i18n="loading-label" style="font-weight: 600; font-size: 0.85rem; min-width: 200px; text-align: center; white-space: nowrap;">Carregando...</span>
-                   <button id="gantt-next" class="glass" data-i18n-aria="aria-gantt-next" style="padding: 0.4rem; border-radius: 0.4rem; cursor: pointer; border: none; background: transparent; display: flex; align-items: center; justify-content: center;"><i class="ph-bold ph-caret-right"></i></button>
+              <div class="gantt-controls">
+                <div class="gantt-period-nav">
+                  <button id="gantt-prev" class="glass" data-i18n-aria="aria-gantt-prev"><i class="ph-bold ph-caret-left"></i></button>
+                  <span id="gantt-current-period-label" data-i18n="loading-label">Carregando...</span>
+                   <button id="gantt-next" class="glass" data-i18n-aria="aria-gantt-next"><i class="ph-bold ph-caret-right"></i></button>
                 </div>
-                <div style="width: 1px; height: 24px; background: var(--border-glass); margin: 0 0.25rem;"></div>
-                <select id="gantt-period" class="glass" style="padding: 0.5rem 0.75rem; font-size: 0.85rem; font-weight: 500; border-radius: 0.5rem; cursor: pointer; width: auto;">
+                <div class="gantt-nav-divider"></div>
+                <select id="gantt-period" class="glass gantt-period-select">
                   <option value="total" data-i18n="gantt-period-total">Visão Geral (Auto)</option>
                   <option value="year" data-i18n="gantt-period-year">Anual</option>
                   <option value="trimester" data-i18n="gantt-period-trimester">Trimestral</option>

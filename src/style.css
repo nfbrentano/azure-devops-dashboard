@@ -71,7 +71,7 @@ body {
   width: 100%;
   max-width: 1800px;
   margin: 0 auto;
-  padding: clamp(1rem, 5vw, 2rem);
+  padding: clamp(0.75rem, 3vw, 2rem);
   box-sizing: border-box;
 }
 
@@ -334,11 +334,19 @@ h1 {
 .heatmap-l3 { background: var(--heatmap-l3); }
 .heatmap-l4 { background: var(--heatmap-l4); }
 
+.data-controls {
+    padding: 1rem 2rem 0 2rem;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 1rem;
+}
+
 .header-select {
-    width: auto !important;
+    width: auto;
     min-width: 250px;
-    padding: 0.6rem 2.5rem 0.6rem 1rem !important;
-    background-color: var(--bg-card) !important;
+    padding: 0.6rem 2.5rem 0.6rem 1rem;
+    background-color: var(--bg-card);
     font-size: 0.9rem;
     font-weight: 500;
     cursor: pointer;
@@ -347,6 +355,10 @@ h1 {
     background-position: right 0.75rem center;
     -webkit-appearance: none;
     appearance: none;
+}
+
+.refresh-btn {
+    width: auto;
 }
 
 h2 { margin: 0 0 1rem 0; }
@@ -367,65 +379,31 @@ h2 { margin: 0 0 1rem 0; }
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
 }
 
-.card-title {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin-bottom: 1.5rem;
-}
-
-/* KPI Card Styles */
-.kpi-grid {
+.portfolio-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 1.5rem;
-    margin-bottom: 2rem;
 }
 
-.kpi-card {
+.full-width {
+    grid-column: 1 / -1 !important;
+}
+
+.card-title-content {
     display: flex;
     align-items: center;
-    gap: 1.25rem;
-    padding: 1.25rem !important;
+    gap: 0.75rem;
+    flex: 1;
 }
 
-.kpi-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    background: rgba(99, 102, 241, 0.1);
-    color: var(--primary);
-    flex-shrink: 0;
-}
+.chart-container-sm { height: 300px; }
+.chart-container-md { height: 400px; }
+.chart-container-lg { height: 500px; }
 
-.kpi-icon.backlog { background: rgba(100, 116, 139, 0.1); color: #64748b; }
-.kpi-icon.inprogress { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
-.kpi-icon.done { background: rgba(16, 185, 129, 0.1); color: #10b981; }
-
-.kpi-content {
-    display: flex;
-    flex-direction: column;
-}
-
-.kpi-label {
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-muted);
-}
-
-.kpi-value {
-    font-size: 1.75rem;
-    font-weight: 800;
-    margin: 0;
-    color: var(--text-main);
+@media (max-width: 768px) {
+    .chart-container-sm, .chart-container-md, .chart-container-lg {
+        height: 300px !important;
+    }
 }
 
 .card-title > div > i:first-child {
@@ -446,10 +424,11 @@ h2 { margin: 0 0 1rem 0; }
 
 .tabs-center {
     display: flex;
-    gap: 1rem;
+    gap: 0.5rem;
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
+    transition: all 0.3s ease;
 }
 
 .theme-toggle-nav {
@@ -945,58 +924,137 @@ button:active { transform: scale(0.98); }
 }
 
 /* Responsiveness */
+@media (max-width: 1024px) {
+    .tabs-center {
+        position: static;
+        transform: none;
+        order: 1;
+        width: 100%;
+        justify-content: center;
+        margin: 0.5rem 0;
+    }
+    
+    .tabs-nav {
+        flex-wrap: wrap;
+        height: auto;
+        position: relative;
+        top: 0;
+        gap: 0.5rem;
+        padding: 1rem;
+    }
+
+    .tabs-nav > button:not(.tab-btn) {
+        order: 2;
+    }
+}
+
 @media (max-width: 768px) {
     header {
         flex-direction: column;
         align-items: flex-start;
         gap: 1.5rem;
+        margin-bottom: 2rem;
     }
     
     header > div {
         width: 100%;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
     }
 
-    #query-selector {
+    #data-controls {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        padding: 1rem 1rem 0 1rem !important;
+        gap: 0.75rem !important;
+    }
+
+    .header-select {
         width: 100% !important;
-        flex-grow: 1;
+        min-width: 0 !important;
+    }
+
+    #refresh-btn {
+        width: 100% !important;
+        justify-content: center;
+    }
+
+    .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .card {
+        padding: 1.25rem;
+        grid-column: 1 / -1 !important;
+    }
+
+    .gantt-header, .gantt-row {
+        min-width: 900px; /* Force minimum width to allow scrolling */
+    }
+
+    /* Wrap charts in a way that handles overflow or just makes them full width */
+    .card > div[style*="height"] {
+        height: 350px !important; /* Slightly shorter on mobile */
     }
 
     .setup-container {
         padding: 1.5rem;
-        margin: 2rem 1rem;
-    }
-    
-    .card-title {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
-    }
-    
-    .card-title > div {
-        width: 100%;
-        justify-content: flex-start;
+        margin: 1rem auto;
     }
 }
 
 @media (max-width: 480px) {
-    .dashboard-grid {
-        gap: 1rem;
+    #app {
+        padding: 0.75rem;
     }
-    
-    .card {
-        padding: 1rem;
+
+    .tabs-center {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .tab-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 0.5rem;
+        font-size: 0.85rem;
+    }
+
+    .kpi-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .kpi-card {
+        padding: 1rem !important;
+    }
+
+    .kpi-value {
+        font-size: 1.5rem;
+    }
+
+    h1 {
+        font-size: 1.75rem;
     }
 
     .legend {
-        gap: 1rem;
+        flex-direction: column;
+        gap: 0.75rem;
     }
-    
-    .progress-list {
-        grid-template-columns: 1fr !important;
-    }
+}
+
+/* Scroll handling for large elements on mobile */
+#items-view .card, #dashboard-view .card {
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+
+#heatmap-container, .gantt-chart-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 /* Gantt Status Filters */
@@ -1129,32 +1187,143 @@ button:active { transform: scale(0.98); }
 }
 
 /* Heatmap Responsiveness */
-:root {
-    --heatmap-cell-size: 22px;
-    --heatmap-gap: 4px;
+/* KPI Card Styles */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
 }
 
-.heatmap-scroll-wrapper {
-    scrollbar-width: thin;
-    scrollbar-color: var(--border-glass) transparent;
+.kpi-card {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 1.25rem !important;
 }
 
-.heatmap-scroll-wrapper::-webkit-scrollbar {
-    height: 6px;
+.kpi-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--primary);
+    flex-shrink: 0;
 }
 
-.heatmap-scroll-wrapper::-webkit-scrollbar-thumb {
-    background-color: var(--border-glass);
-    border-radius: 10px;
+.kpi-icon.backlog { background: rgba(100, 116, 139, 0.1); color: #64748b; }
+.kpi-icon.inprogress { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+.kpi-icon.done { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+
+.kpi-content {
+    display: flex;
+    flex-direction: column;
 }
 
-.heatmap-day {
-    transition: transform 0.1s ease, filter 0.2s ease;
+.kpi-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+}
+
+.kpi-value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    margin: 0;
+    color: var(--text-main);
+}
+
+.card-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+}
+
+.gantt-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.gantt-period-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--bg-input);
+    border-radius: 0.5rem;
+    border: 1px solid var(--border-glass);
+    padding: 0.25rem;
+    flex-shrink: 0;
+}
+
+.gantt-period-nav button {
+    padding: 0.4rem;
+    border-radius: 0.4rem;
     cursor: pointer;
+    border: none;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
 }
 
-.heatmap-day:hover {
-    transform: scale(1.15);
-    filter: brightness(1.2);
-    z-index: 10;
+.gantt-period-nav span {
+    font-weight: 600;
+    font-size: 0.85rem;
+    min-width: 180px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.gantt-nav-divider {
+    width: 1px;
+    height: 24px;
+    background: var(--border-glass);
+    margin: 0 0.25rem;
+}
+
+.gantt-period-select {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    width: auto;
+}
+
+@media (max-width: 768px) {
+    .gantt-controls {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+    }
+    
+    .gantt-period-nav {
+        justify-content: space-between;
+    }
+    
+    .gantt-period-nav span {
+        flex-grow: 1;
+        min-width: 0;
+    }
+    
+    .gantt-nav-divider {
+        display: none;
+    }
+    
+    .gantt-period-select {
+        width: 100%;
+    }
 }
