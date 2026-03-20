@@ -533,7 +533,9 @@ export function renderLegends(activeItems, workItemMetadata, translations, curre
     const activeStatesSet = new Set();
     const activeTypesSet = new Set();
     
-    if (activeItems && activeItems.length > 0) {
+    const hasActiveItems = activeItems && activeItems.length > 0;
+    
+    if (hasActiveItems) {
         activeItems.forEach(item => {
             const state = item.fields['System.State'];
             const type = item.fields['System.WorkItemType'];
@@ -552,7 +554,7 @@ export function renderLegends(activeItems, workItemMetadata, translations, curre
 
     statusLegend.innerHTML = '';
     Object.entries(categories).forEach(([cat, info]) => {
-        if (activeItems && activeItems.length > 0) {
+        if (hasActiveItems) {
             const hasCategory = Object.values(workItemMetadata.states).some(s => 
                 s.category === cat && activeStatesSet.has(s.name.toLowerCase())
             );
@@ -583,7 +585,7 @@ export function renderLegends(activeItems, workItemMetadata, translations, curre
 
     typeLegend.innerHTML = '';
     let typesToRender = [];
-    if (activeItems && activeItems.length > 0) {
+    if (hasActiveItems) {
         typesToRender = Array.from(activeTypesSet);
     } else {
         typesToRender = workItemMetadata.backlogs.length > 0 

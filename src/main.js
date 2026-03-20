@@ -10,8 +10,13 @@ import {
     showLoading, showToast, encryptPAT, decryptPAT, updateLoadingProgress 
 } from './utils.js';
 import { 
-    fetchQueries, fetchFullDetails, buildTree, fetchWithRetry, getAuthHeader 
+    fetchQueries, fetchFullDetails, buildTree, fetchWithRetry, getAuthHeader, fetchMetadata
 } from './api.js';
+import { 
+    renderCharts, renderThroughputChart, renderAgingChart, 
+    renderAssigneeChart, renderWIPChart, renderCFDChart, renderPortfolioFilters, 
+    renderProgress, renderLegends 
+} from './charts.js';
 import { renderGantt } from './gantt.js';
 import { 
     switchTab, updateThemeIcon, applyTranslations, 
@@ -180,8 +185,20 @@ const handlers = {
 
 async function showDashboard(initialQueries = null) {
     switchTab('dashboard', elements);
+    
+    // Fetch metadata in parallel with queries
+    const metadataPromise = fetchMetadata(state.azureConfig, state.workItemMetadata, () => {
+        if (state.currentData.items.length > 0) {
+            runAnalytics();
+        } else {
+            renderLegends(null, state.workItemMetadata, translations, state.currentLanguage);
+        }
+    });
+
     const queries = initialQueries || await fetchQueries(state.azureConfig);
     populateQueries(queries, elements.querySelector, state.currentLanguage);
+    
+    await metadataPromise;
 }
 
 async function loadQueryData(queryId) {
