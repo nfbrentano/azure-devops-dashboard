@@ -11,6 +11,20 @@ A premium, high-performance visualization tool for Azure DevOps, designed for cl
 - **Multi-language Support**: Full Internationalization (i18n) for English and Portuguese (PT-BR).
 - **Responsive Design**: Optimized for everything from large monitors to mobile viewports.
 
+## 🖼️ Interface Preview
+
+### 🖥️ Setup & Connection
+The initial screen provides a secure environment to connect your Azure DevOps account. You can choose your preferred language and theme right from the start.
+
+![Setup Dark Mode](./public/images/setup-dark-pt.png)
+*Modern and secure setup interface in Dark Mode.*
+
+![Setup Light Mode](./public/images/setup-light-en.png)
+*Clean and professional setup interface in Light Mode (English).*
+
+> [!TIP]
+> Use the theme toggle in the top-right corner to switch between Dark and Light modes. The language toggle is located in the top-left.
+
 ## 🔒 Security First (Static Hosting Optimization)
 
 This dashboard uses a unique **client-side security model** designed for static environments like GitHub Pages:
