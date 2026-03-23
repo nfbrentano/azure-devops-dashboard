@@ -7,8 +7,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Azure DevOps Metrics</title>
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
-  <script type="module" crossorigin src="/azure-devops-dashboard/assets/index-D3R-bjvV.js"></script>
-  <link rel="stylesheet" crossorigin href="/azure-devops-dashboard/assets/index--Xy-_wjC.css">
+  <script type="module" crossorigin src="/azure-devops-dashboard/assets/index-0FOjoLwB.js"></script>
+  <link rel="stylesheet" crossorigin href="/azure-devops-dashboard/assets/index-W0QBEBXi.css">
 </head>
 
 <body>
@@ -150,6 +150,14 @@
         </div>
       </header>
 
+      <!-- Global Type Filters (Item Details Tab) -->
+      <div id="global-type-filters" class="legend glass" style="margin-bottom: 2rem; flex-direction: column; align-items: flex-start; gap: 0.75rem;">
+          <span class="legend-group-title" style="margin-bottom: 0;" data-i18n="global-filter-title"><i class="ph-bold ph-funnel"></i> Tipos de Itens Visíveis</span>
+          <div id="global-type-legend" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; width: 100%;">
+              <!-- Populated dynamically -->
+          </div>
+      </div>
+
       <!-- Empty State -->
       <div id="items-empty-state" class="empty-state hidden glass">
           <i class="ph ph-mask-sad"></i>
@@ -223,6 +231,19 @@
           </div>
         </div>
 
+        <!-- Throughput Chart Card -->
+        <div class="card glass full-width">
+          <div class="card-title">
+            <div class="card-title-content" data-i18n="chart-throughput-title">
+              <i class="ph-bold ph-chart-bar"></i>
+              Throughput (Items per Week) — Requirement Backlog
+            </div>
+          </div>
+          <div class="chart-container-sm">
+            <canvas id="throughputChart"></canvas>
+          </div>
+        </div>
+
         <!-- Activity Heatmap -->
         <div class="card glass" style="grid-column: 1 / -1;">
           <div class="card-title">
@@ -290,19 +311,6 @@
       <div id="dashboard-content" class="dashboard-grid">
         <!-- Individual Lead/Cycle charts removed to declutter. Comparison Chart below covers this. -->
 
-
-        <!-- Throughput Chart Card -->
-        <div class="card glass" style="grid-column: 1 / -1; margin-top: 1rem;">
-          <div class="card-title">
-            <div style="display: flex; align-items: center; gap: 0.75rem;" data-i18n="chart-throughput-title">
-              <i class="ph-bold ph-chart-bar"></i>
-              Throughput (Items per Week) — Requirement Backlog
-            </div>
-          </div>
-          <div class="chart-container-sm">
-            <canvas id="throughputChart"></canvas>
-          </div>
-        </div>
 
         <!-- Progress List Card -->
         <div class="card glass" style="grid-column: 1 / -1; margin-top: 1rem;">
