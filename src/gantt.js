@@ -60,7 +60,7 @@ export function getGanttDates(period, items = [], ganttOffset) {
 }
 
 export function filterTreeByDate(tree, start, end, activeStatusCategories, activeItemTypes, workItemMetadata) {
-    return tree.map(node => {
+    return tree.flatMap(node => {
         const fields = node.fields;
         const itemStart = new Date(fields['Microsoft.VSTS.Scheduling.StartDate'] || fields['System.CreatedDate']);
         const itemEnd = new Date(fields['Microsoft.VSTS.Scheduling.TargetDate'] || fields['Microsoft.VSTS.Common.ClosedDate'] || new Date());
@@ -75,21 +75,26 @@ export function filterTreeByDate(tree, start, end, activeStatusCategories, activ
 
         let typeMatch = true;
         if (activeItemTypes) {
-            typeMatch = activeItemTypes.includes(fields['System.WorkItemType']);
+            const itemType = fields['System.WorkItemType'];
+            typeMatch = activeItemTypes.includes(itemType ? itemType.toLowerCase() : '');
         }
 
         const overlaps = dateMatch && statusMatch && typeMatch;
         const filteredChildren = filterTreeByDate(node.children || [], start, end, activeStatusCategories, activeItemTypes, workItemMetadata);
         
-        if (overlaps || filteredChildren.length > 0) {
-            return {
+        if (overlaps) {
+            return [{
                 ...node,
                 children: filteredChildren,
-                isMatch: overlaps 
-            };
+                isMatch: true 
+            }];
+        } else if (filteredChildren.length > 0) {
+            // Se o nó não passou no filtro, mas os filhos passaram, substituímos o nó pelos filhos (hoisting)
+            return filteredChildren;
         }
-        return null;
-    }).filter(node => node !== null);
+        
+        return [];
+    });
 }
 
 export function renderGantt(tree, context) {

@@ -164,8 +164,8 @@ export function processAnalytics(items, tree, options = {}) {
     renderPortfolioFilters(items, workItemMetadata, translations, currentLanguage, () => renderProgress(items, progressList, translations, currentLanguage, workItemMetadata, azureConfig));
     renderProgress(items, progressList, translations, currentLanguage, workItemMetadata, azureConfig);
     
-    if (callRenderGantt) callRenderGantt();
     renderLegends(items, workItemMetadata, translations, currentLanguage);
+    if (callRenderGantt) callRenderGantt();
 
     // Update KPIs
     document.getElementById('kpi-total').textContent = kpis.total;

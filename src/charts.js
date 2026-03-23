@@ -616,9 +616,14 @@ export function renderLegends(activeItems, workItemMetadata, translations, curre
         let isIterationBacklog = false;
         if (workItemMetadata.backlogs) {
             const iterBacklog = workItemMetadata.backlogs.find(b => b.name === 'Iteration backlog' || b.name === 'Iteration Backlog');
-            if (iterBacklog && iterBacklog.workItemTypes.includes(typeName)) {
+            if (iterBacklog && iterBacklog.workItemTypes.some(t => t.toLowerCase() === typeName)) {
                 isIterationBacklog = true;
             }
+        }
+        
+        // Fallback for explicitly common iteration level items according to the user
+        if (['task', 'bug', 'sprint', 'bug sprint'].includes(typeName)) {
+            isIterationBacklog = true;
         }
         
         const isChecked = !isIterationBacklog;
