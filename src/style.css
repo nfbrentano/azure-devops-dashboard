@@ -1335,3 +1335,43 @@ button:active { transform: scale(0.98); }
         width: 100%;
     }
 }
+
+/* Unlock View Full Screen Overlay */
+#unlock-view {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: var(--bg-color);
+    background-image: var(--bg-gradient);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+#unlock-view.hidden {
+    display: none !important;
+}
+
+#unlock-view .setup-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-glass);
+    border-radius: 1rem;
+    padding: 3rem;
+    max-width: 450px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    animation: fadeInDown 0.5s ease-out;
+}
+
+#unlock-view .setup-subtitle {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin-bottom: 2rem;
+}

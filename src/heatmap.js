@@ -23,8 +23,15 @@ export function renderActivityHeatmap(heatmapData, currentLanguage, translations
     heatmapWrapper.style.minWidth = 'min-content';
 
     const now = new Date();
-    const startDate = new Date();
-    startDate.setMonth(now.getMonth() - 6);
+    let startDate = new Date();
+    const dates = Object.keys(heatmapData);
+    if (dates.length > 0) {
+        dates.sort();
+        startDate = new Date(dates[0]);
+    } else {
+        startDate.setMonth(now.getMonth() - 6);
+    }
+    
     startDate.setDate(startDate.getDate() - startDate.getDay()); 
     startDate.setHours(0,0,0,0);
 

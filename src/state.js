@@ -16,6 +16,7 @@ export const state = {
     ganttOffset: 0,
     currentTheme: localStorage.getItem('theme') || 'dark',
     currentLanguage: localStorage.getItem('language') || 'pt-br',
+    globalActiveTypes: null,
     workItemMetadata: {
         types: {},
         backlogs: [],

@@ -635,3 +635,50 @@ export function renderLegends(activeItems, workItemMetadata, translations, curre
         typeLegend.appendChild(label);
     });
 }
+
+export function renderGlobalTypeFilters(activeTypes, items, workItemMetadata, currentLanguage, onFilterChange) {
+    const container = document.getElementById('global-type-legend');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    const uniqueTypes = new Set();
+    items.forEach(item => {
+        const t = item.fields['System.WorkItemType'];
+        if (t) uniqueTypes.add(t);
+    });
+
+    const typesArray = Array.from(uniqueTypes).sort();
+    
+    typesArray.forEach(typeName => {
+        const typeMeta = Object.values(workItemMetadata.types).find(t => t.name.toLowerCase() === typeName.toLowerCase()) || 
+                         { name: typeName, color: '#64748b' };
+        
+        const iconInfo = getItemIcon(typeName, workItemMetadata);
+        const label = document.createElement('label');
+        label.className = 'filter-item';
+        
+        let iconHtml = `<i class="${iconInfo.icon}" style="color: ${typeMeta.color}"></i>`;
+        if (iconInfo.iconData) {
+            iconHtml = `<img src="${iconInfo.iconData}" style="width: 16px; height: 16px;" alt="">`;
+        }
+        
+        const isChecked = activeTypes.includes(typeName);
+        
+        label.innerHTML = `
+            <input type="checkbox" data-global-type="${typeName}" ${isChecked ? 'checked' : ''}>
+            ${iconHtml} <span>${typeMeta.name}</span>
+        `;
+        
+        const checkbox = label.querySelector('input');
+        checkbox.addEventListener('change', () => {
+            const newActiveTypes = [];
+            container.querySelectorAll('input').forEach(cb => {
+                if (cb.checked) newActiveTypes.push(cb.getAttribute('data-global-type'));
+            });
+            onFilterChange(newActiveTypes);
+        });
+        
+        container.appendChild(label);
+    });
+}

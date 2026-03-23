@@ -7,7 +7,7 @@ import { getItemIcon, getStatusInfo } from './utils.js';
 import { 
     renderCharts, renderThroughputChart, renderAgingChart, 
     renderAssigneeChart, renderWIPChart, renderCFDChart, renderPortfolioFilters, 
-    renderProgress, renderLegends 
+    renderProgress, renderLegends, renderGlobalTypeFilters 
 } from './charts.js';
 import { renderActivityHeatmap } from './heatmap.js';
 
@@ -17,13 +17,37 @@ export function processAnalytics(items, tree, options = {}) {
         azureConfig, progressList, callRenderGantt 
     } = options;
 
+    // Global Type Filters Initialization
+    if (!state.globalActiveTypes) {
+        state.globalActiveTypes = [];
+        const seenTypes = new Set();
+        items.forEach(item => {
+            const t = item.fields['System.WorkItemType'];
+            if (t && !seenTypes.has(t)) {
+                seenTypes.add(t);
+                state.globalActiveTypes.push(t);
+            }
+        });
+        state.globalActiveTypes.sort();
+    }
+
+    renderGlobalTypeFilters(state.globalActiveTypes, items, workItemMetadata, currentLanguage, (newActiveTypes) => {
+        state.globalActiveTypes = newActiveTypes;
+        processAnalytics(state.currentData.items, state.currentData.tree, options);
+    });
+
+    const filteredItems = items.filter(item => {
+        const type = item.fields['System.WorkItemType'];
+        return state.globalActiveTypes.includes(type);
+    });
+
     const leadTimes = [], cycleTimes = [], labels = [], agingData = [];
     const assigneeWorkload = {};
     const boardColumnWIP = {};
-    const kpis = { total: items.length, backlog: 0, inprogress: 0, doneRemoved: 0 };
+    const kpis = { total: filteredItems.length, backlog: 0, inprogress: 0, doneRemoved: 0 };
     const now = new Date();
 
-    items.forEach(item => {
+    filteredItems.forEach(item => {
         const f = item.fields;
         const createdDate = new Date(f['System.CreatedDate']);
         const activatedDate = f['Microsoft.VSTS.Common.ActivatedDate'] ? new Date(f['Microsoft.VSTS.Common.ActivatedDate']) : null;
@@ -67,10 +91,10 @@ export function processAnalytics(items, tree, options = {}) {
 
     // CFD and Heatmap processing
     const cfdSeries = [];
-    for (let i = 29; i >= 0; i--) {
+    for (let i = 179; i >= 0; i--) {
         const d = new Date(now); d.setDate(d.getDate() - i); d.setHours(0, 0, 0, 0);
         const counts = { date: d, Proposed: 0, InProgress: 0, Done: 0 };
-        items.forEach(item => {
+        filteredItems.forEach(item => {
             const f = item.fields;
             if (getItemIcon(f['System.WorkItemType'], workItemMetadata).isPortfolio) return;
             const created = new Date(f['System.CreatedDate']);
@@ -86,7 +110,7 @@ export function processAnalytics(items, tree, options = {}) {
     }
 
     state.heatmapData = {};
-    items.forEach(item => {
+    filteredItems.forEach(item => {
         const f = item.fields;
         const closedDateStr = f['Microsoft.VSTS.Common.ClosedDate'] || f['System.ClosedDate'];
         if (closedDateStr) {
@@ -100,7 +124,7 @@ export function processAnalytics(items, tree, options = {}) {
     
     // Find earliest completion date for requirement-level items
     let earliestClosedDate = null;
-    items.forEach(item => {
+    filteredItems.forEach(item => {
         const f = item.fields;
         const closedDateStr = f['Microsoft.VSTS.Common.ClosedDate'] || f['System.ClosedDate'];
         if (!closedDateStr) return;
@@ -133,7 +157,7 @@ export function processAnalytics(items, tree, options = {}) {
             endOfWeek.setHours(23, 59, 59, 999);
 
             let count = 0;
-            items.forEach(item => {
+            filteredItems.forEach(item => {
                 const f = item.fields;
                 const closedDateStr = f['Microsoft.VSTS.Common.ClosedDate'] || f['System.ClosedDate'];
                 if (!closedDateStr) return;
