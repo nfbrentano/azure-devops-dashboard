@@ -54,4 +54,13 @@ export function initEvents(elements, handlers) {
             if (state.currentData.tree.length > 0) handlers.handleGanttFilterChange();
         });
     });
+
+    const typeLegend = document.getElementById('type-legend');
+    if (typeLegend) {
+        typeLegend.addEventListener('change', (e) => {
+            if (e.target.tagName === 'INPUT' && state.currentData.tree.length > 0) {
+                handlers.handleGanttFilterChange();
+            }
+        });
+    }
 }

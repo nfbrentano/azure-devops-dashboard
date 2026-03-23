@@ -604,15 +604,29 @@ export function renderLegends(activeItems, workItemMetadata, translations, curre
         if (!type) return;
         const iconInfo = getItemIcon(typeName, workItemMetadata);
         
-        const item = document.createElement('div');
-        item.className = 'legend-item';
+        const label = document.createElement('label');
+        label.className = 'filter-item';
         
         let iconHtml = `<i class="${iconInfo.icon}" style="color: ${type.color}"></i>`;
         if (iconInfo.iconData) {
             iconHtml = `<img src="${iconInfo.iconData}" style="width: 16px; height: 16px;" alt="">`;
         }
         
-        item.innerHTML = `${iconHtml} ${type.name}`;
-        typeLegend.appendChild(item);
+        // Check if this type belongs to 'Iteration backlog'
+        let isIterationBacklog = false;
+        if (workItemMetadata.backlogs) {
+            const iterBacklog = workItemMetadata.backlogs.find(b => b.name === 'Iteration backlog' || b.name === 'Iteration Backlog');
+            if (iterBacklog && iterBacklog.workItemTypes.includes(typeName)) {
+                isIterationBacklog = true;
+            }
+        }
+        
+        const isChecked = !isIterationBacklog;
+        
+        label.innerHTML = `
+            <input type="checkbox" data-type="${typeName}" ${isChecked ? 'checked' : ''}>
+            ${iconHtml} <span>${type.name}</span>
+        `;
+        typeLegend.appendChild(label);
     });
 }

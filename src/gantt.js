@@ -59,7 +59,7 @@ export function getGanttDates(period, items = [], ganttOffset) {
     return { start, end };
 }
 
-export function filterTreeByDate(tree, start, end, activeStatusCategories, workItemMetadata) {
+export function filterTreeByDate(tree, start, end, activeStatusCategories, activeItemTypes, workItemMetadata) {
     return tree.map(node => {
         const fields = node.fields;
         const itemStart = new Date(fields['Microsoft.VSTS.Scheduling.StartDate'] || fields['System.CreatedDate']);
@@ -73,8 +73,13 @@ export function filterTreeByDate(tree, start, end, activeStatusCategories, workI
             statusMatch = activeStatusCategories.includes(statusInfo.label.replace(' ', ''));
         }
 
-        const overlaps = dateMatch && statusMatch;
-        const filteredChildren = filterTreeByDate(node.children || [], start, end, activeStatusCategories, workItemMetadata);
+        let typeMatch = true;
+        if (activeItemTypes) {
+            typeMatch = activeItemTypes.includes(fields['System.WorkItemType']);
+        }
+
+        const overlaps = dateMatch && statusMatch && typeMatch;
+        const filteredChildren = filterTreeByDate(node.children || [], start, end, activeStatusCategories, activeItemTypes, workItemMetadata);
         
         if (overlaps || filteredChildren.length > 0) {
             return {
@@ -116,7 +121,15 @@ export function renderGantt(tree, context) {
     const activeStatusCategories = Array.from(document.querySelectorAll('.gantt-status-filters input:checked'))
         .map(cb => cb.getAttribute('data-category'));
         
-    const displayTree = filterTreeByDate(tree, viewStart, viewEnd, activeStatusCategories, workItemMetadata);
+    const typeLabelInputs = document.querySelectorAll('#type-legend input');
+    let activeItemTypes = null;
+    if (typeLabelInputs.length > 0) {
+        activeItemTypes = Array.from(typeLabelInputs)
+            .filter(cb => cb.checked)
+            .map(cb => cb.getAttribute('data-type'));
+    }
+        
+    const displayTree = filterTreeByDate(tree, viewStart, viewEnd, activeStatusCategories, activeItemTypes, workItemMetadata);
     
     ganttContainer.innerHTML = '';
     if (displayTree.length === 0) {
