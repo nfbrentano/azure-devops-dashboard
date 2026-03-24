@@ -342,27 +342,32 @@ h1 {
 .heatmap-l3 { background: var(--heatmap-l3); }
 .heatmap-l4 { background: var(--heatmap-l4); }
 
-.data-controls {
-    padding: 1rem 2rem 0 2rem;
+.nav-data-controls {
     display: flex;
-    justify-content: flex-end;
     align-items: center;
-    gap: 1rem;
+    gap: 0.5rem;
+}
+
+.nav-right-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .header-select {
     width: auto;
-    min-width: 250px;
-    padding: 0.6rem 2.5rem 0.6rem 1rem;
+    min-width: 180px;
+    padding: 0.5rem 2.2rem 0.5rem 0.75rem;
     background-color: var(--bg-card);
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 500;
     cursor: pointer;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2394a3b8' viewBox='0 0 256 256'%3E%3Cpath d='M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80a8,8,0,0,1,11.32-11.32L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z'%3E%3C/path%3E%3C/svg%3E");
     background-repeat: no-repeat;
-    background-position: right 0.75rem center;
+    background-position: right 0.6rem center;
     -webkit-appearance: none;
     appearance: none;
+    border-radius: 0.75rem;
 }
 
 .refresh-btn {
@@ -424,10 +429,11 @@ h2 { margin: 0 0 1rem 0; }
     align-items: center;
     justify-content: space-between;
     margin-bottom: 2rem;
-    padding: 0.5rem 1rem;
+    padding: 0.6rem 1rem;
     position: sticky;
     top: 1rem;
     z-index: 100;
+    gap: 1rem;
 }
 
 .tabs-center {
@@ -440,7 +446,6 @@ h2 { margin: 0 0 1rem 0; }
 }
 
 .theme-toggle-nav {
-    margin-left: auto;
     width: 40px !important;
     height: 40px !important;
     display: flex;
@@ -933,26 +938,36 @@ button:active { transform: scale(0.98); }
 
 /* Responsiveness */
 @media (max-width: 1024px) {
+    .tabs-nav {
+        flex-wrap: wrap;
+        height: auto;
+        position: relative;
+        top: 0;
+        gap: 0.75rem;
+        padding: 1rem;
+        justify-content: center;
+    }
+
+    .nav-data-controls {
+        order: 2;
+        width: 100%;
+        justify-content: center;
+    }
+
     .tabs-center {
         position: static;
         transform: none;
         order: 1;
         width: 100%;
         justify-content: center;
-        margin: 0.5rem 0;
-    }
-    
-    .tabs-nav {
-        flex-wrap: wrap;
-        height: auto;
-        position: relative;
-        top: 0;
-        gap: 0.5rem;
-        padding: 1rem;
+        margin-bottom: 0.25rem;
     }
 
-    .tabs-nav > button:not(.tab-btn) {
-        order: 2;
+    .nav-right-actions {
+        order: 3;
+        width: 100%;
+        justify-content: center;
+        gap: 1rem;
     }
 }
 
@@ -968,11 +983,18 @@ button:active { transform: scale(0.98); }
         width: 100%;
     }
 
-    #data-controls {
-        flex-direction: column !important;
-        align-items: stretch !important;
-        padding: 1rem 1rem 0 1rem !important;
-        gap: 0.75rem !important;
+    #data-controls.nav-data-controls {
+        flex-direction: row !important;
+        align-items: center !important;
+        padding: 0 !important;
+        gap: 0.5rem !important;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .nav-data-controls .header-select {
+        flex: 1;
+        max-width: 300px;
     }
 
     .header-select {
