@@ -8,33 +8,37 @@
   <title>Azure DevOps Metrics</title>
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <script type="module" crossorigin src="/azure-devops-dashboard/assets/index-BQAWPGeb.js"></script>
-  <link rel="stylesheet" crossorigin href="/azure-devops-dashboard/assets/index-W0QBEBXi.css">
+  <script type="module" crossorigin src="/azure-devops-dashboard/assets/index-BdA2wBVd.js"></script>
+  <link rel="stylesheet" crossorigin href="/azure-devops-dashboard/assets/index-oxGMpq06.css">
 </head>
 
 <body>
   <div id="app">
     <!-- Tab Navigation -->
     <nav class="tabs-nav no-print glass">
+      <div id="data-controls" class="hidden nav-data-controls">
+        <select id="query-selector" class="glass header-select" title="Select Analytics Query"></select>
+        <button id="refresh-btn" class="glass btn-icon-glass refresh-btn" title="Refresh Data" data-i18n-aria="aria-refresh"><i
+            class="ph-bold ph-arrows-clockwise"></i></button>
+      </div>
+
       <div class="tabs-center">
         <button id="tab-dashboard" class="tab-btn active" data-i18n="tab-dashboard"><i class="ph-bold ph-layout"></i> Dashboard</button>
         <button id="tab-items" class="tab-btn" data-i18n="tab-items"><i class="ph-bold ph-hourglass"></i> Item Details</button>
         <button id="tab-setup" class="tab-btn" data-i18n="tab-setup"><i class="ph-bold ph-gear"></i> Setup</button>
       </div>
-      <button id="lang-toggle" class="glass btn-icon-glass" title="Switch to English" data-i18n-aria="aria-lang-toggle">
-        <span style="font-weight: bold; font-size: 0.8rem;">EN</span>
-      </button>
-      <button id="theme-toggle" class="glass btn-icon-glass theme-toggle-nav" title="Toggle Dark/Light Mode" data-i18n-aria="aria-theme-toggle">
-        <i class="ph-bold ph-sun-dim"></i>
-      </button>
+
+      <div class="nav-right-actions">
+        <button id="lang-toggle" class="glass btn-icon-glass" title="Switch to English" data-i18n-aria="aria-lang-toggle">
+          <span style="font-weight: bold; font-size: 0.8rem;">EN</span>
+        </button>
+        <button id="theme-toggle" class="glass btn-icon-glass theme-toggle-nav" title="Toggle Dark/Light Mode" data-i18n-aria="aria-theme-toggle">
+          <i class="ph-bold ph-sun-dim"></i>
+        </button>
+      </div>
     </nav>
 
-    <!-- Global Data Header (Visible in Dashboard and Items) -->
-    <div id="data-controls" class="hidden no-print data-controls">
-      <select id="query-selector" class="glass header-select" title="Select Analytics Query"></select>
-      <button id="refresh-btn" class="glass btn-icon-glass refresh-btn" title="Refresh Data" data-i18n-aria="aria-refresh"><i
-          class="ph-bold ph-arrows-clockwise"></i></button>
-    </div>
+
 
     <!-- Setup View -->
     <div id="setup-view" class="setup-container glass hidden">
