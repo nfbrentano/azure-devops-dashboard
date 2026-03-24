@@ -622,7 +622,7 @@ export function renderLegends(activeItems, workItemMetadata, translations, curre
         }
         
         // Fallback for explicitly common iteration level items according to the user
-        if (['task', 'bug', 'sprint', 'bug sprint'].includes(typeName)) {
+        if (['task', 'bug', 'sprint', 'bug sprint', 'test', 'test case', 'test plan', 'test suite'].includes(typeName)) {
             isIterationBacklog = true;
         }
         

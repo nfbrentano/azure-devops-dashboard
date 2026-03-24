@@ -7,6 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Azure DevOps Metrics</title>
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </head>
 
 <body>
@@ -171,6 +172,7 @@
               <i class="ph-bold ph-stack"></i>
               Lead vs Cycle Time Comparison
             </div>
+            <button class="glass btn-icon-glass export-btn" style="margin-left: auto;" data-i18n-title="btn-export-chart" data-target="comparisonChart" title="Export Chart (PNG)"><i class="ph-bold ph-download-simple"></i></button>
           </div>
           <div class="chart-container-md">
             <canvas id="comparisonChart"></canvas>
@@ -184,6 +186,7 @@
               <i class="ph-bold ph-hourglass"></i>
               Work Item Aging (In Progress)
             </div>
+            <button class="glass btn-icon-glass export-btn" style="margin-left: auto;" data-i18n-title="btn-export-chart" data-target="agingChart" title="Export Chart (PNG)"><i class="ph-bold ph-download-simple"></i></button>
           </div>
           <div class="chart-container-lg">
             <canvas id="agingChart"></canvas>
@@ -197,6 +200,7 @@
               <i class="ph-bold ph-users-three"></i>
               Workload by Assignee
             </div>
+            <button class="glass btn-icon-glass export-btn" style="margin-left: auto;" data-i18n-title="btn-export-chart" data-target="assigneeChart" title="Export Chart (PNG)"><i class="ph-bold ph-download-simple"></i></button>
           </div>
           <div class="chart-container-lg">
             <canvas id="assigneeChart"></canvas>
@@ -210,6 +214,7 @@
               <i class="ph-bold ph-columns"></i>
               WIP by Kanban Column
             </div>
+            <button class="glass btn-icon-glass export-btn" style="margin-left: auto;" data-i18n-title="btn-export-chart" data-target="wipChart" title="Export Chart (PNG)"><i class="ph-bold ph-download-simple"></i></button>
           </div>
           <div class="chart-container-md">
             <canvas id="wipChart"></canvas>
@@ -223,6 +228,7 @@
               <i class="ph-bold ph-chart-line-up"></i>
               Cumulative Flow Diagram (CFD)
             </div>
+            <button class="glass btn-icon-glass export-btn" style="margin-left: auto;" data-i18n-title="btn-export-chart" data-target="cfdChart" title="Export Chart (PNG)"><i class="ph-bold ph-download-simple"></i></button>
           </div>
           <div class="chart-container-lg">
             <canvas id="cfdChart"></canvas>
@@ -236,6 +242,7 @@
               <i class="ph-bold ph-chart-bar"></i>
               Throughput (Items per Week) — Requirement Backlog
             </div>
+            <button class="glass btn-icon-glass export-btn" style="margin-left: auto;" data-i18n-title="btn-export-chart" data-target="throughputChart" title="Export Chart (PNG)"><i class="ph-bold ph-download-simple"></i></button>
           </div>
           <div class="chart-container-sm">
             <canvas id="throughputChart"></canvas>
@@ -249,6 +256,7 @@
               <i class="ph-bold ph-calendar"></i>
               Delivery Activity (Last 6 Months)
             </div>
+            <button class="glass btn-icon-glass export-btn" style="margin-left: auto;" data-i18n-title="btn-export-chart" data-target="heatmap-container" title="Export Chart (PNG)"><i class="ph-bold ph-download-simple"></i></button>
           </div>
           <div id="heatmap-container" class="heatmap-wrapper">
             <!-- Heatmap will be rendered here -->
@@ -358,6 +366,8 @@
                   <option value="month" selected data-i18n="gantt-period-month">Mensal</option>
                   <option value="week" data-i18n="gantt-period-week">Semanal</option>
                 </select>
+                <div class="gantt-nav-divider"></div>
+                <button class="glass btn-icon-glass export-btn" data-i18n-title="btn-export-chart" data-target="gantt-container" title="Export Chart (PNG)"><i class="ph-bold ph-download-simple"></i></button>
               </div>
             </div>
           </div>
