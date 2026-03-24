@@ -67,6 +67,13 @@ async function initApp() {
     };
     applyTranslations(uiOptions);
 
+    if (state.azureConfig) {
+        document.getElementById('org').value = state.azureConfig.org || '';
+        document.getElementById('project').value = state.azureConfig.project || '';
+        document.getElementById('company-name').value = state.azureConfig.companyName || '';
+        document.getElementById('company-logo').value = state.azureConfig.companyLogo || '';
+    }
+
     if (state.azureConfig?.org && state.azureConfig?.project && state.azureConfig?.pat) {
         if (state.azureConfig.pat.includes(':')) {
             switchTab('unlock', elements);
@@ -86,7 +93,9 @@ async function initApp() {
             const config = {
                 org: document.getElementById('org').value,
                 project: document.getElementById('project').value,
-                pat: document.getElementById('pat').value
+                pat: document.getElementById('pat').value,
+                companyName: document.getElementById('company-name').value,
+                companyLogo: document.getElementById('company-logo').value
             };
             const password = document.getElementById('security-password').value;
             const save = document.getElementById('save-credentials').checked;
