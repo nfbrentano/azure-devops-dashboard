@@ -18,7 +18,6 @@ import {
     renderProgress, renderLegends 
 } from './charts.js';
 import { renderGantt } from './gantt.js';
-import { renderGantt } from './gantt.js';
 import { 
     switchTab, updateThemeIcon, applyTranslations, 
     showEmptyState, populateQueries 
