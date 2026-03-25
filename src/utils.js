@@ -143,18 +143,36 @@ export function getItemIcon(type, workItemMetadata) {
 }
 
 export function calculateProgress(item, workItemMetadata) {
-    if (!item.children || item.children.length === 0) {
-        const state = item.fields['System.State'];
-        const info = getStatusInfo(state, workItemMetadata);
-        return (info.label === 'Done') ? 100 : 0;
-    }
-    const totalChildren = item.children.length;
-    const completedChildren = item.children.filter(child => {
-        const state = child.fields['System.State'];
-        const info = getStatusInfo(state, workItemMetadata);
-        return info.label === 'Done';
-    }).length;
-    return Math.floor((completedChildren / totalChildren) * 100);
+    const descendants = [];
+    const collectLeafNodes = (node) => {
+        if (!node.children || node.children.length === 0) {
+            descendants.push(node);
+        } else {
+            node.children.forEach(collectLeafNodes);
+        }
+    };
+    
+    collectLeafNodes(item);
+    
+    if (descendants.length === 0) return 0;
+    
+    let totalWeight = 0;
+    descendants.forEach(d => {
+        const state = (d.fields['System.State'] || '').toLowerCase();
+        
+        // Specific user request for "resolved" to be 50%
+        if (state === 'resolved') {
+            totalWeight += 0.5;
+            return;
+        }
+        
+        const info = getStatusInfo(d.fields['System.State'], workItemMetadata);
+        if (info.label === 'Done') {
+            totalWeight += 1.0;
+        }
+    });
+    
+    return Math.floor((totalWeight / descendants.length) * 100);
 }
 
 export function showLoading(show = true, progress = null) {
