@@ -86,6 +86,7 @@ export function filterTreeByDate(tree, start, end, activeStatusCategories, activ
             return [{
                 ...node,
                 children: filteredChildren,
+                allChildren: node.children,
                 isMatch: true 
             }];
         } else if (filteredChildren.length > 0) {

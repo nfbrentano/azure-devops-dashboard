@@ -145,10 +145,11 @@ export function getItemIcon(type, workItemMetadata) {
 export function calculateProgress(item, workItemMetadata) {
     const descendants = [];
     const collectLeafNodes = (node) => {
-        if (!node.children || node.children.length === 0) {
+        const children = node.allChildren || node.children;
+        if (!children || children.length === 0) {
             descendants.push(node);
         } else {
-            node.children.forEach(collectLeafNodes);
+            children.forEach(collectLeafNodes);
         }
     };
     
