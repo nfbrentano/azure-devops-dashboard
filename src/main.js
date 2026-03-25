@@ -18,12 +18,14 @@ import {
     renderProgress, renderLegends 
 } from './charts.js';
 import { renderGantt } from './gantt.js';
+import { renderGantt } from './gantt.js';
 import { 
     switchTab, updateThemeIcon, applyTranslations, 
     showEmptyState, populateQueries 
 } from './ui.js';
 import { processAnalytics } from './analytics.js';
 import { initEvents } from './events.js';
+import { LOGO_LIGHT, LOGO_DARK } from './logos.js';
 
 // DOM Elements
 const elements = {
@@ -71,8 +73,9 @@ async function initApp() {
         document.getElementById('org').value = state.azureConfig.org || '';
         document.getElementById('project').value = state.azureConfig.project || '';
         document.getElementById('company-name').value = state.azureConfig.companyName || '';
-        document.getElementById('company-logo').value = state.azureConfig.companyLogo || '';
     }
+    
+    updateLogos();
 
     if (state.azureConfig?.org && state.azureConfig?.project && state.azureConfig?.pat) {
         if (state.azureConfig.pat.includes(':')) {
@@ -94,8 +97,7 @@ async function initApp() {
                 org: document.getElementById('org').value,
                 project: document.getElementById('project').value,
                 pat: document.getElementById('pat').value,
-                companyName: document.getElementById('company-name').value,
-                companyLogo: document.getElementById('company-logo').value
+                companyName: document.getElementById('company-name').value
             };
             const password = document.getElementById('security-password').value;
             const save = document.getElementById('save-credentials').checked;
@@ -133,6 +135,7 @@ async function initApp() {
             document.documentElement.setAttribute('data-theme', state.currentTheme);
             localStorage.setItem('theme', state.currentTheme);
             updateThemeIcon(elements.themeToggle, state.currentTheme);
+            updateLogos();
             if (elements.querySelector.value) runAnalytics();
         },
 
@@ -255,6 +258,14 @@ async function loadQueryData(queryId) {
     } finally {
         showLoading(false);
     }
+}
+
+function updateLogos() {
+    const isDark = state.currentTheme === 'dark';
+    const logoSrc = isDark ? LOGO_DARK : LOGO_LIGHT;
+    document.querySelectorAll('.company-logo-img').forEach(img => {
+        img.src = logoSrc;
+    });
 }
 
 function runAnalytics() {

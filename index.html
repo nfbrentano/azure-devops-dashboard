@@ -40,8 +40,9 @@
 
     <!-- Setup View -->
     <div id="setup-view" class="setup-container glass hidden">
-      <i class="ph-fill ph-chart-line-up"
-        style="font-size: 3rem; color: var(--primary); margin-bottom: 2rem; display: block;"></i>
+      <div class="logo-container" style="margin-bottom: 2rem; text-align: center;">
+        <img src="" class="company-logo-img" style="height: 60px; width: auto;" alt="Company Logo">
+      </div>
       <h2 data-i18n="setup-title">Azure DevOps Dashboard</h2>
       <p class="setup-subtitle" data-i18n="setup-subtitle">Insira suas credenciais para visualizar o dashboard</p>
             
@@ -74,10 +75,6 @@
                 <div class="form-group">
                     <label for="company-name" data-i18n="label-company-name">Company Name (For Export)</label>
                     <input type="text" id="company-name" data-i18n-placeholder="placeholder-company-name" placeholder="Name to appear on exported charts">
-                </div>
-                <div class="form-group">
-                    <label for="company-logo" data-i18n="label-company-logo">Company Logo URL (For Export)</label>
-                    <input type="url" id="company-logo" data-i18n-placeholder="placeholder-company-logo" placeholder="https://example.com/logo.png">
                 </div>
                 <div class="form-group" style="flex-direction: row; align-items: center; gap: 0.5rem; cursor: pointer;">
                     <input type="checkbox" id="save-credentials" style="width: auto;">
@@ -409,7 +406,7 @@
     <div id="unlock-view" class="view hidden">
         <div class="setup-card">
             <div class="logo">
-                <i class="ph-fill ph-lock-key" style="font-size: 3rem; color: var(--primary); margin-bottom: 2rem; display: block;"></i>
+                <img src="" class="company-logo-img" style="height: 60px; width: auto; margin-bottom: 2rem;" alt="Company Logo">
             </div>
             <h2 data-i18n="unlock-title">Dashboard Bloqueado</h2>
             <p class="setup-subtitle" data-i18n="unlock-subtitle">Insira sua senha de segurança para desbloquear</p>
