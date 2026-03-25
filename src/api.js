@@ -231,35 +231,38 @@ export function buildTree(items, workItemMetadata) {
         }
     });
 
-    const getTypePriority = (type) => {
-        const t = (type || '').toLowerCase();
-        for (let i = 0; i < workItemMetadata.backlogs.length; i++) {
-            if (workItemMetadata.backlogs[i].workItemTypes.includes(t)) {
-                return i + 1;
-            }
-        }
-        if (t === 'epic') return 1;
-        if (t === 'feature') return 2;
-        if (['user story', 'product backlog item', 'requirement', 'issue'].includes(t)) return 3;
-        if (['task', 'bug'].includes(t)) return 4;
-        return 99;
-    };
-
-    const sortByPriority = (a, b) => {
-        const pA = getTypePriority(a.fields['System.WorkItemType']);
-        const pB = getTypePriority(b.fields['System.WorkItemType']);
-        if (pA !== pB) return pA - pB;
-        return a.id - b.id;
-    };
-
-    roots.sort(sortByPriority);
+    roots.sort((a, b) => sortByPriority(a, b, workItemMetadata));
     const sortChildren = (node) => {
         if (node.children && node.children.length > 0) {
-            node.children.sort(sortByPriority);
+            node.children.sort((a, b) => sortByPriority(a, b, workItemMetadata));
             node.children.forEach(sortChildren);
         }
     };
     roots.forEach(sortChildren);
 
     return { roots, nodes };
+}
+
+export function getTypePriority(type, workItemMetadata) {
+    const t = (type || '').toLowerCase();
+    if (workItemMetadata && workItemMetadata.backlogs) {
+        for (let i = 0; i < workItemMetadata.backlogs.length; i++) {
+            if (workItemMetadata.backlogs[i].workItemTypes.includes(t)) {
+                return i + 1;
+            }
+        }
+    }
+    // Fallbacks
+    if (t === 'epic') return 1;
+    if (t === 'feature') return 2;
+    if (['user story', 'product backlog item', 'requirement', 'issue'].includes(t)) return 3;
+    if (['task', 'bug'].includes(t)) return 4;
+    return 99;
+}
+
+function sortByPriority(a, b, workItemMetadata) {
+    const pA = getTypePriority(a.fields['System.WorkItemType'], workItemMetadata);
+    const pB = getTypePriority(b.fields['System.WorkItemType'], workItemMetadata);
+    if (pA !== pB) return pA - pB;
+    return a.id - b.id;
 }
