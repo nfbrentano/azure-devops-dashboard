@@ -12,7 +12,7 @@ async function drawWatermark(canvas, isDark) {
 
     if (!companyName && !companyLogo) return canvas;
     
-    const padding = 50;
+    const padding = 80;
     const newCanvas = document.createElement('canvas');
     newCanvas.width = canvas.width;
     newCanvas.height = canvas.height + padding;
@@ -34,30 +34,32 @@ async function drawWatermark(canvas, isDark) {
                 img.src = companyLogo;
             });
             const aspect = img.width / img.height;
-            const h = 30;
+            const h = 50; // Increased from 30
             const w = h * aspect;
-            ctx.drawImage(img, 20, 10, w, h);
+            const logoY = (padding - h) / 2;
+            ctx.drawImage(img, 20, logoY, w, h);
             
             if (companyName) {
                 ctx.fillStyle = textColor;
-                ctx.font = 'bold 16px sans-serif';
+                ctx.font = 'bold 20px sans-serif'; // Slightly larger font too
                 ctx.textBaseline = 'middle';
-                ctx.fillText(companyName, 20 + w + 15, 25);
+                const textY = padding / 2;
+                ctx.fillText(companyName, 20 + w + 20, textY);
             }
         } catch(e) {
             console.warn('Failed to load watermark logo', e);
             if (companyName) {
                 ctx.fillStyle = textColor;
-                ctx.font = 'bold 16px sans-serif';
+                ctx.font = 'bold 20px sans-serif';
                 ctx.textBaseline = 'middle';
-                ctx.fillText(companyName, 20, 25);
+                ctx.fillText(companyName, 20, padding / 2);
             }
         }
     } else if (companyName) {
         ctx.fillStyle = textColor;
-        ctx.font = 'bold 16px sans-serif';
+        ctx.font = 'bold 20px sans-serif';
         ctx.textBaseline = 'middle';
-        ctx.fillText(companyName, 20, 25);
+        ctx.fillText(companyName, 20, padding / 2);
     }
     
     return newCanvas;
