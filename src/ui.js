@@ -7,7 +7,7 @@ import { renderLegends } from './charts.js';
 export function switchTab(tabId, elements) {
     const { 
         tabDashboard, tabItems, tabSetup, dashboardView, 
-        itemsView, setupView, unlockView, dataControls 
+        itemsView, setupView, unlockView, loginView, dataControls 
     } = elements;
 
     tabDashboard.classList.toggle('active', tabId === 'dashboard');
@@ -17,11 +17,12 @@ export function switchTab(tabId, elements) {
     itemsView.classList.toggle('hidden', tabId !== 'items');
     setupView.classList.toggle('hidden', tabId !== 'setup');
     unlockView.classList.toggle('hidden', tabId !== 'unlock');
-    dataControls.classList.toggle('hidden', tabId === 'setup' || tabId === 'unlock');
+    loginView.classList.toggle('hidden', tabId !== 'login');
+    dataControls.classList.toggle('hidden', tabId === 'setup' || tabId === 'unlock' || tabId === 'login');
     
     // Hide tabs if in setup or unlock
     const tabs = document.querySelector('.tabs');
-    if (tabs) tabs.style.display = (tabId === 'setup' || tabId === 'unlock') ? 'none' : 'flex';
+    if (tabs) tabs.style.display = (tabId === 'setup' || tabId === 'unlock' || tabId === 'login') ? 'none' : 'flex';
 }
 
 export function updateThemeIcon(themeToggle, currentTheme) {

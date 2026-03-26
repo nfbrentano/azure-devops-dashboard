@@ -50,6 +50,8 @@ const elements = {
     tabDashboard: document.getElementById('tab-dashboard'),
     tabItems: document.getElementById('tab-items'),
     tabSetup: document.getElementById('tab-setup'),
+    loginView: document.getElementById('login-view'),
+    loginForm: document.getElementById('login-form'),
     saveCloudBtn: document.getElementById('save-cloud-btn'),
     retrieveCloudBtn: document.getElementById('retrieve-cloud-btn')
 };
@@ -262,6 +264,11 @@ async function initApp() {
             } else {
                 showToast(translations[state.currentLanguage]['msg-login-error'], 'error');
             }
+        },
+        handleLogout: () => {
+            state.user = null;
+            sessionStorage.removeItem('azure_user');
+            initApp(state, elements);
         }
     };
 

@@ -85,8 +85,17 @@ export function initEvents(elements, handlers) {
     tabSetup.addEventListener('click', () => handleTabSwitch('setup'));
 
     // Auth Forms
-    setupForm.addEventListener('submit', handleAuth);
-    unlockForm.addEventListener('submit', handleUnlock);
+    setupForm.addEventListener('submit', handlers.handleAuth);
+    unlockForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        handlers.handleRetrieve();
+    });
+    if (elements.loginForm) {
+        elements.loginForm.addEventListener('submit', handlers.handleLogin);
+    }
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', handlers.handleLogout);
+    }
     retrieveCloudBtn.addEventListener('click', handleRetrieveCloud);
 
     forgotPasswordBtn.addEventListener('click', () => {
