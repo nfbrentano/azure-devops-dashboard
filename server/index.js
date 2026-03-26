@@ -73,40 +73,32 @@ app.post('/api/setup', async (req, res) => {
  * Retrieve setup configuration
  */
 app.post('/api/setup/retrieve', async (req, res) => {
-    const { org, project, password } = req.body;
+    const { org, project } = req.body;
 
-    if (!org || !project || !password) {
+    if (!org || !project) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
 
     try {
         // Find setups for this org/project
         const result = await pool.query(
-            'SELECT * FROM setup WHERE org = $1 AND project = $2 ORDER BY created_at DESC',
+            'SELECT * FROM setup WHERE org = $1 AND project = $2 ORDER BY created_at DESC LIMIT 1',
             [org, project]
         );
 
-        const setups = result.rows;
+        const setup = result.rows[0];
 
-        if (!setups || setups.length === 0) {
+        if (!setup) {
             return res.status(404).json({ error: 'No setup found for this organization and project' });
         }
 
-        // Verify password against the most recent setup
-        for (const setup of setups) {
-            const match = await bcrypt.compare(password, setup.password_hash);
-            if (match) {
-                return res.json({
-                    org: setup.org,
-                    project: setup.project,
-                    companyName: setup.company_name,
-                    encryptedPat: setup.encrypted_pat,
-                    iv: setup.iv
-                });
-            }
-        }
-
-        res.status(401).json({ error: 'Invalid password' });
+        return res.json({
+            org: setup.org,
+            project: setup.project,
+            companyName: setup.company_name,
+            encryptedPat: setup.encrypted_pat,
+            iv: setup.iv
+        });
     } catch (error) {
         console.error('Error retrieving setup:', error);
         res.status(500).json({ error: 'Internal server error' });
