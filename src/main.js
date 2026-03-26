@@ -222,8 +222,23 @@ async function initApp() {
             showLoading(false);
 
             if (config) {
-                document.getElementById('pat').value = await decryptPAT(config.pat, password);
+                document.getElementById('org').value = config.org || '';
+                document.getElementById('project').value = config.project || '';
                 document.getElementById('company-name').value = config.companyName || '';
+                
+                // Show the encrypted PAT in the field first
+                document.getElementById('pat').value = config.encryptedPat;
+                
+                // Then try to decrypt it for immediate use if possible
+                try {
+                    const decrypted = await decryptPAT(config.pat || config.encryptedPat, password);
+                    if (decrypted) {
+                        document.getElementById('pat').value = decrypted;
+                    }
+                } catch (e) {
+                    console.warn('Could not decrypt retrieved PAT immediately');
+                }
+                
                 showToast(translations[state.currentLanguage]['msg-retrieve-success'], 'success');
             } else {
                 showToast(translations[state.currentLanguage]['msg-retrieve-error'], 'error');

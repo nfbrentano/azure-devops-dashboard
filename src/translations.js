@@ -116,10 +116,10 @@ export const translations = {
         'chart-bottlenecks-title': 'Work Item Bottlenecks (Avg Time per Column)',
         'label-avg-days': 'Avg Days',
         'msg-bottlenecks-empty': 'No data available for bottleneck analysis.',
-        'btn-save-backend': 'Save to Cloud',
-        'btn-retrieve-backend': 'Retrieve from Cloud',
-        'msg-save-success': 'Configuration saved to cloud successfully.',
-        'msg-save-error': 'Failed to save configuration to cloud.',
+        'btn-save-backend': 'Save to Server',
+        'btn-retrieve-backend': 'Retrieve from Server',
+        'msg-save-success': 'Configuration saved to server successfully.',
+        'msg-save-error': 'Failed to save configuration to server.',
         'msg-retrieve-success': 'Configuration retrieved successfully.',
         'msg-retrieve-error': 'Failed to retrieve configuration. Check your organization, project, and password.'
     },
@@ -232,11 +232,11 @@ export const translations = {
         'chart-bottlenecks-title': 'Gargalos de Work Items (Tempo Médio por Coluna)',
         'label-avg-days': 'Média de Dias',
         'msg-bottlenecks-empty': 'Nenhum dado disponível para análise de gargalos.',
-        'btn-save-backend': 'Salvar na Nuvem',
-        'btn-retrieve-backend': 'Recuperar da Nuvem',
-        'msg-save-success': 'Configuração salva na nuvem com sucesso.',
-        'msg-save-error': 'Falha ao salvar configuração na nuvem.',
-        'msg-retrieve-success': 'Configuração recuperada com sucesso.',
-        'msg-retrieve-error': 'Falha ao recuperar configuração. Verifique a organização, projeto e senha.'
+        'btn-save-backend': 'Gravar Dados no Servidor',
+        'btn-retrieve-backend': 'Carregar Dados do Servidor',
+        'msg-save-success': 'Configuração gravada no servidor com sucesso.',
+        'msg-save-error': 'Falha ao gravar configuração no servidor.',
+        'msg-retrieve-success': 'Configuração carregada com sucesso.',
+        'msg-retrieve-error': 'Falha ao carregar configuração. Verifique a organização, projeto e senha.'
     }
 };
