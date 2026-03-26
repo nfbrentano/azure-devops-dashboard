@@ -11,7 +11,7 @@ import {
 } from './utils.js';
 import { 
     fetchQueries, fetchFullDetails, buildTree, fetchWithRetry, getAuthHeader, fetchMetadata,
-    fetchRevisionsForItems
+    fetchRevisionsForItems, saveSetup, retrieveSetup
 } from './api.js';
 import { 
     renderCharts, renderThroughputChart, renderAgingChart, 
@@ -49,7 +49,9 @@ const elements = {
     forgotPasswordBtn: document.getElementById('forgot-password-btn'),
     tabDashboard: document.getElementById('tab-dashboard'),
     tabItems: document.getElementById('tab-items'),
-    tabSetup: document.getElementById('tab-setup')
+    tabSetup: document.getElementById('tab-setup'),
+    saveCloudBtn: document.getElementById('save-cloud-btn'),
+    retrieveCloudBtn: document.getElementById('retrieve-cloud-btn')
 };
 
 // Initialize application
@@ -102,18 +104,32 @@ async function initApp() {
             const password = document.getElementById('security-password').value;
             const save = document.getElementById('save-credentials').checked;
             
-            const queries = await fetchQueries(config);
-            if (queries) {
-                state.azureConfig = config;
-                if (save) {
-                    const safeConfig = { ...config, pat: await encryptPAT(config.pat, password) };
-                    localStorage.setItem('azure_config', JSON.stringify(safeConfig));
+            showLoading(true);
+            try {
+                const queries = await fetchQueries(config);
+                if (queries) {
+                    state.azureConfig = config;
+                    
+                    // Always save to cloud when connecting from setup form
+                    const encryptedPat = await encryptPAT(config.pat, password);
+                    await saveSetup({ ...config, pat: encryptedPat }, password);
+
+                    if (save) {
+                        const safeConfig = { ...config, pat: encryptedPat };
+                        localStorage.setItem('azure_config', JSON.stringify(safeConfig));
+                    } else {
+                        localStorage.removeItem('azure_config');
+                    }
+                    showDashboard(queries);
+                    showLoading(false);
                 } else {
-                    localStorage.removeItem('azure_config');
+                    showToast(translations[state.currentLanguage]['msg-auth-failed'], 'error');
+                    showLoading(false);
                 }
-                showDashboard(queries);
-            } else {
+            } catch (error) {
+                console.error('Auth error:', error);
                 showToast(translations[state.currentLanguage]['msg-auth-failed'], 'error');
+                showLoading(false);
             }
         },
 
@@ -189,6 +205,29 @@ async function initApp() {
 
         handleGanttFilterChange: () => {
             if (state.currentData.tree.length > 0) callRenderGantt();
+        },
+
+        handleRetrieveCloud: async () => {
+            const org = document.getElementById('org').value;
+            const project = document.getElementById('project').value;
+            const password = document.getElementById('security-password').value;
+
+            if (!org || !project || !password) {
+                showToast(translations[state.currentLanguage]['msg-missing-config'], 'error');
+                return;
+            }
+
+            showLoading(true);
+            const config = await retrieveSetup(org, project, password);
+            showLoading(false);
+
+            if (config) {
+                document.getElementById('pat').value = await decryptPAT(config.pat, password);
+                document.getElementById('company-name').value = config.companyName || '';
+                showToast(translations[state.currentLanguage]['msg-retrieve-success'], 'success');
+            } else {
+                showToast(translations[state.currentLanguage]['msg-retrieve-error'], 'error');
+            }
         }
     };
 

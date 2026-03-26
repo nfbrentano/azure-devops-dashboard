@@ -1,0 +1,21 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Setup {
+  id            Int      @id @default(autoincrement())
+  org           String
+  project       String
+  companyName   String?  @map("company_name")
+  encryptedPat  String   @map("encrypted_pat")
+  iv            String
+  passwordHash  String   @map("password_hash")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@map("setup")
+}

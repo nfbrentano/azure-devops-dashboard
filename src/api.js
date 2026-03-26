@@ -5,6 +5,49 @@ import { showToast } from './utils.js';
 import { translations } from './translations.js';
 import { state } from './state.js';
 
+const BACKEND_URL = 'http://localhost:3000';
+
+export async function saveSetup(config, password) {
+    try {
+        const [iv, encrypted] = config.pat.split(':');
+        const response = await fetch(`${BACKEND_URL}/api/setup`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                org: config.org,
+                project: config.project,
+                companyName: config.companyName,
+                encryptedPat: encrypted,
+                iv,
+                password
+            })
+        });
+        return response.ok;
+    } catch (e) {
+        console.error('Error saving setup to backend:', e);
+        return false;
+    }
+}
+
+export async function retrieveSetup(org, project, password) {
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/setup/retrieve`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ org, project, password })
+        });
+        if (!response.ok) return null;
+        const data = await response.json();
+        return {
+            ...data,
+            pat: `${data.iv}:${data.encryptedPat}`
+        };
+    } catch (e) {
+        console.error('Error retrieving setup from backend:', e);
+        return null;
+    }
+}
+
 export const getAuthHeader = (pat) => `Basic ${btoa(':' + pat)}`;
 
 export async function fetchWithRetry(url, options = {}, maxRetries = 3, initialDelay = 1000) {

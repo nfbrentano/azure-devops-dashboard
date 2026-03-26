@@ -69,13 +69,14 @@ export function initEvents(elements, handlers) {
     const { 
         setupForm, unlockForm, forgotPasswordBtn, logoutBtn, 
         themeToggle, langToggle, querySelector, refreshBtn,
-        ganttPeriod, ganttPrev, ganttNext, tabDashboard, tabItems, tabSetup
+        ganttPeriod, ganttPrev, ganttNext, tabDashboard, tabItems, tabSetup,
+        saveCloudBtn, retrieveCloudBtn
     } = elements;
 
     const { 
         handleAuth, handleUnlock, handleThemeToggle, handleLangToggle, 
         handleQueryChange, handleRefresh, handleGanttPeriodChange, 
-        handleGanttNav, handleTabSwitch 
+        handleGanttNav, handleTabSwitch, handleRetrieveCloud
     } = handlers;
 
     // Tabs
@@ -86,6 +87,7 @@ export function initEvents(elements, handlers) {
     // Auth Forms
     setupForm.addEventListener('submit', handleAuth);
     unlockForm.addEventListener('submit', handleUnlock);
+    retrieveCloudBtn.addEventListener('click', handleRetrieveCloud);
 
     forgotPasswordBtn.addEventListener('click', () => {
         localStorage.removeItem('azure_config');

@@ -80,7 +80,12 @@
                     <input type="checkbox" id="save-credentials" style="width: auto;">
                     <label for="save-credentials" style="margin-bottom: 0; cursor: pointer; font-size: 0.85rem;" data-i18n="label-save-credentials">Salvar credenciais neste navegador</label>
                 </div>
-                <button type="submit" data-i18n="btn-connect-load">Connect & Load</button>
+                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                    <button type="submit" id="save-cloud-btn" class="glass" style="flex: 1; font-size: 0.85rem; color: var(--primary);" data-i18n="btn-save-backend"><i class="ph ph-cloud-arrow-up"></i> Salvar na Nuvem</button>
+                </div>
+                <div style="margin-top: 1rem; text-align: center;">
+                    <button type="button" id="retrieve-cloud-btn" class="glass" style="font-size: 0.85rem; color: var(--text-muted); border: none; background: none; cursor: pointer;" data-i18n="btn-retrieve-backend"><i class="ph ph-cloud-arrow-down"></i> Recuperar da Nuvem</button>
+                </div>
             </form>
 
       <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-glass);">

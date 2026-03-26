@@ -115,7 +115,13 @@ export const translations = {
         'heatmap-days': 'Sun,Mon,Tue,Wed,Thu,Fri,Sat',
         'chart-bottlenecks-title': 'Work Item Bottlenecks (Avg Time per Column)',
         'label-avg-days': 'Avg Days',
-        'msg-bottlenecks-empty': 'No data available for bottleneck analysis.'
+        'msg-bottlenecks-empty': 'No data available for bottleneck analysis.',
+        'btn-save-backend': 'Save to Cloud',
+        'btn-retrieve-backend': 'Retrieve from Cloud',
+        'msg-save-success': 'Configuration saved to cloud successfully.',
+        'msg-save-error': 'Failed to save configuration to cloud.',
+        'msg-retrieve-success': 'Configuration retrieved successfully.',
+        'msg-retrieve-error': 'Failed to retrieve configuration. Check your organization, project, and password.'
     },
     'pt-br': {
         'tab-dashboard': 'Painel',
@@ -225,6 +231,12 @@ export const translations = {
         'heatmap-days': 'Dom,Seg,Ter,Qua,Qui,Sex,Sáb',
         'chart-bottlenecks-title': 'Gargalos de Work Items (Tempo Médio por Coluna)',
         'label-avg-days': 'Média de Dias',
-        'msg-bottlenecks-empty': 'Nenhum dado disponível para análise de gargalos.'
+        'msg-bottlenecks-empty': 'Nenhum dado disponível para análise de gargalos.',
+        'btn-save-backend': 'Salvar na Nuvem',
+        'btn-retrieve-backend': 'Recuperar da Nuvem',
+        'msg-save-success': 'Configuração salva na nuvem com sucesso.',
+        'msg-save-error': 'Falha ao salvar configuração na nuvem.',
+        'msg-retrieve-success': 'Configuração recuperada com sucesso.',
+        'msg-retrieve-error': 'Falha ao recuperar configuração. Verifique a organização, projeto e senha.'
     }
 };
