@@ -6,8 +6,8 @@ import { translations } from './translations.js';
 import { getItemIcon, getStatusInfo } from './utils.js';
 import { 
     renderCharts, renderThroughputChart, renderAgingChart, 
-    renderAssigneeChart, renderWIPChart, renderCFDChart, renderPortfolioFilters, 
-    renderProgress, renderLegends, renderGlobalTypeFilters 
+    renderAssigneeChart, renderWIPChart, renderCFDChart, renderBottlenecksChart,
+    renderPortfolioFilters, renderProgress, renderLegends, renderGlobalTypeFilters 
 } from './charts.js';
 import { renderActivityHeatmap } from './heatmap.js';
 
@@ -185,6 +185,13 @@ export function processAnalytics(items, tree, options = {}) {
     renderActivityHeatmap(state.heatmapData, currentLanguage, translations);
     
     renderThroughputChart(throughputData, charts, currentTheme, currentLanguage, translations);
+    
+    // Bottleneck Analysis (based on revisions data if available)
+    if (options.revisionsData) {
+        const bottleneckData = calculateBottlenecks(filteredItems, options.revisionsData, workItemMetadata);
+        renderBottlenecksChart(bottleneckData, charts, currentTheme, currentLanguage, translations);
+    }
+
     renderPortfolioFilters(items, workItemMetadata, translations, currentLanguage, () => renderProgress(items, progressList, translations, currentLanguage, workItemMetadata, azureConfig));
     renderProgress(items, progressList, translations, currentLanguage, workItemMetadata, azureConfig);
     
@@ -196,4 +203,54 @@ export function processAnalytics(items, tree, options = {}) {
     document.getElementById('kpi-backlog').textContent = kpis.backlog;
     document.getElementById('kpi-inprogress').textContent = kpis.inprogress;
     document.getElementById('kpi-done').textContent = kpis.doneRemoved;
+}
+
+export function calculateBottlenecks(items, revisionsData, workItemMetadata) {
+    const columnTimes = {}; // { column: [durations] }
+    
+    items.forEach(item => {
+        const revisions = revisionsData[item.id];
+        if (!revisions || revisions.length < 2) return;
+
+        // Sort revisions by date
+        const sorted = [...revisions].sort((a, b) => 
+            new Date(a.fields['System.ChangedDate']) - new Date(b.fields['System.ChangedDate'])
+        );
+
+        for (let i = 0; i < sorted.length - 1; i++) {
+            const current = sorted[i];
+            const next = sorted[i + 1];
+            
+            const col = current.fields['System.BoardColumn'] || current.fields['System.State'];
+            if (!col) continue;
+
+            const start = new Date(current.fields['System.ChangedDate']);
+            const end = new Date(next.fields['System.ChangedDate']);
+            const durationDays = (end - start) / (1000 * 60 * 60 * 24);
+
+            if (!columnTimes[col]) columnTimes[col] = [];
+            columnTimes[col].push(durationDays);
+        }
+
+        // Add time in current state for active items
+        const lastRev = sorted[sorted.length - 1];
+        const stateInfo = getStatusInfo(lastRev.fields['System.State'], workItemMetadata);
+        if (stateInfo.label !== 'Done' && stateInfo.label !== 'Removed') {
+            const col = lastRev.fields['System.BoardColumn'] || lastRev.fields['System.State'];
+            const start = new Date(lastRev.fields['System.ChangedDate']);
+            const durationDays = (new Date() - start) / (1000 * 60 * 60 * 24);
+            
+            if (!columnTimes[col]) columnTimes[col] = [];
+            columnTimes[col].push(durationDays);
+        }
+    });
+
+    // Calculate averages
+    return Object.entries(columnTimes)
+        .map(([column, durations]) => ({
+            column,
+            avgDays: durations.length > 0 ? durations.reduce((a, b) => a + b, 0) / durations.length : 0
+        }))
+        .filter(d => d.avgDays > 0.1) // Only show columns with significant time
+        .sort((a, b) => b.avgDays - a.avgDays);
 }

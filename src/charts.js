@@ -682,3 +682,73 @@ export function renderGlobalTypeFilters(activeTypes, items, workItemMetadata, cu
         container.appendChild(label);
     });
 }
+
+export function renderBottlenecksChart(bottleneckData, charts, currentTheme, currentLanguage, translations) {
+    let canvas = document.getElementById('bottlenecksChart');
+    if (!canvas) return;
+    const container = canvas.parentElement;
+    if (!container) return;
+
+    if (charts.bottlenecks) charts.bottlenecks.destroy();
+    
+    if (!bottleneckData || bottleneckData.length === 0) {
+        container.innerHTML = `<div id="bottlenecks-empty-msg" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); gap: 1rem;">
+            <i class="ph-bold ph-ghost" style="font-size: 3rem; opacity: 0.5;"></i>
+            <p>${translations[currentLanguage]['msg-bottlenecks-empty']}</p>
+        </div>`;
+        return;
+    }
+
+    if (document.getElementById('bottlenecks-empty-msg')) {
+        container.innerHTML = '<canvas id="bottlenecksChart"></canvas>';
+        canvas = document.getElementById('bottlenecksChart');
+    }
+
+    if (!canvas) return;
+
+    const labels = bottleneckData.map(d => d.column);
+    const values = bottleneckData.map(d => parseFloat(d.avgDays.toFixed(1)));
+    
+    const isLight = currentTheme === 'light';
+    const gridColor = isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)';
+    const textColor = isLight ? '#64748b' : '#94a3b8';
+
+    charts.bottlenecks = new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                label: translations[currentLanguage]['label-avg-days'],
+                data: values,
+                backgroundColor: values.map(v => v > 5 ? '#ef4444' : (v > 2 ? '#f59e0b' : '#3b82f6')),
+                borderRadius: 4
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: { 
+                    beginAtZero: true, 
+                    grid: { color: gridColor }, 
+                    ticks: { color: textColor },
+                    title: { display: true, text: translations[currentLanguage]['label-days'], color: textColor }
+                },
+                y: { 
+                    grid: { display: false }, 
+                    ticks: { color: textColor } 
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (context) => `${translations[currentLanguage]['label-avg-days']}: ${context.raw}`
+                    }
+                }
+            }
+        }
+    });
+}
+

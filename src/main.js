@@ -10,7 +10,8 @@ import {
     showLoading, showToast, encryptPAT, decryptPAT, updateLoadingProgress 
 } from './utils.js';
 import { 
-    fetchQueries, fetchFullDetails, buildTree, fetchWithRetry, getAuthHeader, fetchMetadata
+    fetchQueries, fetchFullDetails, buildTree, fetchWithRetry, getAuthHeader, fetchMetadata,
+    fetchRevisionsForItems
 } from './api.js';
 import { 
     renderCharts, renderThroughputChart, renderAgingChart, 
@@ -241,8 +242,15 @@ async function loadQueryData(queryId) {
         const items = await fetchFullDetails(state.azureConfig, ids, (p) => {
             updateLoadingProgress(p);
         });
+
+        // 2. Fetch Revisions for Bottleneck analysis
+        showLoading(true, 0); // Reset progress for revisions
+        const revisions = await fetchRevisionsForItems(state.azureConfig, ids, (p) => {
+            updateLoadingProgress(p);
+        });
+
         const { roots, nodes } = buildTree(items, state.workItemMetadata);
-        state.currentData = { items: nodes, tree: roots };
+        state.currentData = { items: nodes, tree: roots, revisions: revisions };
 
         const activeNameEl = document.getElementById('active-query-name');
         if (activeNameEl) {
@@ -251,7 +259,8 @@ async function loadQueryData(queryId) {
         }
 
         runAnalytics();
-    } catch {
+    } catch (e) {
+        console.error('Error loading query data:', e);
         showToast(translations[state.currentLanguage]['msg-error-loading'], 'error');
         showEmptyState(true);
     } finally {
@@ -275,6 +284,7 @@ function runAnalytics() {
         charts: state.charts,
         azureConfig: state.azureConfig,
         progressList: elements.progressList,
+        revisionsData: state.currentData.revisions,
         callRenderGantt
     });
 }

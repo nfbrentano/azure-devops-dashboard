@@ -112,7 +112,10 @@ export const translations = {
         'label-no-title': 'No Title',
         'label-unassigned': 'Unassigned',
         'label-week-short': 'W',
-        'heatmap-days': 'Sun,Mon,Tue,Wed,Thu,Fri,Sat'
+        'heatmap-days': 'Sun,Mon,Tue,Wed,Thu,Fri,Sat',
+        'chart-bottlenecks-title': 'Work Item Bottlenecks (Avg Time per Column)',
+        'label-avg-days': 'Avg Days',
+        'msg-bottlenecks-empty': 'No data available for bottleneck analysis.'
     },
     'pt-br': {
         'tab-dashboard': 'Painel',
@@ -219,6 +222,9 @@ export const translations = {
         'label-no-title': 'Sem Título',
         'label-unassigned': 'Não Atribuído',
         'label-week-short': 'S',
-        'heatmap-days': 'Dom,Seg,Ter,Qua,Qui,Sex,Sáb'
+        'heatmap-days': 'Dom,Seg,Ter,Qua,Qui,Sex,Sáb',
+        'chart-bottlenecks-title': 'Gargalos de Work Items (Tempo Médio por Coluna)',
+        'label-avg-days': 'Média de Dias',
+        'msg-bottlenecks-empty': 'Nenhum dado disponível para análise de gargalos.'
     }
 };

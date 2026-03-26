@@ -113,6 +113,49 @@ export async function fetchFullDetails(config, ids, onProgress = null) {
     return allItems;
 }
 
+export async function fetchWorkItemRevisions(config, id) {
+    const url = `https://dev.azure.com/${config.org}/${config.project}/_apis/wit/workItems/${id}/revisions?api-version=6.0`;
+    const auth = getAuthHeader(config.pat);
+    try {
+        const response = await fetchWithRetry(url, {
+            headers: { 'Authorization': auth },
+            cache: 'no-cache'
+        });
+        if (!response.ok) return null;
+        const data = await response.json();
+        return data.value || [];
+    } catch (e) {
+        console.error(`Error fetching revisions for item ${id}:`, e);
+        return null;
+    }
+}
+
+export async function fetchRevisionsForItems(config, ids, onProgress = null) {
+    const total = ids.length;
+    const results = {};
+    const concurrency = 10;
+    let completed = 0;
+
+    const fetchTask = async (id) => {
+        const revisions = await fetchWorkItemRevisions(config, id);
+        if (revisions) {
+            results[id] = revisions;
+        }
+        completed++;
+        if (onProgress) {
+            onProgress((completed / total) * 100);
+        }
+    };
+
+    // Process in batches
+    for (let i = 0; i < ids.length; i += concurrency) {
+        const batch = ids.slice(i, i + concurrency);
+        await Promise.all(batch.map(id => fetchTask(id)));
+    }
+
+    return results;
+}
+
 export async function fetchMetadata(config, workItemMetadata, renderLegends) {
     try {
         const auth = getAuthHeader(config.pat);

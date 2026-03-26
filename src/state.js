@@ -4,7 +4,7 @@
 
 export const state = {
     azureConfig: JSON.parse(localStorage.getItem('azure_config')) || null,
-    currentData: { items: [], tree: [] },
+    currentData: { items: [], tree: [], revisions: {} },
     charts: {
         comparison: null,
         aging: null,
