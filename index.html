@@ -8,35 +8,46 @@
   <title>Azure DevOps Metrics</title>
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <script type="module" crossorigin src="/azure-devops-dashboard/assets/index-1bVE2Q0x.js"></script>
-  <link rel="stylesheet" crossorigin href="/azure-devops-dashboard/assets/index-oxGMpq06.css">
+  <script type="module" crossorigin src="/azure-devops-dashboard/assets/index-J6g0a1HS.js"></script>
+  <link rel="stylesheet" crossorigin href="/azure-devops-dashboard/assets/index-B2LW8lIk.css">
 </head>
 
 <body>
   <div id="app">
     <!-- Tab Navigation -->
     <nav class="tabs-nav no-print glass">
-      <div id="data-controls" class="hidden nav-data-controls">
-        <select id="query-selector" class="glass header-select" title="Select Analytics Query"></select>
-        <button id="refresh-btn" class="glass btn-icon-glass refresh-btn" title="Refresh Data" data-i18n-aria="aria-refresh"><i
-            class="ph-bold ph-arrows-clockwise"></i></button>
+      <div class="nav-left">
+        <div class="logo-container">
+          <img src="" class="company-logo-img" alt="Logo">
+        </div>
       </div>
 
       <div class="tabs-center">
-        <button id="tab-dashboard" class="tab-btn active" data-i18n="tab-dashboard"><i class="ph-bold ph-layout"></i> Dashboard</button>
-        <button id="tab-items" class="tab-btn" data-i18n="tab-items"><i class="ph-bold ph-hourglass"></i> Item Details</button>
+        <button id="tab-dashboard" class="tab-btn active" data-i18n="tab-dashboard"><i class="ph-bold ph-layout"></i>
+          Dashboard</button>
+        <button id="tab-items" class="tab-btn" data-i18n="tab-items"><i class="ph-bold ph-hourglass"></i> Item
+          Details</button>
         <button id="tab-setup" class="tab-btn" data-i18n="tab-setup"><i class="ph-bold ph-gear"></i> Setup</button>
       </div>
 
       <div class="nav-right-actions">
-        <button id="lang-toggle" class="glass btn-icon-glass" title="Switch to English" data-i18n-aria="aria-lang-toggle">
+        <div id="data-controls" class="hidden nav-data-controls">
+          <select id="query-selector" class="glass header-select" title="Select Analytics Query"></select>
+          <button id="refresh-btn" class="glass btn-icon-glass refresh-btn" title="Refresh Data"
+            data-i18n-aria="aria-refresh"><i class="ph-bold ph-arrows-clockwise"></i></button>
+        </div>
+        <div class="divider"></div>
+        <button id="lang-toggle" class="glass btn-icon-glass" title="Switch to English"
+          data-i18n-aria="aria-lang-toggle">
           <span style="font-weight: bold; font-size: 0.8rem;">EN</span>
         </button>
-        <button id="theme-toggle" class="glass btn-icon-glass theme-toggle-nav" title="Toggle Dark/Light Mode" data-i18n-aria="aria-theme-toggle">
+        <button id="theme-toggle" class="glass btn-icon-glass theme-toggle-nav" title="Toggle Dark/Light Mode"
+          data-i18n-aria="aria-theme-toggle">
           <i class="ph-bold ph-sun-dim"></i>
         </button>
       </div>
     </nav>
+
 
 
 
@@ -47,46 +58,55 @@
       </div>
       <h2 data-i18n="setup-title">Azure DevOps Dashboard</h2>
       <p class="setup-subtitle" data-i18n="setup-subtitle">Insira suas credenciais para visualizar o dashboard</p>
-            
-            <!-- Security Warning -->
-            <div class="security-warning" style="margin-bottom: 1.5rem; padding: 0.75rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 8px; display: flex; gap: 0.75rem; align-items: start;">
-                <i class="ph-fill ph-warning-octagon" style="color: #ef4444; font-size: 1.25rem;"></i>
-                <div style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;">
-                    <strong style="color: #ef4444; display: block; margin-bottom: 0.25rem;" data-i18n="setup-security-warning-title">Segurança para GitHub Pages</strong>
-                    <span data-i18n="setup-security-warning-text">Como esta aplicação é estática, o seu PAT será enviado diretamente do navegador para o Azure. Use um PAT de curta duração por segurança.</span>
-                </div>
-            </div>
 
-            <form id="setup-form">
-                <div class="form-group">
-                    <label for="org" data-i18n="label-org">Organização</label>
-                    <input type="text" id="org" data-i18n-placeholder="placeholder-org" placeholder="ex: minha-org" required>
-                </div>
-                <div class="form-group">
-                    <label for="project" data-i18n="label-project">Projeto</label>
-                    <input type="text" id="project" data-i18n-placeholder="placeholder-project" placeholder="ex: meu-projeto" required>
-                </div>
-                <div class="form-group">
-                    <label for="pat" data-i18n="label-pat">Personal Access Token (PAT)</label>
-                    <input type="password" id="pat" data-i18n-placeholder="placeholder-pat" placeholder="Seu Token do Azure DevOps" required>
-                </div>
-                <div class="form-group">
-                    <label for="security-password" data-i18n="label-security-password">Senha de Segurança</label>
-                    <input type="password" id="security-password" data-i18n-placeholder="placeholder-security-password" placeholder="Usada para criptografar seus dados" required>
-                </div>
-                <div class="form-group">
-                    <label for="company-name" data-i18n="label-company-name">Company Name (For Export)</label>
-                    <input type="text" id="company-name" data-i18n-placeholder="placeholder-company-name" placeholder="Name to appear on exported charts">
-                </div>
-                <div class="form-group" style="flex-direction: row; align-items: center; gap: 0.5rem; cursor: pointer;">
-                    <input type="checkbox" id="save-credentials" style="width: auto;">
-                    <label for="save-credentials" style="margin-bottom: 0; cursor: pointer; font-size: 0.85rem;" data-i18n="label-save-credentials">Salvar credenciais neste navegador</label>
-                </div>
-                <button type="submit" data-i18n="btn-connect-load">Connect & Load</button>
-            </form>
+      <!-- Security Warning -->
+      <div class="security-warning"
+        style="margin-bottom: 1.5rem; padding: 0.75rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 8px; display: flex; gap: 0.75rem; align-items: start;">
+        <i class="ph-fill ph-warning-octagon" style="color: #ef4444; font-size: 1.25rem;"></i>
+        <div style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;">
+          <strong style="color: #ef4444; display: block; margin-bottom: 0.25rem;"
+            data-i18n="setup-security-warning-title">Segurança para GitHub Pages</strong>
+          <span data-i18n="setup-security-warning-text">Como esta aplicação é estática, o seu PAT será enviado
+            diretamente do navegador para o Azure. Use um PAT de curta duração por segurança.</span>
+        </div>
+      </div>
+
+      <form id="setup-form">
+        <div class="form-group">
+          <label for="org" data-i18n="label-org">Organização</label>
+          <input type="text" id="org" data-i18n-placeholder="placeholder-org" placeholder="ex: minha-org" required>
+        </div>
+        <div class="form-group">
+          <label for="project" data-i18n="label-project">Projeto</label>
+          <input type="text" id="project" data-i18n-placeholder="placeholder-project" placeholder="ex: meu-projeto"
+            required>
+        </div>
+        <div class="form-group">
+          <label for="pat" data-i18n="label-pat">Personal Access Token (PAT)</label>
+          <input type="password" id="pat" data-i18n-placeholder="placeholder-pat"
+            placeholder="Seu Token do Azure DevOps" required>
+        </div>
+        <div class="form-group">
+          <label for="security-password" data-i18n="label-security-password">Senha de Segurança</label>
+          <input type="password" id="security-password" data-i18n-placeholder="placeholder-security-password"
+            placeholder="Usada para criptografar seus dados" required>
+        </div>
+        <div class="form-group">
+          <label for="company-name" data-i18n="label-company-name">Company Name (For Export)</label>
+          <input type="text" id="company-name" data-i18n-placeholder="placeholder-company-name"
+            placeholder="Name to appear on exported charts">
+        </div>
+        <div class="form-group" style="flex-direction: row; align-items: center; gap: 0.5rem; cursor: pointer;">
+          <input type="checkbox" id="save-credentials" style="width: auto;">
+          <label for="save-credentials" style="margin-bottom: 0; cursor: pointer; font-size: 0.85rem;"
+            data-i18n="label-save-credentials">Salvar credenciais neste navegador</label>
+        </div>
+        <button type="submit" data-i18n="btn-connect-load">Connect & Load</button>
+      </form>
 
       <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-glass);">
-        <button id="logout-btn" class="glass btn-danger-glass" data-i18n="btn-logout"><i class="ph-bold ph-sign-out"></i> Sair da
+        <button id="logout-btn" class="glass btn-danger-glass" data-i18n="btn-logout"><i
+            class="ph-bold ph-sign-out"></i> Sair da
           Conta</button>
       </div>
 
@@ -94,14 +114,16 @@
       <div class="metrics-guide">
         <h3 data-i18n="metrics-guide-title"><i class="ph-bold ph-book-open"></i> Guia de Métricas</h3>
 
-      <div class="metrics-grid">
+        <div class="metrics-grid">
           <div class="metric-item">
             <div class="metric-header">
               <i class="ph-bold ph-calendar-check"></i>
               <span data-i18n="metric-lead-time-title">Lead Time</span>
             </div>
-            <p data-i18n="metric-lead-time-desc">Mede o tempo total desde que um item é <strong>criado</strong> até ser <strong>concluído</strong>.
-              Reflete a experiência completa do cliente ou solicitante.</p>
+            <p data-i18n="metric-lead-time-desc">Mede o tempo total desde que um item é <strong>criado</strong> até ser
+              <strong>concluído</strong>.
+              Reflete a experiência completa do cliente ou solicitante.
+            </p>
           </div>
 
           <div class="metric-item">
@@ -109,7 +131,8 @@
               <i class="ph-bold ph-timer"></i>
               <span data-i18n="metric-cycle-time-title">Cycle Time</span>
             </div>
-            <p data-i18n="metric-cycle-time-desc">Mede o tempo em que o item esteve efetivamente <strong>em desenvolvimento</strong> (desde 'In Progress'
+            <p data-i18n="metric-cycle-time-desc">Mede o tempo em que o item esteve efetivamente <strong>em
+                desenvolvimento</strong> (desde 'In Progress'
               até ser concluído). Foca na eficiência da execução.</p>
           </div>
 
@@ -118,7 +141,8 @@
               <i class="ph-bold ph-stack"></i>
               <span data-i18n="metric-comparison-title">Lead vs Cycle Time</span>
             </div>
-            <p data-i18n="metric-comparison-desc">Compara o Lead Time e Cycle Time médio do período atual com o anterior, permitindo identificar tendências
+            <p data-i18n="metric-comparison-desc">Compara o Lead Time e Cycle Time médio do período atual com o
+              anterior, permitindo identificar tendências
               de melhoria ou gargalos no fluxo.</p>
           </div>
 
@@ -127,7 +151,8 @@
               <i class="ph-bold ph-chart-line-up"></i>
               <span data-i18n="metric-portfolio-title">Features & Portfolio</span>
             </div>
-            <p data-i18n="metric-portfolio-desc">Visualização macro do progresso de Epics e Features, mostrando como os itens estão distribuídos pelas
+            <p data-i18n="metric-portfolio-desc">Visualização macro do progresso de Epics e Features, mostrando como os
+              itens estão distribuídos pelas
               diversas etapas do fluxo de trabalho.</p>
           </div>
           <div class="metric-item">
@@ -135,7 +160,8 @@
               <i class="ph-bold ph-hourglass"></i>
               <span data-i18n="metric-aging-title">Work Item Aging</span>
             </div>
-            <p data-i18n="metric-aging-desc">Mede quantos dias um item em <strong>In Progress</strong> está sem receber atualizações. Ajuda a
+            <p data-i18n="metric-aging-desc">Mede quantos dias um item em <strong>In Progress</strong> está sem receber
+              atualizações. Ajuda a
               identificar itens esquecidos ou gargalos operacionais.</p>
           </div>
           <div class="metric-item">
@@ -143,7 +169,8 @@
               <i class="ph-bold ph-projector-screen-chart"></i>
               <span data-i18n="metric-gantt-title">Hierarchical Gantt</span>
             </div>
-            <p data-i18n="metric-gantt-desc">Linha do tempo hierárquica que mostra a duração e o encadeamento dos itens, permitindo visualizar o
+            <p data-i18n="metric-gantt-desc">Linha do tempo hierárquica que mostra a duração e o encadeamento dos itens,
+              permitindo visualizar o
               sequenciamento e dependências do projeto.</p>
           </div>
         </div>
@@ -155,24 +182,28 @@
       <header>
         <div>
           <h1 data-i18n="items-view-title">Item Details & Aging</h1>
-          <p style="color: var(--text-muted); margin-top: 0.5rem;" data-i18n="items-view-subtitle">Análise detalhada de inatividade e saúde dos itens
+          <p style="color: var(--text-muted); margin-top: 0.5rem;" data-i18n="items-view-subtitle">Análise detalhada de
+            inatividade e saúde dos itens
           </p>
         </div>
       </header>
 
       <!-- Global Type Filters (Item Details Tab) -->
-      <div id="global-type-filters" class="legend glass" style="margin-bottom: 2rem; flex-direction: column; align-items: flex-start; gap: 0.75rem;">
-          <span class="legend-group-title" style="margin-bottom: 0;" data-i18n="global-filter-title"><i class="ph-bold ph-funnel"></i> Tipos de Itens Visíveis</span>
-          <div id="global-type-legend" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; width: 100%;">
-              <!-- Populated dynamically -->
-          </div>
+      <div id="global-type-filters" class="legend glass"
+        style="margin-bottom: 2rem; flex-direction: column; align-items: flex-start; gap: 0.75rem;">
+        <span class="legend-group-title" style="margin-bottom: 0;" data-i18n="global-filter-title"><i
+            class="ph-bold ph-funnel"></i> Tipos de Itens Visíveis</span>
+        <div id="global-type-legend"
+          style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; width: 100%;">
+          <!-- Populated dynamically -->
+        </div>
       </div>
 
       <!-- Empty State -->
       <div id="items-empty-state" class="empty-state hidden glass">
-          <i class="ph ph-mask-sad"></i>
-          <h3 data-i18n="empty-state-title">Nenhum item encontrado</h3>
-          <p data-i18n="empty-state-desc">A consulta selecionada não retornou nenhum item de trabalho.</p>
+        <i class="ph ph-mask-sad"></i>
+        <h3 data-i18n="empty-state-title">Nenhum item encontrado</h3>
+        <p data-i18n="empty-state-desc">A consulta selecionada não retornou nenhum item de trabalho.</p>
       </div>
 
       <div id="items-content" class="dashboard-grid">
@@ -183,7 +214,9 @@
               <i class="ph-bold ph-stack"></i>
               Lead vs Cycle Time Comparison
             </div>
-            <button class="glass btn-icon-glass export-btn" style="margin-left: auto;" data-i18n-title="btn-export-chart" data-target="comparisonChart" title="Export Chart (PNG)"><i class="ph-bold ph-download-simple"></i></button>
+            <button class="glass btn-icon-glass export-btn" style="margin-left: auto;"
+              data-i18n-title="btn-export-chart" data-target="comparisonChart" title="Export Chart (PNG)"><i
+                class="ph-bold ph-download-simple"></i></button>
           </div>
           <div class="chart-container-md">
             <canvas id="comparisonChart"></canvas>
@@ -197,7 +230,9 @@
               <i class="ph-bold ph-hourglass"></i>
               Work Item Aging (In Progress)
             </div>
-            <button class="glass btn-icon-glass export-btn" style="margin-left: auto;" data-i18n-title="btn-export-chart" data-target="agingChart" title="Export Chart (PNG)"><i class="ph-bold ph-download-simple"></i></button>
+            <button class="glass btn-icon-glass export-btn" style="margin-left: auto;"
+              data-i18n-title="btn-export-chart" data-target="agingChart" title="Export Chart (PNG)"><i
+                class="ph-bold ph-download-simple"></i></button>
           </div>
           <div class="chart-container-lg">
             <canvas id="agingChart"></canvas>
@@ -211,7 +246,9 @@
               <i class="ph-bold ph-users-three"></i>
               Workload by Assignee
             </div>
-            <button class="glass btn-icon-glass export-btn" style="margin-left: auto;" data-i18n-title="btn-export-chart" data-target="assigneeChart" title="Export Chart (PNG)"><i class="ph-bold ph-download-simple"></i></button>
+            <button class="glass btn-icon-glass export-btn" style="margin-left: auto;"
+              data-i18n-title="btn-export-chart" data-target="assigneeChart" title="Export Chart (PNG)"><i
+                class="ph-bold ph-download-simple"></i></button>
           </div>
           <div class="chart-container-lg">
             <canvas id="assigneeChart"></canvas>
@@ -225,7 +262,9 @@
               <i class="ph-bold ph-columns"></i>
               WIP by Kanban Column
             </div>
-            <button class="glass btn-icon-glass export-btn" style="margin-left: auto;" data-i18n-title="btn-export-chart" data-target="wipChart" title="Export Chart (PNG)"><i class="ph-bold ph-download-simple"></i></button>
+            <button class="glass btn-icon-glass export-btn" style="margin-left: auto;"
+              data-i18n-title="btn-export-chart" data-target="wipChart" title="Export Chart (PNG)"><i
+                class="ph-bold ph-download-simple"></i></button>
           </div>
           <div class="chart-container-md">
             <canvas id="wipChart"></canvas>
@@ -239,7 +278,9 @@
               <i class="ph-bold ph-funnel"></i>
               Work Item Bottlenecks (Avg Time per Column)
             </div>
-            <button class="glass btn-icon-glass export-btn" style="margin-left: auto;" data-i18n-title="btn-export-chart" data-target="bottlenecksChart" title="Export Chart (PNG)"><i class="ph-bold ph-download-simple"></i></button>
+            <button class="glass btn-icon-glass export-btn" style="margin-left: auto;"
+              data-i18n-title="btn-export-chart" data-target="bottlenecksChart" title="Export Chart (PNG)"><i
+                class="ph-bold ph-download-simple"></i></button>
           </div>
           <div class="chart-container-md">
             <canvas id="bottlenecksChart"></canvas>
@@ -253,7 +294,9 @@
               <i class="ph-bold ph-chart-line-up"></i>
               Cumulative Flow Diagram (CFD)
             </div>
-            <button class="glass btn-icon-glass export-btn" style="margin-left: auto;" data-i18n-title="btn-export-chart" data-target="cfdChart" title="Export Chart (PNG)"><i class="ph-bold ph-download-simple"></i></button>
+            <button class="glass btn-icon-glass export-btn" style="margin-left: auto;"
+              data-i18n-title="btn-export-chart" data-target="cfdChart" title="Export Chart (PNG)"><i
+                class="ph-bold ph-download-simple"></i></button>
           </div>
           <div class="chart-container-lg">
             <canvas id="cfdChart"></canvas>
@@ -267,7 +310,9 @@
               <i class="ph-bold ph-chart-bar"></i>
               Throughput (Items per Week) — Requirement Backlog
             </div>
-            <button class="glass btn-icon-glass export-btn" style="margin-left: auto;" data-i18n-title="btn-export-chart" data-target="throughputChart" title="Export Chart (PNG)"><i class="ph-bold ph-download-simple"></i></button>
+            <button class="glass btn-icon-glass export-btn" style="margin-left: auto;"
+              data-i18n-title="btn-export-chart" data-target="throughputChart" title="Export Chart (PNG)"><i
+                class="ph-bold ph-download-simple"></i></button>
           </div>
           <div class="chart-container-sm">
             <canvas id="throughputChart"></canvas>
@@ -281,7 +326,9 @@
               <i class="ph-bold ph-calendar"></i>
               Delivery Activity (Last 6 Months)
             </div>
-            <button class="glass btn-icon-glass export-btn" style="margin-left: auto;" data-i18n-title="btn-export-chart" data-target="heatmap-container" title="Export Chart (PNG)"><i class="ph-bold ph-download-simple"></i></button>
+            <button class="glass btn-icon-glass export-btn" style="margin-left: auto;"
+              data-i18n-title="btn-export-chart" data-target="heatmap-container" title="Export Chart (PNG)"><i
+                class="ph-bold ph-download-simple"></i></button>
           </div>
           <div id="heatmap-container" class="heatmap-wrapper">
             <!-- Heatmap will be rendered here -->
@@ -295,7 +342,8 @@
       <header>
         <div>
           <h1 data-i18n="dashboard-title">Development Analytics</h1>
-          <p id="active-query-name" data-i18n="active-query-placeholder" style="color: var(--text-muted); margin-top: 0.5rem;">Selecione uma consulta para
+          <p id="active-query-name" data-i18n="active-query-placeholder"
+            style="color: var(--text-muted); margin-top: 0.5rem;">Selecione uma consulta para
             começar</p>
         </div>
       </header>
@@ -334,9 +382,9 @@
 
       <!-- Empty State -->
       <div id="dashboard-empty-state" class="empty-state hidden glass">
-          <i class="ph ph-files"></i>
-          <h3 data-i18n="empty-state-title">Nenhum item encontrado</h3>
-          <p data-i18n="empty-state-desc">A consulta selecionada não retornou nenhum item de trabalho.</p>
+        <i class="ph ph-files"></i>
+        <h3 data-i18n="empty-state-title">Nenhum item encontrado</h3>
+        <p data-i18n="empty-state-desc">A consulta selecionada não retornou nenhum item de trabalho.</p>
       </div>
 
       <div id="dashboard-content" class="dashboard-grid">
@@ -359,7 +407,8 @@
           </div>
         </div>
         <div class="card glass" style="grid-column: 1 / -1; margin-top: 1rem;">
-          <div class="card-title" style="justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+          <div class="card-title"
+            style="justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
             <div style="display: flex; align-items: center; gap: 0.75rem;" data-i18n="gantt-section-title">
               <i class="ph-bold ph-projector-screen-chart"></i>
               Hierarchical Gantt
@@ -368,19 +417,26 @@
             <!-- Coluna de Controles à Direita -->
             <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.75rem; flex-grow: 1;">
               <!-- Linha 1: Filtros de status -->
-              <div class="gantt-status-filters" style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; justify-content: flex-end;">
-                <label class="filter-item"><input type="checkbox" data-category="Backlog" checked> <span data-i18n="status-backlog">Backlog</span></label>
-                <label class="filter-item"><input type="checkbox" data-category="InProgress" checked> <span data-i18n="status-inprogress">In Progress</span></label>
-                <label class="filter-item"><input type="checkbox" data-category="Done" checked> <span data-i18n="status-done">Done</span></label>
-                <label class="filter-item"><input type="checkbox" data-category="Removed"> <span data-i18n="status-removed">Removed</span></label>
+              <div class="gantt-status-filters"
+                style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; justify-content: flex-end;">
+                <label class="filter-item"><input type="checkbox" data-category="Backlog" checked> <span
+                    data-i18n="status-backlog">Backlog</span></label>
+                <label class="filter-item"><input type="checkbox" data-category="InProgress" checked> <span
+                    data-i18n="status-inprogress">In Progress</span></label>
+                <label class="filter-item"><input type="checkbox" data-category="Done" checked> <span
+                    data-i18n="status-done">Done</span></label>
+                <label class="filter-item"><input type="checkbox" data-category="Removed"> <span
+                    data-i18n="status-removed">Removed</span></label>
               </div>
 
               <!-- Linha 2: Navegação de período + Select -->
               <div class="gantt-controls">
                 <div class="gantt-period-nav">
-                  <button id="gantt-prev" class="glass" data-i18n-aria="aria-gantt-prev"><i class="ph-bold ph-caret-left"></i></button>
+                  <button id="gantt-prev" class="glass" data-i18n-aria="aria-gantt-prev"><i
+                      class="ph-bold ph-caret-left"></i></button>
                   <span id="gantt-current-period-label" data-i18n="loading-label">Carregando...</span>
-                   <button id="gantt-next" class="glass" data-i18n-aria="aria-gantt-next"><i class="ph-bold ph-caret-right"></i></button>
+                  <button id="gantt-next" class="glass" data-i18n-aria="aria-gantt-next"><i
+                      class="ph-bold ph-caret-right"></i></button>
                 </div>
                 <div class="gantt-nav-divider"></div>
                 <select id="gantt-period" class="glass gantt-period-select">
@@ -392,7 +448,9 @@
                   <option value="week" data-i18n="gantt-period-week">Semanal</option>
                 </select>
                 <div class="gantt-nav-divider"></div>
-                <button class="glass btn-icon-glass export-btn" data-i18n-title="btn-export-chart" data-target="gantt-container" title="Export Chart (PNG)"><i class="ph-bold ph-download-simple"></i></button>
+                <button class="glass btn-icon-glass export-btn" data-i18n-title="btn-export-chart"
+                  data-target="gantt-container" title="Export Chart (PNG)"><i
+                    class="ph-bold ph-download-simple"></i></button>
               </div>
             </div>
           </div>
@@ -420,22 +478,26 @@
     </div>
     <!-- Unlock Modal -->
     <div id="unlock-view" class="view hidden">
-        <div class="setup-card">
-            <div class="logo">
-                <img src="" class="company-logo-img" style="height: 60px; width: auto; margin-bottom: 2rem;" alt="Company Logo">
-            </div>
-            <h2 data-i18n="unlock-title">Dashboard Bloqueado</h2>
-            <p class="setup-subtitle" data-i18n="unlock-subtitle">Insira sua senha de segurança para desbloquear</p>
-            <form id="unlock-form">
-                <div class="form-group">
-                    <input type="password" id="unlock-password" data-i18n-placeholder="placeholder-unlock-password" placeholder="Sua senha de segurança" required>
-                </div>
-                <button type="submit" data-i18n="btn-unlock">Desbloquear</button>
-                <div style="text-align: center; margin-top: 1rem;">
-                    <button type="button" id="forgot-password-btn" class="glass" style="font-size: 0.85rem; color: var(--primary); border: none; background: none; cursor: pointer;" data-i18n="link-forgot-password">Limpar dados e sair</button>
-                </div>
-            </form>
+      <div class="setup-card">
+        <div class="logo">
+          <img src="" class="company-logo-img" style="height: 60px; width: auto; margin-bottom: 2rem;"
+            alt="Company Logo">
         </div>
+        <h2 data-i18n="unlock-title">Dashboard Bloqueado</h2>
+        <p class="setup-subtitle" data-i18n="unlock-subtitle">Insira sua senha de segurança para desbloquear</p>
+        <form id="unlock-form">
+          <div class="form-group">
+            <input type="password" id="unlock-password" data-i18n-placeholder="placeholder-unlock-password"
+              placeholder="Sua senha de segurança" required>
+          </div>
+          <button type="submit" data-i18n="btn-unlock">Desbloquear</button>
+          <div style="text-align: center; margin-top: 1rem;">
+            <button type="button" id="forgot-password-btn" class="glass"
+              style="font-size: 0.85rem; color: var(--primary); border: none; background: none; cursor: pointer;"
+              data-i18n="link-forgot-password">Limpar dados e sair</button>
+          </div>
+        </form>
+      </div>
     </div>
 
 </body>
