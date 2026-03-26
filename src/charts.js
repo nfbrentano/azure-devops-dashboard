@@ -684,6 +684,7 @@ export function renderGlobalTypeFilters(activeTypes, items, workItemMetadata, cu
 }
 
 export function renderBottlenecksChart(bottleneckData, charts, currentTheme, currentLanguage, translations) {
+    console.log('Rendering Bottlenecks Chart with data:', bottleneckData);
     let canvas = document.getElementById('bottlenecksChart');
     if (!canvas) return;
     const container = canvas.parentElement;

@@ -207,16 +207,19 @@ export function processAnalytics(items, tree, options = {}) {
 
 export function calculateBottlenecks(items, revisionsData, workItemMetadata) {
     const columnTimes = {}; // { column: [durations] }
+    let itemsWithRevisions = 0;
     
     items.forEach(item => {
         const revisions = revisionsData[item.id];
-        if (!revisions || revisions.length < 2) return;
+        if (!revisions || revisions.length === 0) return;
+        itemsWithRevisions++;
 
         // Sort revisions by date
         const sorted = [...revisions].sort((a, b) => 
             new Date(a.fields['System.ChangedDate']) - new Date(b.fields['System.ChangedDate'])
         );
 
+        // Time spent between transitions
         for (let i = 0; i < sorted.length - 1; i++) {
             const current = sorted[i];
             const next = sorted[i + 1];
@@ -245,12 +248,17 @@ export function calculateBottlenecks(items, revisionsData, workItemMetadata) {
         }
     });
 
+    console.log(`Bottlenecks: Calculated for ${itemsWithRevisions}/${items.length} items`);
+
     // Calculate averages
-    return Object.entries(columnTimes)
+    const results = Object.entries(columnTimes)
         .map(([column, durations]) => ({
             column,
             avgDays: durations.length > 0 ? durations.reduce((a, b) => a + b, 0) / durations.length : 0
         }))
-        .filter(d => d.avgDays > 0.1) // Only show columns with significant time
+        .filter(d => d.avgDays > 0.01) // Show almost everything with some time
         .sort((a, b) => b.avgDays - a.avgDays);
+
+    console.log('Bottlenecks data:', results);
+    return results;
 }

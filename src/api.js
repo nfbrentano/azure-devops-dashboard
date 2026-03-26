@@ -153,6 +153,7 @@ export async function fetchRevisionsForItems(config, ids, onProgress = null) {
         await Promise.all(batch.map(id => fetchTask(id)));
     }
 
+    console.log(`Fetched revisions for ${Object.keys(results).length}/${total} items`);
     return results;
 }
 

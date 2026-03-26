@@ -10,7 +10,8 @@ export const state = {
         aging: null,
         assignee: null,
         cfd: null,
-        throughput: null
+        throughput: null,
+        bottlenecks: null
     },
     heatmapData: null,
     ganttOffset: 0,
