@@ -29,21 +29,17 @@ export async function saveSetup(config, password) {
     }
 }
 
-export async function retrieveSetup(org, project, password) {
+export async function retrieveSetup(org, project) {
     try {
         const response = await fetch(`${BACKEND_URL}/api/setup/retrieve`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ org, project, password })
+            body: JSON.stringify({ org, project })
         });
         if (!response.ok) return null;
-        const data = await response.json();
-        return {
-            ...data,
-            pat: `${data.iv}:${data.encryptedPat}`
-        };
+        return await response.json();
     } catch (e) {
-        console.error('Error retrieving setup from backend:', e);
+        console.error('Failed to retrieve setup', e);
         return null;
     }
 }

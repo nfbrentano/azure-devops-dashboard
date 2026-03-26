@@ -108,6 +108,23 @@ export function initEvents(elements, handlers) {
     querySelector.addEventListener('change', handleQueryChange);
     refreshBtn.addEventListener('click', handleRefresh);
 
+    // Auto-retrieve as user types Org/Project
+    const autoRetrieve = async () => {
+        const org = document.getElementById('org').value;
+        const project = document.getElementById('project').value;
+        if (org && project && !document.getElementById('pat').value) {
+            const { retrieveSetup } = await import('./api.js');
+            const config = await retrieveSetup(org, project);
+            if (config) {
+                document.getElementById('company-name').value = config.companyName || '';
+                document.getElementById('pat').value = config.encryptedPat;
+            }
+        }
+    };
+
+    document.getElementById('org').addEventListener('blur', autoRetrieve);
+    document.getElementById('project').addEventListener('blur', autoRetrieve);
+
     // Gantt
     ganttPeriod.addEventListener('change', handleGanttPeriodChange);
     ganttPrev.addEventListener('click', () => handleGanttNav(-1));

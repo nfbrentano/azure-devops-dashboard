@@ -79,6 +79,16 @@ async function initApp() {
     
     updateLogos();
 
+    // Auto-retrieve from server if Org/Project are present in state/locally
+    if (state.azureConfig?.org && state.azureConfig?.project && !state.azureConfig?.pat) {
+        const serverConfig = await retrieveSetup(state.azureConfig.org, state.azureConfig.project);
+        if (serverConfig) {
+            state.azureConfig = { ...state.azureConfig, ...serverConfig };
+            document.getElementById('pat').value = serverConfig.encryptedPat;
+            document.getElementById('company-name').value = serverConfig.companyName || '';
+        }
+    }
+
     if (state.azureConfig?.org && state.azureConfig?.project && state.azureConfig?.pat) {
         if (state.azureConfig.pat.includes(':')) {
             switchTab('unlock', elements);
@@ -210,35 +220,21 @@ async function initApp() {
         handleRetrieveCloud: async () => {
             const org = document.getElementById('org').value;
             const project = document.getElementById('project').value;
-            const password = document.getElementById('security-password').value;
 
-            if (!org || !project || !password) {
+            if (!org || !project) {
                 showToast(translations[state.currentLanguage]['msg-missing-config'], 'error');
                 return;
             }
 
             showLoading(true);
-            const config = await retrieveSetup(org, project, password);
+            const config = await retrieveSetup(org, project);
             showLoading(false);
 
             if (config) {
                 document.getElementById('org').value = config.org || '';
                 document.getElementById('project').value = config.project || '';
                 document.getElementById('company-name').value = config.companyName || '';
-                
-                // Show the encrypted PAT in the field first
                 document.getElementById('pat').value = config.encryptedPat;
-                
-                // Then try to decrypt it for immediate use if possible
-                try {
-                    const decrypted = await decryptPAT(config.pat || config.encryptedPat, password);
-                    if (decrypted) {
-                        document.getElementById('pat').value = decrypted;
-                    }
-                } catch (e) {
-                    console.warn('Could not decrypt retrieved PAT immediately');
-                }
-                
                 showToast(translations[state.currentLanguage]['msg-retrieve-success'], 'success');
             } else {
                 showToast(translations[state.currentLanguage]['msg-retrieve-error'], 'error');
