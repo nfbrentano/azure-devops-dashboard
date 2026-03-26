@@ -8,7 +8,7 @@
   <title>Azure DevOps Metrics</title>
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <script type="module" crossorigin src="/azure-devops-dashboard/assets/index-f5kpp-wE.js"></script>
+  <script type="module" crossorigin src="/azure-devops-dashboard/assets/index-Bg4WpoqE.js"></script>
   <link rel="stylesheet" crossorigin href="/azure-devops-dashboard/assets/index-oxGMpq06.css">
 </head>
 
@@ -229,6 +229,20 @@
           </div>
           <div class="chart-container-md">
             <canvas id="wipChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Work Item Bottlenecks Chart -->
+        <div class="card glass full-width">
+          <div class="card-title">
+            <div class="card-title-content" data-i18n="chart-bottlenecks-title">
+              <i class="ph-bold ph-funnel"></i>
+              Work Item Bottlenecks (Avg Time per Column)
+            </div>
+            <button class="glass btn-icon-glass export-btn" style="margin-left: auto;" data-i18n-title="btn-export-chart" data-target="bottlenecksChart" title="Export Chart (PNG)"><i class="ph-bold ph-download-simple"></i></button>
+          </div>
+          <div class="chart-container-md">
+            <canvas id="bottlenecksChart"></canvas>
           </div>
         </div>
 
