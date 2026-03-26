@@ -79,6 +79,12 @@ async function initApp() {
     
     updateLogos();
 
+    // If not logged in, show login screen
+    if (!state.user) {
+        switchTab('login', elements);
+        return;
+    }
+
     // Auto-retrieve from server if Org/Project are present in state/locally
     if (state.azureConfig?.org && state.azureConfig?.project && !state.azureConfig?.pat) {
         const serverConfig = await retrieveSetup(state.azureConfig.org, state.azureConfig.project);
@@ -238,6 +244,23 @@ async function initApp() {
                 showToast(translations[state.currentLanguage]['msg-retrieve-success'], 'success');
             } else {
                 showToast(translations[state.currentLanguage]['msg-retrieve-error'], 'error');
+            }
+        },
+        handleLogin: async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+
+            showLoading(true);
+            const user = await login(username, password);
+            showLoading(false);
+
+            if (user) {
+                state.user = user.username;
+                sessionStorage.setItem('azure_user', user.username);
+                initApp(state, elements);
+            } else {
+                showToast(translations[state.currentLanguage]['msg-login-error'], 'error');
             }
         }
     };

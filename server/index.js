@@ -27,7 +27,24 @@ const initDb = async () => {
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
             CREATE INDEX IF NOT EXISTS idx_setup_org_project ON setup(org, project);
+
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                username TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
         `);
+        
+        // Seed admin user
+        const adminPassword = 'abt576';
+        const adminHash = await bcrypt.hash(adminPassword, 10);
+        await pool.query(`
+            INSERT INTO users (username, password_hash) 
+            VALUES ($1, $2)
+            ON CONFLICT (username) DO NOTHING
+        `, ['admin', adminHash]);
+        
         console.log('Database initialized successfully');
     } catch (err) {
         console.error('Error initializing database:', err);
@@ -65,6 +82,31 @@ app.post('/api/setup', async (req, res) => {
         res.status(201).json({ message: 'Setup saved successfully', id: result.rows[0].id });
     } catch (error) {
         console.error('Error saving setup:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+/**
+ * User Login
+ */
+app.post('/api/login', async (req, res) => {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+        return res.status(400).json({ error: 'Missing username or password' });
+    }
+
+    try {
+        const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
+        const user = result.rows[0];
+
+        if (user && await bcrypt.compare(password, user.password_hash)) {
+            res.json({ success: true, username: user.username });
+        } else {
+            res.status(401).json({ error: 'Invalid username or password' });
+        }
+    } catch (error) {
+        console.error('Login error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });

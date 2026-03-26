@@ -29,6 +29,21 @@ export async function saveSetup(config, password) {
     }
 }
 
+export async function login(username, password) {
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        if (!response.ok) return null;
+        return await response.json();
+    } catch (e) {
+        console.error('Login failed', e);
+        return null;
+    }
+}
+
 export async function retrieveSetup(org, project) {
     try {
         const response = await fetch(`${BACKEND_URL}/api/setup/retrieve`, {

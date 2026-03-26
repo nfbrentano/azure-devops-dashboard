@@ -121,7 +121,12 @@ export const translations = {
         'msg-save-success': 'Configuration saved to server successfully.',
         'msg-save-error': 'Failed to save configuration to server.',
         'msg-retrieve-success': 'Configuration retrieved successfully.',
-        'msg-retrieve-error': 'Failed to retrieve configuration. Check your organization, project, and password.'
+        'msg-retrieve-error': 'Failed to retrieve configuration. Check your organization, project, and password.',
+        'label-login-title': 'System Access',
+        'label-username': 'Username',
+        'label-password': 'Password',
+        'btn-login': 'Login',
+        'msg-login-error': 'Invalid username or password.'
     },
     'pt-br': {
         'tab-dashboard': 'Painel',
@@ -237,6 +242,11 @@ export const translations = {
         'msg-save-success': 'Configuração gravada no servidor com sucesso.',
         'msg-save-error': 'Falha ao gravar configuração no servidor.',
         'msg-retrieve-success': 'Configuração carregada com sucesso.',
-        'msg-retrieve-error': 'Falha ao carregar configuração. Verifique a organização, projeto e senha.'
+        'msg-retrieve-error': 'Falha ao carregar configuração. Verifique a organização, projeto e senha.',
+        'label-login-title': 'Acesso ao Sistema',
+        'label-username': 'Usuário',
+        'label-password': 'Senha',
+        'btn-login': 'Entrar',
+        'msg-login-error': 'Usuário ou senha inválidos.'
     }
 };
