@@ -3,6 +3,7 @@
 [![CI](https://github.com/nfbrentano/azure-devops-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/nfbrentano/azure-devops-dashboard/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Last Commit](https://img.shields.io/github/last-commit/nfbrentano/azure-devops-dashboard.svg)](https://github.com/nfbrentano/azure-devops-dashboard/commits/main)
+[![Dependabot](https://img.shields.io/badge/dependabot-enabled-blue.svg?logo=dependabot)](https://github.com/nfbrentano/azure-devops-dashboard/network/updates)
 
 A premium, high-performance visualization tool for Azure DevOps, designed for clarity, security, and deep project insights. Built as a static application, it is perfectly suited for hosting on **GitHub Pages**.
 
