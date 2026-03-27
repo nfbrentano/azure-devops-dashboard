@@ -1,8 +1,9 @@
 /**
  * UI Translations for Azure DevOps Dashboard
  */
+import type { Translations } from './types.ts';
 
-export const translations = {
+export const translations: Translations = {
     'en': {
         'tab-dashboard': 'Dashboard',
         'tab-items': 'Item Details',

@@ -1,4 +1,5 @@
-import { getWorkItemUrl, getStatusInfo, getItemIcon, calculateProgress } from './utils.js';
+// @ts-nocheck
+import { getWorkItemUrl, getStatusInfo, getItemIcon, calculateProgress } from './utils.ts';
 
 /**
  * Hierarchical Gantt chart logic

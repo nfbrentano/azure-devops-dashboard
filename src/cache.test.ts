@@ -1,15 +1,15 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { apiCache, TTL } from './cache.js';
+import { apiCache, TTL } from './cache.ts';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function advanceTime(ms) {
+function advanceTime(ms: number): void {
     vi.setSystemTime(Date.now() + ms);
 }
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
-describe('cache.js', () => {
+describe('cache.ts', () => {
     beforeEach(() => {
         vi.useFakeTimers();
         apiCache.invalidateAll();
@@ -70,7 +70,7 @@ describe('cache.js', () => {
         });
 
         it('should deduplicate concurrent requests for the same URL', async () => {
-            let resolveFirst;
+            let resolveFirst!: (value: unknown) => void;
             const fetchFn = vi.fn(() => new Promise(res => { resolveFirst = res; }));
 
             const url = 'https://example.com/g';

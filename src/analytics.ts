@@ -1,15 +1,16 @@
+// @ts-nocheck
 /**
  * Analytics and Data Processing for Azure DevOps Dashboard
  */
-import { state } from './state.js';
-import { translations } from './translations.js';
-import { getItemIcon, getStatusInfo } from './utils.js';
+import { state } from './state.ts';
+import { translations } from './translations.ts';
+import { getItemIcon, getStatusInfo } from './utils.ts';
 import { 
     renderCharts, renderThroughputChart, renderAgingChart, 
     renderAssigneeChart, renderWIPChart, renderCFDChart, renderBottlenecksChart,
     renderPortfolioFilters, renderProgress, renderLegends, renderGlobalTypeFilters 
-} from './charts.js';
-import { renderActivityHeatmap } from './heatmap.js';
+} from './charts.ts';
+import { renderActivityHeatmap } from './heatmap.ts';
 
 export function processAnalytics(items, tree, options = {}) {
     const { 
@@ -198,11 +199,17 @@ export function processAnalytics(items, tree, options = {}) {
     renderLegends(items, workItemMetadata, translations, currentLanguage);
     if (callRenderGantt) callRenderGantt();
 
-    // Update KPIs
+    // Update KPIs (counts + percentages)
+    const pct = (val) => kpis.total > 0 ? Math.round((val / kpis.total) * 100) : 0;
+
     document.getElementById('kpi-total').textContent = kpis.total;
+    document.getElementById('kpi-total-pct').textContent = '100%';
     document.getElementById('kpi-backlog').textContent = kpis.backlog;
+    document.getElementById('kpi-backlog-pct').textContent = `${pct(kpis.backlog)}%`;
     document.getElementById('kpi-inprogress').textContent = kpis.inprogress;
+    document.getElementById('kpi-inprogress-pct').textContent = `${pct(kpis.inprogress)}%`;
     document.getElementById('kpi-done').textContent = kpis.doneRemoved;
+    document.getElementById('kpi-done-pct').textContent = `${pct(kpis.doneRemoved)}%`;
 }
 
 export function calculateBottlenecks(items, revisionsData, workItemMetadata) {

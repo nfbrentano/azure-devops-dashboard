@@ -1337,6 +1337,18 @@ button:active { transform: scale(0.98); }
     color: var(--text-main);
 }
 
+.kpi-percent {
+    display: inline-block;
+    margin-top: 0.25rem;
+    padding: 0.15rem 0.5rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    border-radius: 999px;
+    background: var(--primary-transparent, rgba(99, 102, 241, 0.12));
+    color: var(--primary, #6366f1);
+}
+
 .card-title {
     display: flex;
     align-items: center;

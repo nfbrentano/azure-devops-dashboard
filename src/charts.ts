@@ -1,5 +1,6 @@
+// @ts-nocheck
 import Chart from 'chart.js/auto';
-import { getWorkItemUrl, getStatusInfo, getItemIcon, calculateProgress } from './utils.js';
+import { getWorkItemUrl, getStatusInfo, getItemIcon, calculateProgress } from './utils.ts';
 
 /**
  * Analytics and Charting logic

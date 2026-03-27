@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Activity Heatmap rendering logic
  */

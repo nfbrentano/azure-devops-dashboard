@@ -1,8 +1,9 @@
+// @ts-nocheck
 /**
  * UI Orchestration for Azure DevOps Dashboard
  */
-import { translations } from './translations.js';
-import { renderLegends } from './charts.js';
+import { translations } from './translations.ts';
+import { renderLegends } from './charts.ts';
 
 export function switchTab(tabId, elements) {
     const { 

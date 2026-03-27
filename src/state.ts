@@ -1,9 +1,10 @@
 /**
  * Centralized state store for the Azure DevOps Dashboard
  */
+import type { AppState } from './types.ts';
 
-export const state = {
-    azureConfig: JSON.parse(localStorage.getItem('azure_config')) || null,
+export const state: AppState = {
+    azureConfig: JSON.parse(localStorage.getItem('azure_config') || 'null'),
     currentData: { items: [], tree: [], revisions: {} },
     charts: {
         comparison: null,
@@ -15,7 +16,7 @@ export const state = {
     },
     heatmapData: null,
     ganttOffset: 0,
-    currentTheme: localStorage.getItem('theme') || 'dark',
+    currentTheme: (localStorage.getItem('theme') as 'dark' | 'light') || 'dark',
     currentLanguage: localStorage.getItem('language') || 'pt-br',
     globalActiveTypes: null,
     workItemMetadata: {

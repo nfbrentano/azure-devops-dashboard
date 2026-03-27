@@ -8,30 +8,29 @@
  *  - Cache statistics: hits, misses, inflight dedupes, throttle skips
  */
 
+import type { CacheEntry, CacheStats } from './types.ts';
+
 // TTL presets (milliseconds)
 export const TTL = {
     METADATA:   30 * 60 * 1000, //  30 minutes – work item types, states, backlogs
     QUERIES:     5 * 60 * 1000, //   5 minutes – list of saved queries
     WORK_ITEMS:  2 * 60 * 1000, //   2 minutes – work item details (chunks)
     REVISIONS:  10 * 60 * 1000, //  10 minutes – per-item revision history
-};
+} as const;
 
 // ─── Internal state ──────────────────────────────────────────────────────────
 
-/** @type {Map<string, { data: any, expiresAt: number }>} */
-const _store = new Map();
+const _store = new Map<string, CacheEntry>();
 
-/** @type {Map<string, Promise<any>>} */
-const _inflight = new Map();
+const _inflight = new Map<string, Promise<unknown>>();
 
-/** @type {Map<string, number>} Throttled origins → timestamp when throttle expires */
-const _throttled = new Map();
+const _throttled = new Map<string, number>();
 
-const _stats = { hits: 0, misses: 0, inflight: 0, throttled: 0 };
+const _stats: Omit<CacheStats, 'size'> = { hits: 0, misses: 0, inflight: 0, throttled: 0 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function _origin(url) {
+function _origin(url: string): string {
     try { return new URL(url).origin; } catch { return url; }
 }
 
@@ -40,36 +39,30 @@ function _origin(url) {
 /**
  * Returns cached value if still valid, otherwise undefined.
  */
-function get(url) {
+function get<T = unknown>(url: string): T | undefined {
     const entry = _store.get(url);
     if (!entry) return undefined;
     if (Date.now() > entry.expiresAt) {
         _store.delete(url);
         return undefined;
     }
-    return entry.data;
+    return entry.data as T;
 }
 
 /**
  * Stores a value with a TTL (ms).
  */
-function set(url, data, ttl) {
+function set(url: string, data: unknown, ttl: number): void {
     _store.set(url, { data, expiresAt: Date.now() + ttl });
 }
 
 /**
  * Core helper: returns cached data, deduplicates concurrent requests, and
  * skips the real fetch if the origin is throttled.
- *
- * @param {string}   url      - Cache key (also passed to fetchFn)
- * @param {Function} fetchFn  - Async function () => data (NOT a Response, already parsed)
- * @param {number}   ttl      - TTL in ms
- * @param {boolean}  [bust]   - If true, bypass cache and force a fresh fetch
- * @returns {Promise<any>}
  */
-async function getOrFetch(url, fetchFn, ttl, bust = false) {
+async function getOrFetch<T>(url: string, fetchFn: () => Promise<T>, ttl: number, bust = false): Promise<T> {
     if (!bust) {
-        const cached = get(url);
+        const cached = get<T>(url);
         if (cached !== undefined) {
             _stats.hits++;
             return cached;
@@ -81,10 +74,10 @@ async function getOrFetch(url, fetchFn, ttl, bust = false) {
     // Deduplicate concurrent requests for the same URL
     if (_inflight.has(url)) {
         _stats.inflight++;
-        return _inflight.get(url);
+        return _inflight.get(url) as Promise<T>;
     }
 
-    const promise = (async () => {
+    const promise = (async (): Promise<T> => {
         try {
             const data = await fetchFn();
             if (data !== null && data !== undefined) {
@@ -102,20 +95,16 @@ async function getOrFetch(url, fetchFn, ttl, bust = false) {
 
 /**
  * Marks an origin as throttled for `retryAfterMs` milliseconds.
- * @param {string} url
- * @param {number} retryAfterMs
  */
-function markThrottled(url, retryAfterMs = 60_000) {
+function markThrottled(url: string, retryAfterMs = 60_000): void {
     _throttled.set(_origin(url), Date.now() + retryAfterMs);
     _stats.throttled++;
 }
 
 /**
  * Returns true if the origin of `url` is currently rate-limited.
- * @param {string} url
- * @returns {boolean}
  */
-function isThrottled(url) {
+function isThrottled(url: string): boolean {
     const origin = _origin(url);
     const until = _throttled.get(origin);
     if (!until) return false;
@@ -128,9 +117,8 @@ function isThrottled(url) {
 
 /**
  * Invalidates all cache entries whose key starts with `prefix`.
- * @param {string} prefix
  */
-function invalidate(prefix) {
+function invalidate(prefix: string): void {
     for (const key of _store.keys()) {
         if (key.startsWith(prefix)) _store.delete(key);
     }
@@ -142,7 +130,7 @@ function invalidate(prefix) {
 /**
  * Clears the entire cache and resets in-flight tracking.
  */
-function invalidateAll() {
+function invalidateAll(): void {
     _store.clear();
     _inflight.clear();
     _throttled.clear();
@@ -151,9 +139,8 @@ function invalidateAll() {
 
 /**
  * Returns a snapshot of current cache statistics.
- * @returns {{ hits: number, misses: number, inflight: number, throttled: number, size: number }}
  */
-function getStats() {
+function getStats(): CacheStats {
     return { ..._stats, size: _store.size };
 }
 

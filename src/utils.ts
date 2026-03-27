@@ -1,11 +1,12 @@
 /**
  * Utility functions for Azure DevOps Dashboard
  */
+import type { AzureConfig, WorkItemMetadata, WorkItemNode, StatusInfo, IconInfo } from './types.ts';
 
 // Encryption constants
 const SALT = new Uint8Array([71, 101, 109, 105, 110, 105, 32, 65, 105, 32, 82, 111, 99, 107, 115, 33]); // 'Gemini Ai Rocks!'
 
-async function getEncryptionKey(password) {
+async function getEncryptionKey(password: string): Promise<CryptoKey> {
     const encoder = new TextEncoder();
     const baseKey = await crypto.subtle.importKey(
         'raw', 
@@ -28,7 +29,7 @@ async function getEncryptionKey(password) {
     );
 }
 
-export async function encryptPAT(pat, password) {
+export async function encryptPAT(pat: string, password: string): Promise<string> {
     if (!pat || !password) return pat;
     try {
         const key = await getEncryptionKey(password);
@@ -49,7 +50,7 @@ export async function encryptPAT(pat, password) {
     }
 }
 
-export async function decryptPAT(enc, password) {
+export async function decryptPAT(enc: string, password?: string): Promise<string | null> {
     if (!enc) return enc;
     
     // Check if it's the new format (base64:base64)
@@ -85,13 +86,13 @@ export async function decryptPAT(enc, password) {
     }
 }
 
-export function getWorkItemUrl(azureConfig, id) {
+export function getWorkItemUrl(azureConfig: AzureConfig | null, id: number | string): string {
     if (!azureConfig) return '#';
     return `https://dev.azure.com/${azureConfig.org}/${azureConfig.project}/_workitems/edit/${id}`;
 }
 
-export function getStatusInfo(state, workItemMetadata) {
-    const s = (state || '').toLowerCase();
+export function getStatusInfo(stateName: string, workItemMetadata: WorkItemMetadata): StatusInfo {
+    const s = (stateName || '').toLowerCase();
     const meta = workItemMetadata.states[s];
     
     if (meta) {
@@ -114,8 +115,8 @@ export function getStatusInfo(state, workItemMetadata) {
     return { label: 'Backlog', class: 'bg-backlog', color: '#b2b2b2' };
 }
 
-export function getItemIcon(type, workItemMetadata) {
-    const t = type.toLowerCase();
+export function getItemIcon(type: string, workItemMetadata: WorkItemMetadata): IconInfo {
+    const t = (type || '').toLowerCase();
     const meta = workItemMetadata.types[t];
     
     // Determine if it's a portfolio item based on backlog levels or common types
@@ -123,7 +124,7 @@ export function getItemIcon(type, workItemMetadata) {
                         t === 'epic' || t === 'feature';
     
     // Basic defaults with dynamic color
-    const base = { 
+    const base: IconInfo = { 
         icon: 'ph-fill ph-square', 
         iconClass: '', 
         isPortfolio,
@@ -142,9 +143,9 @@ export function getItemIcon(type, workItemMetadata) {
     return base;
 }
 
-export function calculateProgress(item, workItemMetadata) {
-    const descendants = [];
-    const collectLeafNodes = (node) => {
+export function calculateProgress(item: WorkItemNode, workItemMetadata: WorkItemMetadata): number {
+    const descendants: WorkItemNode[] = [];
+    const collectLeafNodes = (node: WorkItemNode): void => {
         const children = node.allChildren || node.children;
         if (!children || children.length === 0) {
             descendants.push(node);
@@ -168,7 +169,7 @@ export function calculateProgress(item, workItemMetadata) {
         }
         
         const info = getStatusInfo(d.fields['System.State'], workItemMetadata);
-        if (info.label === 'Done') {
+        if (info.label === 'Done' || info.label === 'Removed') {
             totalWeight += 1.0;
         }
     });
@@ -176,7 +177,7 @@ export function calculateProgress(item, workItemMetadata) {
     return Math.floor((totalWeight / descendants.length) * 100);
 }
 
-export function showLoading(show = true, progress = null) {
+export function showLoading(show = true, progress: number | null = null): void {
     const loading = document.getElementById('loading');
     if (!loading) return;
     
@@ -189,7 +190,7 @@ export function showLoading(show = true, progress = null) {
         loading.classList.add('hidden');
         updateLoadingProgress(0); // Reset for next time
         // Reset all steps to pending
-        ['step-queries', 'step-items', 'step-revisions'].forEach(id => {
+        (['step-queries', 'step-items', 'step-revisions'] as const).forEach(id => {
             const el = document.getElementById(id);
             if (el) el.className = 'loading-step step-pending';
         });
@@ -199,27 +200,24 @@ export function showLoading(show = true, progress = null) {
 
 /**
  * Updates the status label text inside the loading overlay.
- * @param {string} text
  */
-export function setLoadingStatus(text) {
+export function setLoadingStatus(text: string): void {
     const el = document.getElementById('loading-status-label');
     if (el) el.textContent = text || 'Carregando...';
 }
 
 /**
  * Marks a loading step as active or done.
- * @param {'step-queries'|'step-items'|'step-revisions'} stepId
- * @param {'active'|'done'|'pending'} state
  */
-export function setLoadingStep(stepId, state) {
+export function setLoadingStep(stepId: 'step-queries' | 'step-items' | 'step-revisions', stepState: 'active' | 'done' | 'pending'): void {
     const el = document.getElementById(stepId);
     if (!el) return;
-    el.className = `loading-step step-${state}`;
+    el.className = `loading-step step-${stepState}`;
 }
 
-export function updateLoadingProgress(percentage) {
+export function updateLoadingProgress(percentage: number): void {
     const container = document.getElementById('loading-progress-container');
-    const fill = document.getElementById('loading-progress-fill');
+    const fill = document.getElementById('loading-progress-fill') as HTMLElement | null;
     const text = document.getElementById('loading-progress-text');
     
     if (!container || !fill || !text) return;
@@ -236,7 +234,7 @@ export function updateLoadingProgress(percentage) {
     }
 }
 
-export function showToast(message, type = 'error') {
+export function showToast(message: string, type: 'error' | 'success' | 'info' | 'warning' = 'error'): void {
     let container = document.querySelector('.toast-container');
     if (!container) {
         container = document.createElement('div');

@@ -1,33 +1,34 @@
+// @ts-nocheck
 /**
  * Main Entry Point for Azure DevOps Dashboard
  */
 
 // Imports
 import './style.css';
-import { state } from './state.js';
-import { translations } from './translations.js';
+import { state } from './state.ts';
+import { translations } from './translations.ts';
 import { 
     showLoading, showToast, encryptPAT, decryptPAT, updateLoadingProgress,
     setLoadingStatus, setLoadingStep
-} from './utils.js';
+} from './utils.ts';
 import { 
     fetchQueries, fetchFullDetails, buildTree, fetchWithRetry, getAuthHeader, fetchMetadata,
     fetchRevisionsForItems
-} from './api.js';
-import { apiCache } from './cache.js';
+} from './api.ts';
+import { apiCache } from './cache.ts';
 import { 
     renderCharts, renderThroughputChart, renderAgingChart, 
     renderAssigneeChart, renderWIPChart, renderCFDChart, renderPortfolioFilters, 
     renderProgress, renderLegends 
-} from './charts.js';
-import { renderGantt } from './gantt.js';
+} from './charts.ts';
+import { renderGantt } from './gantt.ts';
 import { 
     switchTab, updateThemeIcon, applyTranslations, 
     showEmptyState, populateQueries 
-} from './ui.js';
-import { processAnalytics } from './analytics.js';
-import { initEvents } from './events.js';
-import { LOGO_LIGHT, LOGO_DARK } from './logos.js';
+} from './ui.ts';
+import { processAnalytics } from './analytics.ts';
+import { initEvents } from './events.ts';
+import { LOGO_LIGHT, LOGO_DARK } from './logos.ts';
 
 // DOM Elements
 const elements = {

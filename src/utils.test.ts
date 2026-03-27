@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { calculateProgress, getStatusInfo, getItemIcon } from './utils.js';
+import { calculateProgress, getStatusInfo, getItemIcon } from './utils.ts';
+import type { WorkItemMetadata, WorkItemNode } from './types.ts';
 
-describe('utils.js', () => {
+describe('utils.ts', () => {
     const mockMetadata = {
         types: {
             'epic': { color: '#ff0000' },
@@ -21,7 +22,7 @@ describe('utils.js', () => {
             { name: 'Features', type: 'portfolio', workItemTypes: ['feature'] },
             { name: 'Stories', type: 'requirement', workItemTypes: ['user story'] }
         ]
-    };
+    } as unknown as WorkItemMetadata;
 
     describe('getStatusInfo', () => {
         it('should return correct info for mapped states', () => {
@@ -37,14 +38,15 @@ describe('utils.js', () => {
 
         it('should handle "Resolved" specifically in fallback if needed', () => {
             // If not in metadata, it uses internal fallback
-            const result = getStatusInfo('Resolved', { states: {} });
+            const emptyMeta = { types: {}, states: {}, backlogs: [] } as unknown as WorkItemMetadata;
+            const result = getStatusInfo('Resolved', emptyMeta);
             expect(result.label).toBe('Done'); // Fallback says Done for resolved
         });
     });
 
     describe('calculateProgress', () => {
         it('should return 0 for leaf items with no children', () => {
-            const item = { fields: { 'System.State': 'New' } };
+            const item = { fields: { 'System.State': 'New' } } as unknown as WorkItemNode;
             expect(calculateProgress(item, mockMetadata)).toBe(0);
         });
 
@@ -54,7 +56,7 @@ describe('utils.js', () => {
                     { fields: { 'System.State': 'Done' } },
                     { fields: { 'System.State': 'New' } }
                 ]
-            };
+            } as unknown as WorkItemNode;
             expect(calculateProgress(item, mockMetadata)).toBe(50);
         });
 
@@ -63,7 +65,7 @@ describe('utils.js', () => {
                 children: [
                     { fields: { 'System.State': 'Resolved' } }
                 ]
-            };
+            } as unknown as WorkItemNode;
             // Resolved is hardcoded to 0.5 in calculateProgress
             expect(calculateProgress(item, mockMetadata)).toBe(50);
         });
@@ -79,7 +81,7 @@ describe('utils.js', () => {
                     },
                     { fields: { 'System.State': 'New' } } // 0.0
                 ]
-            };
+            } as unknown as WorkItemNode;
             // Leaves are: Done(1), Resolved(0.5), New(0)
             // Total = (1 + 0.5 + 0) / 3 = 1.5 / 3 = 0.5 (50%)
             expect(calculateProgress(item, mockMetadata)).toBe(50);
@@ -91,7 +93,7 @@ describe('utils.js', () => {
                     { fields: { 'System.State': 'Done' } }
                 ],
                 children: [] // Filtered out
-            };
+            } as unknown as WorkItemNode;
             expect(calculateProgress(item, mockMetadata)).toBe(100);
         });
     });

@@ -1,14 +1,15 @@
 /**
  * Azure DevOps API interaction logic
  */
-import { showToast } from './utils.js';
-import { translations } from './translations.js';
-import { state } from './state.js';
-import { apiCache, TTL } from './cache.js';
+import { showToast } from './utils.ts';
+import { translations } from './translations.ts';
+import { state } from './state.ts';
+import { apiCache, TTL } from './cache.ts';
+import type { AzureConfig, WorkItem, WorkItemMetadata, WorkItemNode, SavedQuery } from './types.ts';
 
-export const getAuthHeader = (pat) => `Basic ${btoa(':' + pat)}`;
+export const getAuthHeader = (pat: string): string => `Basic ${btoa(':' + pat)}`;
 
-export async function fetchWithRetry(url, options = {}, maxRetries = 3, initialDelay = 1000) {
+export async function fetchWithRetry(url: string, options: RequestInit = {}, maxRetries = 3, initialDelay = 1000): Promise<Response> {
     // Skip if this origin is currently throttled
     if (apiCache.isThrottled(url)) {
         console.warn(`[cache] Throttled — skipping request to ${url}`);
@@ -44,9 +45,12 @@ export async function fetchWithRetry(url, options = {}, maxRetries = 3, initialD
             delay *= 2;
         }
     }
+
+    // Should never reach here, but TypeScript needs a return
+    throw new Error(`fetchWithRetry: exhausted ${maxRetries} retries for ${url}`);
 }
 
-export async function fetchQueries(config, { bust = false } = {}) {
+export async function fetchQueries(config: AzureConfig, { bust = false } = {}): Promise<SavedQuery[] | null> {
     const url = `https://dev.azure.com/${config.org}/${config.project}/_apis/wit/queries?$depth=2&api-version=6.0`;
 
     return apiCache.getOrFetch(url, async () => {
@@ -58,8 +62,8 @@ export async function fetchQueries(config, { bust = false } = {}) {
             if (!response.ok) return null;
             const data = await response.json();
             
-            const allQueries = [];
-            const flatten = (items) => {
+            const allQueries: SavedQuery[] = [];
+            const flatten = (items: SavedQuery[]): void => {
                 items.forEach(item => {
                     if (item.isFolder && item.children) {
                         flatten(item.children);
@@ -79,9 +83,9 @@ export async function fetchQueries(config, { bust = false } = {}) {
     }, TTL.QUERIES, bust);
 }
 
-export async function fetchFullDetails(config, ids, onProgress = null, { bust = false } = {}) {
+export async function fetchFullDetails(config: AzureConfig, ids: number[], onProgress: ((pct: number) => void) | null = null, { bust = false } = {}): Promise<WorkItem[]> {
     const chunkSize = 200;
-    let allItems = [];
+    let allItems: WorkItem[] = [];
     const auth = getAuthHeader(config.pat);
     const total = ids.length;
     let failedChunks = 0;
@@ -107,7 +111,7 @@ export async function fetchFullDetails(config, ids, onProgress = null, { bust = 
                 }
 
                 const data = await response.json();
-                return (data && data.value) ? data.value : [];
+                return (data && data.value) ? data.value as WorkItem[] : [];
             } catch (e) {
                 console.error(`Error loading chunk starting at index ${i}:`, e);
                 failedChunks++;
@@ -124,7 +128,7 @@ export async function fetchFullDetails(config, ids, onProgress = null, { bust = 
         const lang = translations[state.currentLanguage];
         const msg = failedChunks === 1 
             ? lang['msg-partial-data-single']
-            : lang['msg-partial-data-multiple'].replace('{count}', failedChunks);
+            : lang['msg-partial-data-multiple'].replace('{count}', String(failedChunks));
         showToast(msg, 'warning');
     }
     
@@ -135,7 +139,7 @@ export async function fetchFullDetails(config, ids, onProgress = null, { bust = 
     return allItems;
 }
 
-export async function fetchWorkItemRevisions(config, id, { bust = false } = {}) {
+export async function fetchWorkItemRevisions(config: AzureConfig, id: number, { bust = false } = {}): Promise<WorkItem[] | null> {
     const url = `https://dev.azure.com/${config.org}/${config.project}/_apis/wit/workItems/${id}/revisions?api-version=6.0`;
     const auth = getAuthHeader(config.pat);
 
@@ -147,7 +151,7 @@ export async function fetchWorkItemRevisions(config, id, { bust = false } = {}) 
             });
             if (!response.ok) return null;
             const data = await response.json();
-            return data.value || [];
+            return (data.value || []) as WorkItem[];
         } catch (e) {
             console.error(`Error fetching revisions for item ${id}:`, e);
             return null;
@@ -155,13 +159,13 @@ export async function fetchWorkItemRevisions(config, id, { bust = false } = {}) 
     }, TTL.REVISIONS, bust);
 }
 
-export async function fetchRevisionsForItems(config, ids, onProgress = null, { bust = false } = {}) {
+export async function fetchRevisionsForItems(config: AzureConfig, ids: number[], onProgress: ((pct: number) => void) | null = null, { bust = false } = {}): Promise<Record<number, WorkItem[]>> {
     const total = ids.length;
-    const results = {};
+    const results: Record<number, WorkItem[]> = {};
     const concurrency = 10;
     let completed = 0;
 
-    const fetchTask = async (id) => {
+    const fetchTask = async (id: number): Promise<void> => {
         const revisions = await fetchWorkItemRevisions(config, id, { bust });
         if (revisions) {
             results[id] = revisions;
@@ -182,10 +186,10 @@ export async function fetchRevisionsForItems(config, ids, onProgress = null, { b
     return results;
 }
 
-export async function fetchMetadata(config, workItemMetadata, renderLegends, { bust = false } = {}) {
+export async function fetchMetadata(config: AzureConfig, workItemMetadata: WorkItemMetadata, renderLegends: ((...args: unknown[]) => void) | null, { bust = false } = {}): Promise<void> {
     const metaCacheKey = `metadata:${config.org}:${config.project}`;
 
-    const cached = bust ? undefined : apiCache.get(metaCacheKey);
+    const cached = bust ? undefined : apiCache.get<{ types: Record<string, WorkItemMetadata['types'][string]>; states: WorkItemMetadata['states']; backlogs: WorkItemMetadata['backlogs'] }>(metaCacheKey);
     if (cached) {
         // Restore from cache into the shared metadata object
         Object.assign(workItemMetadata.types, cached.types);
@@ -203,9 +207,9 @@ export async function fetchMetadata(config, workItemMetadata, renderLegends, { b
         const typesResp = await fetchWithRetry(typesUrl, { headers: { 'Authorization': auth } });
         const typesData = await typesResp.json();
         
-        const typePromises = typesData.value.map(async (type) => {
+        const typePromises = typesData.value.map(async (type: { name: string; color?: string; description?: string; icon?: { url: string } }) => {
             const lowName = type.name.toLowerCase();
-            let iconData = null;
+            let iconData: string | null = null;
             if (type.icon && type.icon.url) {
                 iconData = await getBase64Image(type.icon.url, auth);
             }
@@ -228,13 +232,13 @@ export async function fetchMetadata(config, workItemMetadata, renderLegends, { b
                 if (!statesResp.ok) continue;
                 const statesData = await statesResp.json();
                 
-                statesData.value.forEach(s => {
+                statesData.value.forEach((s: { name: string; color?: string; category: string }) => {
                     const lowState = s.name.toLowerCase();
                     if (!workItemMetadata.states[lowState]) {
                         workItemMetadata.states[lowState] = {
                             name: s.name,
                             color: s.color ? (s.color.startsWith('#') ? s.color : '#' + s.color) : '#64748b',
-                            category: s.category // Proposed, InProgress, Completed, Removed
+                            category: s.category as 'Proposed' | 'InProgress' | 'Completed' | 'Removed'
                         };
                     }
                 });
@@ -252,14 +256,14 @@ export async function fetchMetadata(config, workItemMetadata, renderLegends, { b
             const backlogsResp = await fetchWithRetry(backlogsUrl, { headers: { 'Authorization': auth } });
             const backlogsData = await backlogsResp.json();
             
-            workItemMetadata.backlogs = backlogsData.value.map(b => ({
+            workItemMetadata.backlogs = backlogsData.value.map((b: { name: string; type: string; workItemTypes: { name: string }[] }) => ({
                 name: b.name,
                 type: b.type,
                 workItemTypes: b.workItemTypes.map(wit => wit.name.toLowerCase())
             }));
         }
 
-        // Store snapshot in cache (deep copies of the plain data — no icons to save memory)
+        // Store snapshot in cache
         apiCache.set(metaCacheKey, {
             types: Object.fromEntries(
                 Object.entries(workItemMetadata.types).map(([k, v]) => [k, { ...v, iconData: null }])
@@ -274,14 +278,14 @@ export async function fetchMetadata(config, workItemMetadata, renderLegends, { b
     }
 }
 
-export async function getBase64Image(url, auth) {
+export async function getBase64Image(url: string, auth: string): Promise<string | null> {
     try {
         const resp = await fetchWithRetry(url, { headers: { 'Authorization': auth } });
         if (!resp.ok) return null;
         const blob = await resp.blob();
         return new Promise((resolve) => {
             const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result);
+            reader.onloadend = () => resolve(reader.result as string);
             reader.readAsDataURL(blob);
         });
     } catch {
@@ -289,23 +293,24 @@ export async function getBase64Image(url, auth) {
     }
 }
 
-export function buildTree(items, workItemMetadata) {
-    const nodeMap = new Map();
-    const nodes = items.map(item => {
-        const node = { ...item, children: [] };
+export function buildTree(items: WorkItem[], workItemMetadata: WorkItemMetadata): { roots: WorkItemNode[]; nodes: WorkItemNode[] } {
+    const nodeMap = new Map<number, WorkItemNode>();
+    const nodes: WorkItemNode[] = items.map(item => {
+        const node: WorkItemNode = { ...item, children: [] };
         nodeMap.set(node.id, node);
         return node;
     });
 
-    const roots = [];
+    const roots: WorkItemNode[] = [];
     nodes.forEach(node => {
-        const parentIdField = node.fields['System.Parent']?.id || node.fields['System.Parent'];
-        let parentId = parentIdField ? parseInt(parentIdField) : null;
+        // Type-safe parent ID extraction — fixes the ambiguous ?.id || . pattern
+        const parentField = node.fields['System.Parent'];
+        let parentId: number | null = typeof parentField === 'number' ? parentField : null;
 
         if (!parentId) {
             const parentRelation = node.relations?.find(r => r.rel === 'System.LinkTypes.Hierarchy-Reverse');
             if (parentRelation) {
-                parentId = parseInt(parentRelation.url.split('/').pop());
+                parentId = parseInt(parentRelation.url.split('/').pop() || '0');
             }
         }
 
@@ -322,7 +327,7 @@ export function buildTree(items, workItemMetadata) {
     });
 
     roots.sort((a, b) => sortByPriority(a, b, workItemMetadata));
-    const sortChildren = (node) => {
+    const sortChildren = (node: WorkItemNode): void => {
         if (node.children && node.children.length > 0) {
             node.children.sort((a, b) => sortByPriority(a, b, workItemMetadata));
             node.children.forEach(sortChildren);
@@ -333,7 +338,7 @@ export function buildTree(items, workItemMetadata) {
     return { roots, nodes };
 }
 
-export function getTypePriority(type, workItemMetadata) {
+export function getTypePriority(type: string | undefined, workItemMetadata: WorkItemMetadata): number {
     const t = (type || '').toLowerCase();
     if (workItemMetadata && workItemMetadata.backlogs) {
         for (let i = 0; i < workItemMetadata.backlogs.length; i++) {
@@ -350,7 +355,7 @@ export function getTypePriority(type, workItemMetadata) {
     return 99;
 }
 
-function sortByPriority(a, b, workItemMetadata) {
+function sortByPriority(a: WorkItemNode, b: WorkItemNode, workItemMetadata: WorkItemMetadata): number {
     const pA = getTypePriority(a.fields['System.WorkItemType'], workItemMetadata);
     const pB = getTypePriority(b.fields['System.WorkItemType'], workItemMetadata);
     if (pA !== pB) return pA - pB;

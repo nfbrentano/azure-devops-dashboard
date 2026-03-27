@@ -1,8 +1,9 @@
+// @ts-nocheck
 /**
  * Event Handlers for Azure DevOps Dashboard
  */
-import { state } from './state.js';
-import { LOGO_LIGHT, LOGO_DARK } from './logos.js';
+import { state } from './state.ts';
+import { LOGO_LIGHT, LOGO_DARK } from './logos.ts';
 
 async function drawWatermark(canvas, isDark) {
     let { companyName } = state.azureConfig || {};
