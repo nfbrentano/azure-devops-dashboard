@@ -7,24 +7,24 @@ import { LOGO_LIGHT, LOGO_DARK } from './logos.ts';
 
 async function drawWatermark(canvas, isDark) {
     let { companyName } = state.azureConfig || {};
-    
+
     // Use hardcoded theme-aware logo
     const companyLogo = isDark ? LOGO_DARK : LOGO_LIGHT;
 
     if (!companyName && !companyLogo) return canvas;
-    
+
     const padding = 80;
     const newCanvas = document.createElement('canvas');
     newCanvas.width = canvas.width;
     newCanvas.height = canvas.height + padding;
     const ctx = newCanvas.getContext('2d');
-    
+
     ctx.fillStyle = isDark ? '#1e293b' : '#ffffff';
     ctx.fillRect(0, 0, newCanvas.width, newCanvas.height);
     ctx.drawImage(canvas, 0, padding);
-    
+
     const textColor = isDark ? '#e2e8f0' : '#334155';
-    
+
     if (companyLogo) {
         try {
             const img = new Image();
@@ -39,7 +39,7 @@ async function drawWatermark(canvas, isDark) {
             const w = h * aspect;
             const logoY = (padding - h) / 2;
             ctx.drawImage(img, 20, logoY, w, h);
-            
+
             if (companyName) {
                 ctx.fillStyle = textColor;
                 ctx.font = 'bold 20px sans-serif'; // Slightly larger font too
@@ -47,7 +47,7 @@ async function drawWatermark(canvas, isDark) {
                 const textY = padding / 2;
                 ctx.fillText(companyName, 20 + w + 20, textY);
             }
-        } catch(e) {
+        } catch (e) {
             console.warn('Failed to load watermark logo', e);
             if (companyName) {
                 ctx.fillStyle = textColor;
@@ -62,21 +62,38 @@ async function drawWatermark(canvas, isDark) {
         ctx.textBaseline = 'middle';
         ctx.fillText(companyName, 20, padding / 2);
     }
-    
+
     return newCanvas;
 }
 
 export function initEvents(elements, handlers) {
-    const { 
-        setupForm, unlockForm, forgotPasswordBtn, logoutBtn, 
-        themeToggle, langToggle, querySelector, refreshBtn,
-        ganttPeriod, ganttPrev, ganttNext, tabDashboard, tabItems, tabSetup
+    const {
+        setupForm,
+        unlockForm,
+        forgotPasswordBtn,
+        logoutBtn,
+        themeToggle,
+        langToggle,
+        querySelector,
+        refreshBtn,
+        ganttPeriod,
+        ganttPrev,
+        ganttNext,
+        tabDashboard,
+        tabItems,
+        tabSetup
     } = elements;
 
-    const { 
-        handleAuth, handleUnlock, handleThemeToggle, handleLangToggle, 
-        handleQueryChange, handleRefresh, handleGanttPeriodChange, 
-        handleGanttNav, handleTabSwitch 
+    const {
+        handleAuth,
+        handleUnlock,
+        handleThemeToggle,
+        handleLangToggle,
+        handleQueryChange,
+        handleRefresh,
+        handleGanttPeriodChange,
+        handleGanttNav,
+        handleTabSwitch
     } = handlers;
 
     // Tabs
@@ -112,7 +129,7 @@ export function initEvents(elements, handlers) {
     ganttPrev.addEventListener('click', () => handleGanttNav(-1));
     ganttNext.addEventListener('click', () => handleGanttNav(1));
 
-    document.querySelectorAll('.gantt-status-filters input').forEach(cb => {
+    document.querySelectorAll('.gantt-status-filters input').forEach((cb) => {
         cb.addEventListener('change', () => {
             if (state.currentData.tree.length > 0) handlers.handleGanttFilterChange();
         });
@@ -133,17 +150,17 @@ export function initEvents(elements, handlers) {
         if (exportBtn) {
             const targetId = exportBtn.getAttribute('data-target');
             const element = document.getElementById(targetId);
-            
+
             if (!element) return;
-            
+
             const isDark = state.currentTheme === 'dark';
             const bgColor = isDark ? '#1e293b' : '#ffffff';
-            
+
             const icon = exportBtn.querySelector('i');
             const originalClass = icon.className;
             icon.className = 'ph-bold ph-spinner ph-spin';
             exportBtn.disabled = true;
-            
+
             try {
                 if (element.tagName === 'CANVAS') {
                     const canvas = element;
@@ -151,11 +168,11 @@ export function initEvents(elements, handlers) {
                     tempCanvas.width = canvas.width;
                     tempCanvas.height = canvas.height;
                     const ctx = tempCanvas.getContext('2d');
-                    
+
                     ctx.fillStyle = bgColor;
                     ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
                     ctx.drawImage(canvas, 0, 0);
-                    
+
                     const withWatermark = await drawWatermark(tempCanvas, isDark);
                     const link = document.createElement('a');
                     link.download = `${targetId}_export.png`;
@@ -167,16 +184,16 @@ export function initEvents(elements, handlers) {
                     const originalMaxHeight = element.style.maxHeight;
                     element.style.overflowX = 'visible';
                     element.style.maxHeight = 'none';
-                    
+
                     const canvas = await window.html2canvas(element, {
                         backgroundColor: bgColor,
                         scale: window.devicePixelRatio || 2,
                         logging: false
                     });
-                    
+
                     element.style.overflowX = originalOverflow;
                     element.style.maxHeight = originalMaxHeight;
-                    
+
                     const withWatermark = await drawWatermark(canvas, isDark);
                     const link = document.createElement('a');
                     link.download = `${targetId}_export.png`;
@@ -184,12 +201,11 @@ export function initEvents(elements, handlers) {
                     link.click();
                 }
             } catch (err) {
-                console.error("Export failed", err);
+                console.error('Export failed', err);
             } finally {
                 icon.className = originalClass;
                 exportBtn.disabled = false;
             }
         }
     });
-
 }

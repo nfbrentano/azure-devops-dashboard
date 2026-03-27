@@ -6,10 +6,8 @@ import { translations } from './translations.ts';
 import { renderLegends } from './charts.ts';
 
 export function switchTab(tabId, elements) {
-    const { 
-        tabDashboard, tabItems, tabSetup, dashboardView, 
-        itemsView, setupView, unlockView, dataControls 
-    } = elements;
+    const { tabDashboard, tabItems, tabSetup, dashboardView, itemsView, setupView, unlockView, dataControls } =
+        elements;
 
     tabDashboard.classList.toggle('active', tabId === 'dashboard');
     tabItems.classList.toggle('active', tabId === 'items');
@@ -19,10 +17,10 @@ export function switchTab(tabId, elements) {
     setupView.classList.toggle('hidden', tabId !== 'setup');
     unlockView.classList.toggle('hidden', tabId !== 'unlock');
     dataControls.classList.toggle('hidden', tabId === 'setup' || tabId === 'unlock');
-    
+
     // Hide tabs if in setup or unlock
     const tabs = document.querySelector('.tabs');
-    if (tabs) tabs.style.display = (tabId === 'setup' || tabId === 'unlock') ? 'none' : 'flex';
+    if (tabs) tabs.style.display = tabId === 'setup' || tabId === 'unlock' ? 'none' : 'flex';
 }
 
 export function updateThemeIcon(themeToggle, currentTheme) {
@@ -33,22 +31,27 @@ export function updateThemeIcon(themeToggle, currentTheme) {
 }
 
 export function applyTranslations(options) {
-    const { 
-        currentLanguage, currentData, workItemMetadata, 
-        langToggle, themeToggle, refreshBtn, querySelector, 
-        callRenderGantt 
+    const {
+        currentLanguage,
+        currentData,
+        workItemMetadata,
+        langToggle,
+        themeToggle,
+        refreshBtn,
+        querySelector,
+        callRenderGantt
     } = options;
 
     const lang = translations[currentLanguage];
-    document.documentElement.lang = currentLanguage.split('-')[0]; 
-    
-    document.querySelectorAll('[data-i18n]').forEach(el => {
+    document.documentElement.lang = currentLanguage.split('-')[0];
+
+    document.querySelectorAll('[data-i18n]').forEach((el) => {
         const key = el.getAttribute('data-i18n');
         if (lang[key]) {
             const icon = el.querySelector('i, img');
             if (icon) {
                 let foundTextNode = false;
-                Array.from(el.childNodes).forEach(node => {
+                Array.from(el.childNodes).forEach((node) => {
                     if (node.nodeType === Node.TEXT_NODE && node.textContent.trim() !== '') {
                         node.textContent = ' ' + lang[key];
                         foundTextNode = true;
@@ -61,21 +64,21 @@ export function applyTranslations(options) {
         }
     });
 
-    document.querySelectorAll('[data-i18n-aria]').forEach(el => {
+    document.querySelectorAll('[data-i18n-aria]').forEach((el) => {
         const key = el.getAttribute('data-i18n-aria');
         if (lang[key]) {
             el.setAttribute('aria-label', lang[key]);
         }
     });
-    
-    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+
+    document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
         const key = el.getAttribute('data-i18n-placeholder');
         if (lang[key]) {
             el.setAttribute('placeholder', lang[key]);
         }
     });
 
-    document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    document.querySelectorAll('[data-i18n-title]').forEach((el) => {
         const key = el.getAttribute('data-i18n-title');
         if (lang[key]) {
             el.setAttribute('title', lang[key]);
@@ -87,7 +90,7 @@ export function applyTranslations(options) {
         const span = langToggle.querySelector('span');
         if (span) span.textContent = currentLanguage === 'pt-br' ? 'EN' : 'PT';
     }
-    
+
     if (themeToggle) themeToggle.title = lang['theme-toggle-title'];
     if (refreshBtn) refreshBtn.title = lang['refresh-btn-title'];
     if (querySelector) {
@@ -103,7 +106,7 @@ export function showEmptyState(show) {
     const dashboardContent = document.getElementById('dashboard-content');
     const itemsEmpty = document.getElementById('items-empty-state');
     const itemsContent = document.getElementById('items-content');
-    
+
     if (show) {
         dashboardEmpty?.classList.remove('hidden');
         dashboardContent?.classList.add('hidden');
@@ -121,11 +124,13 @@ export function populateQueries(queries, querySelector, currentLanguage) {
     const currentVal = querySelector.value;
     const lang = translations[currentLanguage];
     querySelector.innerHTML = `<option value="">${lang['query-selector-placeholder']}</option>`;
-    queries.sort((a, b) => a.name.localeCompare(b.name)).forEach(q => {
-        const option = document.createElement('option');
-        option.value = q.id;
-        option.textContent = q.name;
-        querySelector.appendChild(option);
-    });
+    queries
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .forEach((q) => {
+            const option = document.createElement('option');
+            option.value = q.id;
+            option.textContent = q.name;
+            querySelector.appendChild(option);
+        });
     if (currentVal) querySelector.value = currentVal;
 }

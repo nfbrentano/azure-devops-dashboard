@@ -8,13 +8,7 @@ const SALT = new Uint8Array([71, 101, 109, 105, 110, 105, 32, 65, 105, 32, 82, 1
 
 async function getEncryptionKey(password: string): Promise<CryptoKey> {
     const encoder = new TextEncoder();
-    const baseKey = await crypto.subtle.importKey(
-        'raw', 
-        encoder.encode(password), 
-        'PBKDF2', 
-        false, 
-        ['deriveKey']
-    );
+    const baseKey = await crypto.subtle.importKey('raw', encoder.encode(password), 'PBKDF2', false, ['deriveKey']);
     return crypto.subtle.deriveKey(
         {
             name: 'PBKDF2',
@@ -35,12 +29,8 @@ export async function encryptPAT(pat: string, password: string): Promise<string>
         const key = await getEncryptionKey(password);
         const iv = crypto.getRandomValues(new Uint8Array(12));
         const encoder = new TextEncoder();
-        const encrypted = await crypto.subtle.encrypt(
-            { name: 'AES-GCM', iv },
-            key,
-            encoder.encode(pat)
-        );
-        
+        const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, encoder.encode(pat));
+
         const ivBase64 = btoa(String.fromCharCode(...iv));
         const encryptedBase64 = btoa(String.fromCharCode(...new Uint8Array(encrypted)));
         return `${ivBase64}:${encryptedBase64}`;
@@ -52,21 +42,25 @@ export async function encryptPAT(pat: string, password: string): Promise<string>
 
 export async function decryptPAT(enc: string, password?: string): Promise<string | null> {
     if (!enc) return enc;
-    
+
     // Check if it's the new format (base64:base64)
     if (enc.includes(':')) {
         if (!password) return null; // Need password for new format
         try {
             const [ivBase64, encryptedBase64] = enc.split(':');
-            const iv = new Uint8Array(atob(ivBase64).split('').map(c => c.charCodeAt(0)));
-            const encrypted = new Uint8Array(atob(encryptedBase64).split('').map(c => c.charCodeAt(0)));
-            const key = await getEncryptionKey(password);
-            
-            const decrypted = await crypto.subtle.decrypt(
-                { name: 'AES-GCM', iv },
-                key,
-                encrypted
+            const iv = new Uint8Array(
+                atob(ivBase64)
+                    .split('')
+                    .map((c) => c.charCodeAt(0))
             );
+            const encrypted = new Uint8Array(
+                atob(encryptedBase64)
+                    .split('')
+                    .map((c) => c.charCodeAt(0))
+            );
+            const key = await getEncryptionKey(password);
+
+            const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, encrypted);
             return new TextDecoder().decode(decrypted);
         } catch (e) {
             console.error('Decryption failed:', e);
@@ -76,7 +70,10 @@ export async function decryptPAT(enc: string, password?: string): Promise<string
 
     // Backward compatibility with XOR(42) + base64 (only if no password is provided/needed)
     try {
-        const xorDecoded = atob(enc).split('').map(c => String.fromCharCode(c.charCodeAt(0) ^ 42)).join('');
+        const xorDecoded = atob(enc)
+            .split('')
+            .map((c) => String.fromCharCode(c.charCodeAt(0) ^ 42))
+            .join('');
         if (/^[a-z0-9]+$/i.test(xorDecoded)) {
             return xorDecoded;
         }
@@ -94,7 +91,7 @@ export function getWorkItemUrl(azureConfig: AzureConfig | null, id: number | str
 export function getStatusInfo(stateName: string, workItemMetadata: WorkItemMetadata): StatusInfo {
     const s = (stateName || '').toLowerCase();
     const meta = workItemMetadata.states[s];
-    
+
     if (meta) {
         if (meta.category === 'Completed') return { label: 'Done', class: 'bg-done', color: meta.color };
         if (meta.category === 'Removed') return { label: 'Removed', class: 'bg-removed', color: meta.color };
@@ -118,20 +115,22 @@ export function getStatusInfo(stateName: string, workItemMetadata: WorkItemMetad
 export function getItemIcon(type: string, workItemMetadata: WorkItemMetadata): IconInfo {
     const t = (type || '').toLowerCase();
     const meta = workItemMetadata.types[t];
-    
+
     // Determine if it's a portfolio item based on backlog levels or common types
-    const isPortfolio = workItemMetadata.backlogs.some(b => b.type === 'portfolio' && b.workItemTypes.includes(t)) || 
-                        t === 'epic' || t === 'feature';
-    
+    const isPortfolio =
+        workItemMetadata.backlogs.some((b) => b.type === 'portfolio' && b.workItemTypes.includes(t)) ||
+        t === 'epic' ||
+        t === 'feature';
+
     // Basic defaults with dynamic color
-    const base: IconInfo = { 
-        icon: 'ph-fill ph-square', 
-        iconClass: '', 
+    const base: IconInfo = {
+        icon: 'ph-fill ph-square',
+        iconClass: '',
         isPortfolio,
         color: meta?.color || '#64748b',
         iconData: meta?.iconData || null
     };
- 
+
     if (t === 'epic') return { ...base, icon: 'ph-fill ph-crown', iconClass: 'icon-epic' };
     if (t === 'feature') return { ...base, icon: 'ph-fill ph-trophy', iconClass: 'icon-feature' };
     if (t.includes('requirement') || t === 'user story' || t === 'product backlog item' || t === 'issue') {
@@ -139,7 +138,7 @@ export function getItemIcon(type: string, workItemMetadata: WorkItemMetadata): I
     }
     if (t === 'task') return { ...base, icon: 'ph-fill ph-check-square', iconClass: 'icon-task' };
     if (t === 'bug') return { ...base, icon: 'ph-fill ph-bug', iconClass: 'icon-bug' };
-    
+
     return base;
 }
 
@@ -153,34 +152,34 @@ export function calculateProgress(item: WorkItemNode, workItemMetadata: WorkItem
             children.forEach(collectLeafNodes);
         }
     };
-    
+
     collectLeafNodes(item);
-    
+
     if (descendants.length === 0) return 0;
-    
+
     let totalWeight = 0;
-    descendants.forEach(d => {
+    descendants.forEach((d) => {
         const state = (d.fields['System.State'] || '').toLowerCase();
-        
+
         // Specific user request for "resolved" to be 50%
         if (state === 'resolved') {
             totalWeight += 0.5;
             return;
         }
-        
+
         const info = getStatusInfo(d.fields['System.State'], workItemMetadata);
         if (info.label === 'Done' || info.label === 'Removed') {
             totalWeight += 1.0;
         }
     });
-    
+
     return Math.floor((totalWeight / descendants.length) * 100);
 }
 
 export function showLoading(show = true, progress: number | null = null): void {
     const loading = document.getElementById('loading');
     if (!loading) return;
-    
+
     if (show) {
         loading.classList.remove('hidden');
         if (progress !== null) {
@@ -190,7 +189,7 @@ export function showLoading(show = true, progress: number | null = null): void {
         loading.classList.add('hidden');
         updateLoadingProgress(0); // Reset for next time
         // Reset all steps to pending
-        (['step-queries', 'step-items', 'step-revisions'] as const).forEach(id => {
+        (['step-queries', 'step-items', 'step-revisions'] as const).forEach((id) => {
             const el = document.getElementById(id);
             if (el) el.className = 'loading-step step-pending';
         });
@@ -209,7 +208,10 @@ export function setLoadingStatus(text: string): void {
 /**
  * Marks a loading step as active or done.
  */
-export function setLoadingStep(stepId: 'step-queries' | 'step-items' | 'step-revisions', stepState: 'active' | 'done' | 'pending'): void {
+export function setLoadingStep(
+    stepId: 'step-queries' | 'step-items' | 'step-revisions',
+    stepState: 'active' | 'done' | 'pending'
+): void {
     const el = document.getElementById(stepId);
     if (!el) return;
     el.className = `loading-step step-${stepState}`;
@@ -219,9 +221,9 @@ export function updateLoadingProgress(percentage: number): void {
     const container = document.getElementById('loading-progress-container');
     const fill = document.getElementById('loading-progress-fill') as HTMLElement | null;
     const text = document.getElementById('loading-progress-text');
-    
+
     if (!container || !fill || !text) return;
-    
+
     if (percentage > 0) {
         container.classList.remove('hidden');
         const p = Math.min(100, Math.max(0, percentage));
@@ -244,10 +246,10 @@ export function showToast(message: string, type: 'error' | 'success' | 'info' | 
 
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
-    
+
     let icon = 'ph-info';
     let color = 'var(--primary)';
-    
+
     if (type === 'error') {
         icon = 'ph-fill ph-x-circle';
         color = '#ef4444';
@@ -258,7 +260,7 @@ export function showToast(message: string, type: 'error' | 'success' | 'info' | 
         icon = 'ph-fill ph-info';
         color = '#3b82f6';
     }
-    
+
     toast.innerHTML = `
         <i class="${icon}" style="color: ${color}; font-size: 1.25rem; flex-shrink: 0;"></i>
         <span>${message}</span>

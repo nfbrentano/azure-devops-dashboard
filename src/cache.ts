@@ -12,10 +12,10 @@ import type { CacheEntry, CacheStats } from './types.ts';
 
 // TTL presets (milliseconds)
 export const TTL = {
-    METADATA:   30 * 60 * 1000, //  30 minutes – work item types, states, backlogs
-    QUERIES:     5 * 60 * 1000, //   5 minutes – list of saved queries
-    WORK_ITEMS:  2 * 60 * 1000, //   2 minutes – work item details (chunks)
-    REVISIONS:  10 * 60 * 1000, //  10 minutes – per-item revision history
+    METADATA: 30 * 60 * 1000, //  30 minutes – work item types, states, backlogs
+    QUERIES: 5 * 60 * 1000, //   5 minutes – list of saved queries
+    WORK_ITEMS: 2 * 60 * 1000, //   2 minutes – work item details (chunks)
+    REVISIONS: 10 * 60 * 1000 //  10 minutes – per-item revision history
 } as const;
 
 // ─── Internal state ──────────────────────────────────────────────────────────
@@ -31,7 +31,11 @@ const _stats: Omit<CacheStats, 'size'> = { hits: 0, misses: 0, inflight: 0, thro
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function _origin(url: string): string {
-    try { return new URL(url).origin; } catch { return url; }
+    try {
+        return new URL(url).origin;
+    } catch {
+        return url;
+    }
 }
 
 // ─── Public API ──────────────────────────────────────────────────────────────

@@ -7,25 +7,38 @@
 import './style.css';
 import { state } from './state.ts';
 import { translations } from './translations.ts';
-import { 
-    showLoading, showToast, encryptPAT, decryptPAT, updateLoadingProgress,
-    setLoadingStatus, setLoadingStep
+import {
+    showLoading,
+    showToast,
+    encryptPAT,
+    decryptPAT,
+    updateLoadingProgress,
+    setLoadingStatus,
+    setLoadingStep
 } from './utils.ts';
-import { 
-    fetchQueries, fetchFullDetails, buildTree, fetchWithRetry, getAuthHeader, fetchMetadata,
+import {
+    fetchQueries,
+    fetchFullDetails,
+    buildTree,
+    fetchWithRetry,
+    getAuthHeader,
+    fetchMetadata,
     fetchRevisionsForItems
 } from './api.ts';
 import { apiCache } from './cache.ts';
-import { 
-    renderCharts, renderThroughputChart, renderAgingChart, 
-    renderAssigneeChart, renderWIPChart, renderCFDChart, renderPortfolioFilters, 
-    renderProgress, renderLegends 
+import {
+    renderCharts,
+    renderThroughputChart,
+    renderAgingChart,
+    renderAssigneeChart,
+    renderWIPChart,
+    renderCFDChart,
+    renderPortfolioFilters,
+    renderProgress,
+    renderLegends
 } from './charts.ts';
 import { renderGantt } from './gantt.ts';
-import { 
-    switchTab, updateThemeIcon, applyTranslations, 
-    showEmptyState, populateQueries 
-} from './ui.ts';
+import { switchTab, updateThemeIcon, applyTranslations, showEmptyState, populateQueries } from './ui.ts';
 import { processAnalytics } from './analytics.ts';
 import { initEvents } from './events.ts';
 import { LOGO_LIGHT, LOGO_DARK } from './logos.ts';
@@ -59,7 +72,7 @@ const elements = {
 async function initApp() {
     document.documentElement.setAttribute('data-theme', state.currentTheme);
     updateThemeIcon(elements.themeToggle, state.currentTheme);
-    
+
     const uiOptions = {
         currentLanguage: state.currentLanguage,
         currentData: state.currentData,
@@ -77,7 +90,7 @@ async function initApp() {
         document.getElementById('project').value = state.azureConfig.project || '';
         document.getElementById('company-name').value = state.azureConfig.companyName || '';
     }
-    
+
     updateLogos();
 
     if (state.azureConfig?.org && state.azureConfig?.project && state.azureConfig?.pat) {
@@ -93,7 +106,7 @@ async function initApp() {
 
     const handlers = {
         handleTabSwitch: (tabId) => switchTab(tabId, elements),
-        
+
         handleAuth: async (e) => {
             e.preventDefault();
             const config = {
@@ -104,7 +117,7 @@ async function initApp() {
             };
             const password = document.getElementById('security-password').value;
             const save = document.getElementById('save-credentials').checked;
-            
+
             const queries = await fetchQueries(config);
             if (queries) {
                 state.azureConfig = config;
@@ -124,7 +137,7 @@ async function initApp() {
             e.preventDefault();
             const password = document.getElementById('unlock-password').value;
             const decryptedPat = await decryptPAT(state.azureConfig.pat, password);
-            
+
             if (decryptedPat) {
                 state.azureConfig.pat = decryptedPat;
                 showDashboard();
@@ -156,7 +169,10 @@ async function initApp() {
                 callRenderGantt
             });
             if (state.currentData.items.length > 0) runAnalytics();
-            if (state.azureConfig) fetchQueries(state.azureConfig).then(queries => populateQueries(queries, elements.querySelector, state.currentLanguage));
+            if (state.azureConfig)
+                fetchQueries(state.azureConfig).then((queries) =>
+                    populateQueries(queries, elements.querySelector, state.currentLanguage)
+                );
         },
 
         handleQueryChange: (e) => {
@@ -200,7 +216,7 @@ async function initApp() {
 
 async function showDashboard(initialQueries = null) {
     switchTab('dashboard', elements);
-    
+
     // Fetch metadata in parallel with queries
     const metadataPromise = fetchMetadata(state.azureConfig, state.workItemMetadata, () => {
         if (state.currentData.items.length > 0) {
@@ -210,9 +226,9 @@ async function showDashboard(initialQueries = null) {
         }
     });
 
-    const queries = initialQueries || await fetchQueries(state.azureConfig);
+    const queries = initialQueries || (await fetchQueries(state.azureConfig));
     populateQueries(queries, elements.querySelector, state.currentLanguage);
-    
+
     await metadataPromise;
 }
 
@@ -230,19 +246,21 @@ async function loadQueryData(queryId, { bust = false } = {}) {
     try {
         const url = `https://dev.azure.com/${state.azureConfig.org}/${state.azureConfig.project}/_apis/wit/wiql/${queryId}?api-version=6.0`;
         const response = await fetchWithRetry(url, {
-            headers: { 'Authorization': getAuthHeader(state.azureConfig.pat) },
+            headers: { Authorization: getAuthHeader(state.azureConfig.pat) },
             cache: 'no-cache'
         });
         const result = await response.json();
         setLoadingStep('step-queries', 'done');
-        
+
         let ids = [];
         if (result.workItems) {
-            ids = result.workItems.map(wi => wi.id);
+            ids = result.workItems.map((wi) => wi.id);
         } else if (result.workItemRelations) {
-            ids = [...new Set(result.workItemRelations.flatMap(r => [r.source?.id, r.target?.id]).filter(id => id))];
+            ids = [
+                ...new Set(result.workItemRelations.flatMap((r) => [r.source?.id, r.target?.id]).filter((id) => id))
+            ];
         }
-        
+
         if (ids.length === 0) {
             showEmptyState(true);
             showLoading(false);
@@ -253,18 +271,28 @@ async function loadQueryData(queryId, { bust = false } = {}) {
         showEmptyState(false);
         setLoadingStatus(`Carregando ${ids.length} itens...`);
         setLoadingStep('step-items', 'active');
-        const items = await fetchFullDetails(state.azureConfig, ids, (p) => {
-            updateLoadingProgress(p);
-        }, { bust });
+        const items = await fetchFullDetails(
+            state.azureConfig,
+            ids,
+            (p) => {
+                updateLoadingProgress(p);
+            },
+            { bust }
+        );
         setLoadingStep('step-items', 'done');
 
         // ── Phase: revisions ──────────────────────────────────
         showLoading(true, 0); // Reset progress bar for revisions
         setLoadingStatus(`Carregando histórico de ${ids.length} itens...`);
         setLoadingStep('step-revisions', 'active');
-        const revisions = await fetchRevisionsForItems(state.azureConfig, ids, (p) => {
-            updateLoadingProgress(p);
-        }, { bust });
+        const revisions = await fetchRevisionsForItems(
+            state.azureConfig,
+            ids,
+            (p) => {
+                updateLoadingProgress(p);
+            },
+            { bust }
+        );
         setLoadingStep('step-revisions', 'done');
 
         const { roots, nodes } = buildTree(items, state.workItemMetadata);
@@ -300,7 +328,7 @@ async function loadQueryData(queryId, { bust = false } = {}) {
 function updateLogos() {
     const isDark = state.currentTheme === 'dark';
     const logoSrc = isDark ? LOGO_DARK : LOGO_LIGHT;
-    document.querySelectorAll('.company-logo-img').forEach(img => {
+    document.querySelectorAll('.company-logo-img').forEach((img) => {
         img.src = logoSrc;
     });
 }
@@ -320,13 +348,13 @@ function runAnalytics() {
 
 function callRenderGantt() {
     renderGantt(state.currentData.tree, {
-        ganttPeriod: elements.ganttPeriod, 
-        currentData: state.currentData, 
-        ganttOffset: state.ganttOffset, 
-        currentLanguage: state.currentLanguage, 
-        translations, 
-        workItemMetadata: state.workItemMetadata, 
-        ganttContainer: elements.ganttContainer, 
+        ganttPeriod: elements.ganttPeriod,
+        currentData: state.currentData,
+        ganttOffset: state.ganttOffset,
+        currentLanguage: state.currentLanguage,
+        translations,
+        workItemMetadata: state.workItemMetadata,
+        ganttContainer: elements.ganttContainer,
         azureConfig: state.azureConfig
     });
 }

@@ -13,9 +13,13 @@ export function getGanttDates(period, items = [], ganttOffset) {
     if (period === 'total' && items.length > 0) {
         let minDate = new Date();
         let maxDate = new Date();
-        items.forEach(item => {
+        items.forEach((item) => {
             const s = new Date(item.fields['Microsoft.VSTS.Scheduling.StartDate'] || item.fields['System.CreatedDate']);
-            const e = new Date(item.fields['Microsoft.VSTS.Scheduling.TargetDate'] || item.fields['Microsoft.VSTS.Common.ClosedDate'] || new Date());
+            const e = new Date(
+                item.fields['Microsoft.VSTS.Scheduling.TargetDate'] ||
+                    item.fields['Microsoft.VSTS.Common.ClosedDate'] ||
+                    new Date()
+            );
             if (!isNaN(s) && s < minDate) minDate = s;
             if (!isNaN(e) && e > maxDate) maxDate = e;
         });
@@ -27,9 +31,9 @@ export function getGanttDates(period, items = [], ganttOffset) {
         return { start, end };
     }
 
-    switch(period) {
+    switch (period) {
         case 'week': {
-            start.setDate(now.getDate() - now.getDay() + (ganttOffset * 7));
+            start.setDate(now.getDate() - now.getDay() + ganttOffset * 7);
             end = new Date(start);
             end.setDate(start.getDate() + 7);
             break;
@@ -61,13 +65,15 @@ export function getGanttDates(period, items = [], ganttOffset) {
 }
 
 export function filterTreeByDate(tree, start, end, activeStatusCategories, activeItemTypes, workItemMetadata) {
-    return tree.flatMap(node => {
+    return tree.flatMap((node) => {
         const fields = node.fields;
         const itemStart = new Date(fields['Microsoft.VSTS.Scheduling.StartDate'] || fields['System.CreatedDate']);
-        const itemEnd = new Date(fields['Microsoft.VSTS.Scheduling.TargetDate'] || fields['Microsoft.VSTS.Common.ClosedDate'] || new Date());
-        
-        const dateMatch = (itemStart <= end && itemEnd >= start);
-        
+        const itemEnd = new Date(
+            fields['Microsoft.VSTS.Scheduling.TargetDate'] || fields['Microsoft.VSTS.Common.ClosedDate'] || new Date()
+        );
+
+        const dateMatch = itemStart <= end && itemEnd >= start;
+
         let statusMatch = true;
         if (activeStatusCategories) {
             const statusInfo = getStatusInfo(fields['System.State'], workItemMetadata);
@@ -81,34 +87,36 @@ export function filterTreeByDate(tree, start, end, activeStatusCategories, activ
         }
 
         const overlaps = dateMatch && statusMatch && typeMatch;
-        const filteredChildren = filterTreeByDate(node.children || [], start, end, activeStatusCategories, activeItemTypes, workItemMetadata);
-        
+        const filteredChildren = filterTreeByDate(
+            node.children || [],
+            start,
+            end,
+            activeStatusCategories,
+            activeItemTypes,
+            workItemMetadata
+        );
+
         if (overlaps) {
-            return [{
-                ...node,
-                children: filteredChildren,
-                allChildren: node.children,
-                isMatch: true 
-            }];
+            return [
+                {
+                    ...node,
+                    children: filteredChildren,
+                    allChildren: node.children,
+                    isMatch: true
+                }
+            ];
         } else if (filteredChildren.length > 0) {
             // Se o nó não passou no filtro, mas os filhos passaram, substituímos o nó pelos filhos (hoisting)
             return filteredChildren;
         }
-        
+
         return [];
     });
 }
 
 export function renderGantt(tree, context) {
-    const { 
-        ganttPeriod, 
-        currentData, 
-        ganttOffset, 
-        currentLanguage, 
-        translations, 
-        workItemMetadata, 
-        ganttContainer 
-    } = context;
+    const { ganttPeriod, currentData, ganttOffset, currentLanguage, translations, workItemMetadata, ganttContainer } =
+        context;
 
     const periodValue = ganttPeriod.value;
     const { start: viewStart, end: viewEnd } = getGanttDates(periodValue, currentData.items, ganttOffset);
@@ -125,19 +133,27 @@ export function renderGantt(tree, context) {
         }
     }
 
-    const activeStatusCategories = Array.from(document.querySelectorAll('.gantt-status-filters input:checked'))
-        .map(cb => cb.getAttribute('data-category'));
-        
+    const activeStatusCategories = Array.from(document.querySelectorAll('.gantt-status-filters input:checked')).map(
+        (cb) => cb.getAttribute('data-category')
+    );
+
     const typeLabelInputs = document.querySelectorAll('#type-legend input');
     let activeItemTypes = null;
     if (typeLabelInputs.length > 0) {
         activeItemTypes = Array.from(typeLabelInputs)
-            .filter(cb => cb.checked)
-            .map(cb => cb.getAttribute('data-type'));
+            .filter((cb) => cb.checked)
+            .map((cb) => cb.getAttribute('data-type'));
     }
-        
-    const displayTree = filterTreeByDate(tree, viewStart, viewEnd, activeStatusCategories, activeItemTypes, workItemMetadata);
-    
+
+    const displayTree = filterTreeByDate(
+        tree,
+        viewStart,
+        viewEnd,
+        activeStatusCategories,
+        activeItemTypes,
+        workItemMetadata
+    );
+
     ganttContainer.innerHTML = '';
     if (displayTree.length === 0) {
         ganttContainer.innerHTML = `<div style="text-align: center; opacity: 0.5; padding: 2rem;">${translations[currentLanguage]['msg-gantt-empty']}</div>`;
@@ -148,7 +164,7 @@ export function renderGantt(tree, context) {
     header.className = 'gantt-header';
     header.innerHTML = `<div class="gantt-label" style="border: none;"></div><div class="gantt-timeline"></div>`;
     const timeline = header.querySelector('.gantt-timeline');
-    
+
     let steps = 4;
     if (periodValue === 'month') steps = 4;
     if (periodValue === 'year') steps = 12;
@@ -159,7 +175,10 @@ export function renderGantt(tree, context) {
         const milestone = document.createElement('div');
         milestone.className = 'timeline-milestone';
         const mDate = new Date(viewStart.getTime() + (totalMs / steps) * i);
-        milestone.textContent = (periodValue === 'year' || periodValue === 'total') ? mDate.toLocaleString(currentLanguage, { month: 'short', year: '2-digit' }) : mDate.toLocaleDateString(currentLanguage, { day: 'numeric', month: 'short' });
+        milestone.textContent =
+            periodValue === 'year' || periodValue === 'total'
+                ? mDate.toLocaleString(currentLanguage, { month: 'short', year: '2-digit' })
+                : mDate.toLocaleDateString(currentLanguage, { day: 'numeric', month: 'short' });
         timeline.appendChild(milestone);
     }
     ganttContainer.appendChild(header);
@@ -177,13 +196,7 @@ export function renderGantt(tree, context) {
 }
 
 function renderRecursive(nodes, depth, parentSiblingsActive, totalMs, viewStart, context) {
-    const { 
-        ganttContainer, 
-        currentLanguage, 
-        translations, 
-        workItemMetadata, 
-        azureConfig 
-    } = context;
+    const { ganttContainer, currentLanguage, translations, workItemMetadata, azureConfig } = context;
 
     nodes.forEach((item, index) => {
         const fields = item.fields;
@@ -191,25 +204,30 @@ function renderRecursive(nodes, depth, parentSiblingsActive, totalMs, viewStart,
         const iconInfo = getItemIcon(fields['System.WorkItemType'], workItemMetadata);
         const statusInfo = getStatusInfo(state, workItemMetadata);
 
-        const hasMissingDates = !fields['Microsoft.VSTS.Scheduling.StartDate'] || !fields['Microsoft.VSTS.Scheduling.TargetDate'];
-        const missingDatesWarning = hasMissingDates ? `<i class="ph ph-warning-circle missing-dates-warning" title="${translations[currentLanguage]['gantt-missing-dates-tooltip']}"></i>` : '';
+        const hasMissingDates =
+            !fields['Microsoft.VSTS.Scheduling.StartDate'] || !fields['Microsoft.VSTS.Scheduling.TargetDate'];
+        const missingDatesWarning = hasMissingDates
+            ? `<i class="ph ph-warning-circle missing-dates-warning" title="${translations[currentLanguage]['gantt-missing-dates-tooltip']}"></i>`
+            : '';
 
         const itemStart = new Date(fields['Microsoft.VSTS.Scheduling.StartDate'] || fields['System.CreatedDate']);
-        const itemEnd = new Date(fields['Microsoft.VSTS.Scheduling.TargetDate'] || fields['Microsoft.VSTS.Common.ClosedDate'] || new Date());
+        const itemEnd = new Date(
+            fields['Microsoft.VSTS.Scheduling.TargetDate'] || fields['Microsoft.VSTS.Common.ClosedDate'] || new Date()
+        );
 
         const left = Math.max(-10, ((itemStart - viewStart) / totalMs) * 100);
         const right = Math.min(110, ((itemEnd - viewStart) / totalMs) * 100);
         const width = Math.max(0.1, right - left);
 
-        const isOutside = (right <= 0 || left >= 100);
+        const isOutside = right <= 0 || left >= 100;
         const progress = calculateProgress(item, workItemMetadata);
         const row = document.createElement('div');
         const hasChildren = item.children && item.children.length > 0;
-        const isLastChild = (index === nodes.length - 1);
+        const isLastChild = index === nodes.length - 1;
         row.className = `gantt-row ${hasChildren ? 'parent' : ''} ${depth === 0 ? 'root' : ''} ${isLastChild ? 'last-child' : ''}`;
-        
+
         let treeLinesHtml = '';
-        parentSiblingsActive.forEach(active => {
+        parentSiblingsActive.forEach((active) => {
             treeLinesHtml += `<div class="tree-line spacer ${active ? 'active' : ''}"></div>`;
         });
         if (depth > 0) {
@@ -238,11 +256,15 @@ function renderRecursive(nodes, depth, parentSiblingsActive, totalMs, viewStart,
                 <div class="assigned-user" title="${assignedTo}">${assignedTo}</div>
             </div>
             <div class="gantt-track">
-                ${!isOutside ? `
+                ${
+                    !isOutside
+                        ? `
                 <div class="gantt-bar ${statusInfo.class}" style="left: ${Math.max(0, left)}%; width: ${Math.min(100, width)}%; padding-left: 0.5rem; background-color: ${statusInfo.color}">
                     <span>${progress}%</span>
                 </div>
-                ` : ''}
+                `
+                        : ''
+                }
             </div>
         `;
         ganttContainer.appendChild(row);

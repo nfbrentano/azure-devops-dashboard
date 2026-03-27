@@ -71,7 +71,12 @@ describe('cache.ts', () => {
 
         it('should deduplicate concurrent requests for the same URL', async () => {
             let resolveFirst!: (value: unknown) => void;
-            const fetchFn = vi.fn(() => new Promise(res => { resolveFirst = res; }));
+            const fetchFn = vi.fn(
+                () =>
+                    new Promise((res) => {
+                        resolveFirst = res;
+                    })
+            );
 
             const url = 'https://example.com/g';
             const p1 = apiCache.getOrFetch(url, fetchFn, 5000);

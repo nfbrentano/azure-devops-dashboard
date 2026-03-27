@@ -9,18 +9,26 @@ import type { AzureConfig, WorkItem, WorkItemMetadata, WorkItemNode, SavedQuery 
 
 export const getAuthHeader = (pat: string): string => `Basic ${btoa(':' + pat)}`;
 
-export async function fetchWithRetry(url: string, options: RequestInit = {}, maxRetries = 3, initialDelay = 1000): Promise<Response> {
+export async function fetchWithRetry(
+    url: string,
+    options: RequestInit = {},
+    maxRetries = 3,
+    initialDelay = 1000
+): Promise<Response> {
     // Skip if this origin is currently throttled
     if (apiCache.isThrottled(url)) {
         console.warn(`[cache] Throttled — skipping request to ${url}`);
-        return new Response(JSON.stringify({ value: [] }), { status: 429, headers: { 'Content-Type': 'application/json' } });
+        return new Response(JSON.stringify({ value: [] }), {
+            status: 429,
+            headers: { 'Content-Type': 'application/json' }
+        });
     }
 
     let delay = initialDelay;
     for (let i = 0; i < maxRetries; i++) {
         try {
             const response = await fetch(url, options);
-            
+
             // Retry on rate limit (429) or server errors (5xx)
             if (response.status === 429 || (response.status >= 500 && response.status <= 504)) {
                 const retryAfter = response.headers.get('Retry-After');
@@ -32,16 +40,16 @@ export async function fetchWithRetry(url: string, options: RequestInit = {}, max
                 }
 
                 if (i === maxRetries - 1) return response;
-                
-                await new Promise(res => setTimeout(res, waitTime));
+
+                await new Promise((res) => setTimeout(res, waitTime));
                 delay *= 2; // Exponential backoff
                 continue;
             }
-            
+
             return response;
         } catch (e) {
             if (i === maxRetries - 1) throw e;
-            await new Promise(res => setTimeout(res, delay));
+            await new Promise((res) => setTimeout(res, delay));
             delay *= 2;
         }
     }
@@ -53,113 +61,143 @@ export async function fetchWithRetry(url: string, options: RequestInit = {}, max
 export async function fetchQueries(config: AzureConfig, { bust = false } = {}): Promise<SavedQuery[] | null> {
     const url = `https://dev.azure.com/${config.org}/${config.project}/_apis/wit/queries?$depth=2&api-version=6.0`;
 
-    return apiCache.getOrFetch(url, async () => {
-        try {
-            const response = await fetchWithRetry(url, {
-                headers: { 'Authorization': getAuthHeader(config.pat) },
-                cache: 'no-cache'
-            });
-            if (!response.ok) return null;
-            const data = await response.json();
-            
-            const allQueries: SavedQuery[] = [];
-            const flatten = (items: SavedQuery[]): void => {
-                items.forEach(item => {
-                    if (item.isFolder && item.children) {
-                        flatten(item.children);
-                    } else if (!item.isFolder) {
-                        allQueries.push(item);
-                    }
+    return apiCache.getOrFetch(
+        url,
+        async () => {
+            try {
+                const response = await fetchWithRetry(url, {
+                    headers: { Authorization: getAuthHeader(config.pat) },
+                    cache: 'no-cache'
                 });
-            };
-            
-            flatten(data.value);
-            return allQueries;
-        } catch {
-            const errMsg = translations[state.currentLanguage]['msg-error-loading'];
-            showToast(errMsg, 'error');
-            return null;
-        }
-    }, TTL.QUERIES, bust);
+                if (!response.ok) return null;
+                const data = await response.json();
+
+                const allQueries: SavedQuery[] = [];
+                const flatten = (items: SavedQuery[]): void => {
+                    items.forEach((item) => {
+                        if (item.isFolder && item.children) {
+                            flatten(item.children);
+                        } else if (!item.isFolder) {
+                            allQueries.push(item);
+                        }
+                    });
+                };
+
+                flatten(data.value);
+                return allQueries;
+            } catch {
+                const errMsg = translations[state.currentLanguage]['msg-error-loading'];
+                showToast(errMsg, 'error');
+                return null;
+            }
+        },
+        TTL.QUERIES,
+        bust
+    );
 }
 
-export async function fetchFullDetails(config: AzureConfig, ids: number[], onProgress: ((pct: number) => void) | null = null, { bust = false } = {}): Promise<WorkItem[]> {
+export async function fetchFullDetails(
+    config: AzureConfig,
+    ids: number[],
+    onProgress: ((pct: number) => void) | null = null,
+    { bust = false } = {}
+): Promise<WorkItem[]> {
     const chunkSize = 200;
     let allItems: WorkItem[] = [];
     const auth = getAuthHeader(config.pat);
     const total = ids.length;
     let failedChunks = 0;
-    
+
     for (let i = 0; i < total; i += chunkSize) {
         if (onProgress) {
             onProgress((i / total) * 100);
         }
-        
+
         const chunk = ids.slice(i, i + chunkSize).sort((a, b) => a - b);
         const chunkKey = chunk.join(',');
         const url = `https://dev.azure.com/${config.org}/${config.project}/_apis/wit/workitems?ids=${chunkKey}&$expand=all&api-version=6.0`;
 
-        const chunkData = await apiCache.getOrFetch(url, async () => {
-            try {
-                const response = await fetchWithRetry(url, {
-                    headers: { 'Authorization': auth },
-                    cache: 'no-cache'
-                });
+        const chunkData = await apiCache.getOrFetch(
+            url,
+            async () => {
+                try {
+                    const response = await fetchWithRetry(url, {
+                        headers: { Authorization: auth },
+                        cache: 'no-cache'
+                    });
 
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status} fetching chunk ${i / chunkSize + 1}`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status} fetching chunk ${i / chunkSize + 1}`);
+                    }
+
+                    const data = await response.json();
+                    return data && data.value ? (data.value as WorkItem[]) : [];
+                } catch (e) {
+                    console.error(`Error loading chunk starting at index ${i}:`, e);
+                    failedChunks++;
+                    return null;
                 }
-
-                const data = await response.json();
-                return (data && data.value) ? data.value as WorkItem[] : [];
-            } catch (e) {
-                console.error(`Error loading chunk starting at index ${i}:`, e);
-                failedChunks++;
-                return null;
-            }
-        }, TTL.WORK_ITEMS, bust);
+            },
+            TTL.WORK_ITEMS,
+            bust
+        );
 
         if (chunkData) {
             allItems = allItems.concat(chunkData);
         }
     }
-    
+
     if (failedChunks > 0) {
         const lang = translations[state.currentLanguage];
-        const msg = failedChunks === 1 
-            ? lang['msg-partial-data-single']
-            : lang['msg-partial-data-multiple'].replace('{count}', String(failedChunks));
+        const msg =
+            failedChunks === 1
+                ? lang['msg-partial-data-single']
+                : lang['msg-partial-data-multiple'].replace('{count}', String(failedChunks));
         showToast(msg, 'warning');
     }
-    
+
     if (onProgress) {
         onProgress(100);
     }
-    
+
     return allItems;
 }
 
-export async function fetchWorkItemRevisions(config: AzureConfig, id: number, { bust = false } = {}): Promise<WorkItem[] | null> {
+export async function fetchWorkItemRevisions(
+    config: AzureConfig,
+    id: number,
+    { bust = false } = {}
+): Promise<WorkItem[] | null> {
     const url = `https://dev.azure.com/${config.org}/${config.project}/_apis/wit/workItems/${id}/revisions?api-version=6.0`;
     const auth = getAuthHeader(config.pat);
 
-    return apiCache.getOrFetch(url, async () => {
-        try {
-            const response = await fetchWithRetry(url, {
-                headers: { 'Authorization': auth },
-                cache: 'no-cache'
-            });
-            if (!response.ok) return null;
-            const data = await response.json();
-            return (data.value || []) as WorkItem[];
-        } catch (e) {
-            console.error(`Error fetching revisions for item ${id}:`, e);
-            return null;
-        }
-    }, TTL.REVISIONS, bust);
+    return apiCache.getOrFetch(
+        url,
+        async () => {
+            try {
+                const response = await fetchWithRetry(url, {
+                    headers: { Authorization: auth },
+                    cache: 'no-cache'
+                });
+                if (!response.ok) return null;
+                const data = await response.json();
+                return (data.value || []) as WorkItem[];
+            } catch (e) {
+                console.error(`Error fetching revisions for item ${id}:`, e);
+                return null;
+            }
+        },
+        TTL.REVISIONS,
+        bust
+    );
 }
 
-export async function fetchRevisionsForItems(config: AzureConfig, ids: number[], onProgress: ((pct: number) => void) | null = null, { bust = false } = {}): Promise<Record<number, WorkItem[]>> {
+export async function fetchRevisionsForItems(
+    config: AzureConfig,
+    ids: number[],
+    onProgress: ((pct: number) => void) | null = null,
+    { bust = false } = {}
+): Promise<Record<number, WorkItem[]>> {
     const total = ids.length;
     const results: Record<number, WorkItem[]> = {};
     const concurrency = 10;
@@ -179,17 +217,28 @@ export async function fetchRevisionsForItems(config: AzureConfig, ids: number[],
     // Process in batches
     for (let i = 0; i < ids.length; i += concurrency) {
         const batch = ids.slice(i, i + concurrency);
-        await Promise.all(batch.map(id => fetchTask(id)));
+        await Promise.all(batch.map((id) => fetchTask(id)));
     }
 
     console.log(`Fetched revisions for ${Object.keys(results).length}/${total} items`);
     return results;
 }
 
-export async function fetchMetadata(config: AzureConfig, workItemMetadata: WorkItemMetadata, renderLegends: ((...args: unknown[]) => void) | null, { bust = false } = {}): Promise<void> {
+export async function fetchMetadata(
+    config: AzureConfig,
+    workItemMetadata: WorkItemMetadata,
+    renderLegends: ((...args: unknown[]) => void) | null,
+    { bust = false } = {}
+): Promise<void> {
     const metaCacheKey = `metadata:${config.org}:${config.project}`;
 
-    const cached = bust ? undefined : apiCache.get<{ types: Record<string, WorkItemMetadata['types'][string]>; states: WorkItemMetadata['states']; backlogs: WorkItemMetadata['backlogs'] }>(metaCacheKey);
+    const cached = bust
+        ? undefined
+        : apiCache.get<{
+              types: Record<string, WorkItemMetadata['types'][string]>;
+              states: WorkItemMetadata['states'];
+              backlogs: WorkItemMetadata['backlogs'];
+          }>(metaCacheKey);
     if (cached) {
         // Restore from cache into the shared metadata object
         Object.assign(workItemMetadata.types, cached.types);
@@ -201,37 +250,39 @@ export async function fetchMetadata(config: AzureConfig, workItemMetadata: WorkI
 
     try {
         const auth = getAuthHeader(config.pat);
-        
+
         // 1. Fetch Work Item Types (Colors and names)
         const typesUrl = `https://dev.azure.com/${config.org}/${config.project}/_apis/wit/workitemtypes?api-version=6.0`;
-        const typesResp = await fetchWithRetry(typesUrl, { headers: { 'Authorization': auth } });
+        const typesResp = await fetchWithRetry(typesUrl, { headers: { Authorization: auth } });
         const typesData = await typesResp.json();
-        
-        const typePromises = typesData.value.map(async (type: { name: string; color?: string; description?: string; icon?: { url: string } }) => {
-            const lowName = type.name.toLowerCase();
-            let iconData: string | null = null;
-            if (type.icon && type.icon.url) {
-                iconData = await getBase64Image(type.icon.url, auth);
+
+        const typePromises = typesData.value.map(
+            async (type: { name: string; color?: string; description?: string; icon?: { url: string } }) => {
+                const lowName = type.name.toLowerCase();
+                let iconData: string | null = null;
+                if (type.icon && type.icon.url) {
+                    iconData = await getBase64Image(type.icon.url, auth);
+                }
+
+                workItemMetadata.types[lowName] = {
+                    name: type.name,
+                    color: type.color ? (type.color.startsWith('#') ? type.color : '#' + type.color) : '#64748b',
+                    description: type.description,
+                    iconData: iconData,
+                    states: {}
+                };
             }
-            
-            workItemMetadata.types[lowName] = {
-                name: type.name,
-                color: type.color ? (type.color.startsWith('#') ? type.color : '#' + type.color) : '#64748b',
-                description: type.description,
-                iconData: iconData,
-                states: {}
-            };
-        });
+        );
         await Promise.all(typePromises);
 
         // 2. Fetch States for ALL discovered Work Item Types
         for (const type of typesData.value) {
             try {
                 const statesUrl = `https://dev.azure.com/${config.org}/${config.project}/_apis/wit/workitemtypes/${type.name}/states?api-version=6.0`;
-                const statesResp = await fetchWithRetry(statesUrl, { headers: { 'Authorization': auth } });
+                const statesResp = await fetchWithRetry(statesUrl, { headers: { Authorization: auth } });
                 if (!statesResp.ok) continue;
                 const statesData = await statesResp.json();
-                
+
                 statesData.value.forEach((s: { name: string; color?: string; category: string }) => {
                     const lowState = s.name.toLowerCase();
                     if (!workItemMetadata.states[lowState]) {
@@ -242,35 +293,43 @@ export async function fetchMetadata(config: AzureConfig, workItemMetadata: WorkI
                         };
                     }
                 });
-            } catch { /* ignore types that don't exist */ }
+            } catch {
+                /* ignore types that don't exist */
+            }
         }
 
         // 3. Fetch Backlog Configurations
         const teamsUrl = `https://dev.azure.com/${config.org}/${config.project}/_apis/teams?api-version=6.0-preview.3`;
-        const teamsResp = await fetchWithRetry(teamsUrl, { headers: { 'Authorization': auth } });
+        const teamsResp = await fetchWithRetry(teamsUrl, { headers: { Authorization: auth } });
         const teamsData = await teamsResp.json();
-        
+
         if (teamsData.value && teamsData.value.length > 0) {
             const teamId = teamsData.value[0].id;
             const backlogsUrl = `https://dev.azure.com/${config.org}/${config.project}/${teamId}/_apis/work/backlogs?api-version=6.0-preview.1`;
-            const backlogsResp = await fetchWithRetry(backlogsUrl, { headers: { 'Authorization': auth } });
+            const backlogsResp = await fetchWithRetry(backlogsUrl, { headers: { Authorization: auth } });
             const backlogsData = await backlogsResp.json();
-            
-            workItemMetadata.backlogs = backlogsData.value.map((b: { name: string; type: string; workItemTypes: { name: string }[] }) => ({
-                name: b.name,
-                type: b.type,
-                workItemTypes: b.workItemTypes.map(wit => wit.name.toLowerCase())
-            }));
+
+            workItemMetadata.backlogs = backlogsData.value.map(
+                (b: { name: string; type: string; workItemTypes: { name: string }[] }) => ({
+                    name: b.name,
+                    type: b.type,
+                    workItemTypes: b.workItemTypes.map((wit) => wit.name.toLowerCase())
+                })
+            );
         }
 
         // Store snapshot in cache
-        apiCache.set(metaCacheKey, {
-            types: Object.fromEntries(
-                Object.entries(workItemMetadata.types).map(([k, v]) => [k, { ...v, iconData: null }])
-            ),
-            states: { ...workItemMetadata.states },
-            backlogs: [...workItemMetadata.backlogs]
-        }, TTL.METADATA);
+        apiCache.set(
+            metaCacheKey,
+            {
+                types: Object.fromEntries(
+                    Object.entries(workItemMetadata.types).map(([k, v]) => [k, { ...v, iconData: null }])
+                ),
+                states: { ...workItemMetadata.states },
+                backlogs: [...workItemMetadata.backlogs]
+            },
+            TTL.METADATA
+        );
 
         if (renderLegends) renderLegends();
     } catch {
@@ -280,7 +339,7 @@ export async function fetchMetadata(config: AzureConfig, workItemMetadata: WorkI
 
 export async function getBase64Image(url: string, auth: string): Promise<string | null> {
     try {
-        const resp = await fetchWithRetry(url, { headers: { 'Authorization': auth } });
+        const resp = await fetchWithRetry(url, { headers: { Authorization: auth } });
         if (!resp.ok) return null;
         const blob = await resp.blob();
         return new Promise((resolve) => {
@@ -293,22 +352,25 @@ export async function getBase64Image(url: string, auth: string): Promise<string 
     }
 }
 
-export function buildTree(items: WorkItem[], workItemMetadata: WorkItemMetadata): { roots: WorkItemNode[]; nodes: WorkItemNode[] } {
+export function buildTree(
+    items: WorkItem[],
+    workItemMetadata: WorkItemMetadata
+): { roots: WorkItemNode[]; nodes: WorkItemNode[] } {
     const nodeMap = new Map<number, WorkItemNode>();
-    const nodes: WorkItemNode[] = items.map(item => {
+    const nodes: WorkItemNode[] = items.map((item) => {
         const node: WorkItemNode = { ...item, children: [] };
         nodeMap.set(node.id, node);
         return node;
     });
 
     const roots: WorkItemNode[] = [];
-    nodes.forEach(node => {
+    nodes.forEach((node) => {
         // Type-safe parent ID extraction — fixes the ambiguous ?.id || . pattern
         const parentField = node.fields['System.Parent'];
         let parentId: number | null = typeof parentField === 'number' ? parentField : null;
 
         if (!parentId) {
-            const parentRelation = node.relations?.find(r => r.rel === 'System.LinkTypes.Hierarchy-Reverse');
+            const parentRelation = node.relations?.find((r) => r.rel === 'System.LinkTypes.Hierarchy-Reverse');
             if (parentRelation) {
                 parentId = parseInt(parentRelation.url.split('/').pop() || '0');
             }

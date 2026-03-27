@@ -6,9 +6,9 @@
 export function renderActivityHeatmap(heatmapData, currentLanguage, translations) {
     const container = document.getElementById('heatmap-container');
     if (!container || !heatmapData) return;
-    
+
     container.innerHTML = '';
-    
+
     // Create scrollable wrapper
     const scrollWrapper = document.createElement('div');
     scrollWrapper.className = 'heatmap-scroll-wrapper';
@@ -32,14 +32,14 @@ export function renderActivityHeatmap(heatmapData, currentLanguage, translations
     } else {
         startDate.setMonth(now.getMonth() - 6);
     }
-    
-    startDate.setDate(startDate.getDate() - startDate.getDay()); 
-    startDate.setHours(0,0,0,0);
+
+    startDate.setDate(startDate.getDate() - startDate.getDay());
+    startDate.setHours(0, 0, 0, 0);
 
     const weeks = [];
     let currentWeek = [];
     let iterDate = new Date(startDate);
-    
+
     while (iterDate <= now) {
         currentWeek.push(new Date(iterDate));
         if (iterDate.getDay() === 6) {
@@ -82,7 +82,7 @@ export function renderActivityHeatmap(heatmapData, currentLanguage, translations
     const daysCol = document.createElement('div');
     daysCol.className = 'heatmap-labels-days';
     const dayNames = translations[currentLanguage]['heatmap-days'].split(',');
-        
+
     dayNames.forEach((day, i) => {
         const d = document.createElement('div');
         d.textContent = i % 2 === 0 ? day : '';
@@ -99,30 +99,30 @@ export function renderActivityHeatmap(heatmapData, currentLanguage, translations
     grid.style.gridAutoFlow = 'column';
     grid.style.gridTemplateRows = 'repeat(7, var(--heatmap-cell-size))';
     grid.style.gap = 'var(--heatmap-gap)';
-    
-    weeks.forEach(week => {
-        week.forEach(day => {
+
+    weeks.forEach((week) => {
+        week.forEach((day) => {
             const dateStr = day.toISOString().split('T')[0];
             const count = heatmapData[dateStr] || 0;
-            
+
             const dayEl = document.createElement('div');
             dayEl.className = 'heatmap-day';
             dayEl.style.width = 'var(--heatmap-cell-size)';
             dayEl.style.height = 'var(--heatmap-cell-size)';
             dayEl.style.borderRadius = '3px';
-            
+
             let level = 0;
             if (count > 0) level = 1;
             if (count > 2) level = 2;
             if (count > 5) level = 3;
             if (count > 10) level = 4;
-            
+
             dayEl.classList.add(`heatmap-l${level}`);
             const labelDelivered = translations[currentLanguage]['label-delivered'].toLowerCase();
             dayEl.title = `${day.toLocaleDateString(currentLanguage)}: ${count} ${labelDelivered}`;
             grid.appendChild(dayEl);
         });
-        
+
         // Filler for partial weeks
         if (week.length < 7) {
             for (let i = week.length; i < 7; i++) {

@@ -4,7 +4,7 @@
 import type { Translations } from './types.ts';
 
 export const translations: Translations = {
-    'en': {
+    en: {
         'tab-dashboard': 'Dashboard',
         'tab-items': 'Item Details',
         'tab-setup': 'Setup',
@@ -54,18 +54,24 @@ export const translations: Translations = {
         // Metrics Guide
         'metrics-guide-title': 'Metrics Guide',
         'metric-lead-time-title': 'Lead Time',
-        'metric-lead-time-desc': 'Measures the total time from when an item is <strong>created</strong> until it is <strong>completed</strong>. Reflects the full customer experience.',
+        'metric-lead-time-desc':
+            'Measures the total time from when an item is <strong>created</strong> until it is <strong>completed</strong>. Reflects the full customer experience.',
         'metric-cycle-time-title': 'Cycle Time',
-        'metric-cycle-time-desc': 'Measures the time an item was actually <strong>in development</strong> (from \'In Progress\' until completion). Focuses on execution efficiency.',
+        'metric-cycle-time-desc':
+            "Measures the time an item was actually <strong>in development</strong> (from 'In Progress' until completion). Focuses on execution efficiency.",
         'metric-comparison-title': 'Lead vs Cycle Time',
-        'metric-comparison-desc': 'Compares the average Lead Time and Cycle Time of the current period with the previous, allowing to identify trends or bottlenecks.',
+        'metric-comparison-desc':
+            'Compares the average Lead Time and Cycle Time of the current period with the previous, allowing to identify trends or bottlenecks.',
         'metric-portfolio-title': 'Features & Portfolio',
-        'metric-portfolio-desc': 'Macro view of Epic and Feature progress, showing how items are distributed across the workflow stages.',
+        'metric-portfolio-desc':
+            'Macro view of Epic and Feature progress, showing how items are distributed across the workflow stages.',
         'global-filter-title': 'Item Types Displayed',
         'metric-aging-title': 'Work Item Aging',
-        'metric-aging-desc': 'Measures how many days an <strong>In Progress</strong> item has been without updates. Helps identify stuck items or bottlenecks.',
+        'metric-aging-desc':
+            'Measures how many days an <strong>In Progress</strong> item has been without updates. Helps identify stuck items or bottlenecks.',
         'metric-gantt-title': 'Hierarchical Gantt',
-        'metric-gantt-desc': 'Hierarchical timeline showing item duration and nesting, allowing to visualize project sequencing and dependencies.',
+        'metric-gantt-desc':
+            'Hierarchical timeline showing item duration and nesting, allowing to visualize project sequencing and dependencies.',
         'chart-aging-title': 'Work Item Aging (In Progress)',
         'chart-assignee-title': 'Workload by Assignee',
         'chart-cfd-title': 'Cumulative Flow Diagram (CFD)',
@@ -80,9 +86,11 @@ export const translations: Translations = {
         'aria-gantt-next': 'Next period',
         'items-view-subtitle': 'Detailed analysis of item inactivity and health',
         'empty-state-title': 'No items found',
-        'empty-state-desc': 'The selected query returned no work items. Please check your query or try a different one.',
+        'empty-state-desc':
+            'The selected query returned no work items. Please check your query or try a different one.',
         'setup-security-warning-title': 'GitHub Pages Security',
-        'setup-security-warning-text': 'As this is a static application, your PAT is sent directly from the browser to Azure. Use a short-lived PAT for security.',
+        'setup-security-warning-text':
+            'As this is a static application, your PAT is sent directly from the browser to Azure. Use a short-lived PAT for security.',
         'placeholder-org': 'ex: my-org',
         'placeholder-project': 'ex: my-project',
         'placeholder-pat': 'Your Azure DevOps Token',
@@ -128,7 +136,7 @@ export const translations: Translations = {
         'label-project': 'Projeto',
         'label-pat': 'Personal Access Token (PAT)',
         'label-security-password': 'Senha de Segurança',
-        'label-company-name': 'Nome da Empresa (Marca d\'água)',
+        'label-company-name': "Nome da Empresa (Marca d'água)",
         'label-save-credentials': 'Salvar credenciais neste navegador',
         'btn-logout': 'Sair da Conta',
         'dashboard-title': 'Análise de Desenvolvimento',
@@ -164,18 +172,24 @@ export const translations: Translations = {
         // Metrics Guide
         'metrics-guide-title': 'Guia de Métricas',
         'metric-lead-time-title': 'Lead Time',
-        'metric-lead-time-desc': 'Mede o tempo total desde que um item é <strong>criado</strong> até ser <strong>concluído</strong>. Reflete a experiência completa do cliente.',
+        'metric-lead-time-desc':
+            'Mede o tempo total desde que um item é <strong>criado</strong> até ser <strong>concluído</strong>. Reflete a experiência completa do cliente.',
         'metric-cycle-time-title': 'Cycle Time',
-        'metric-cycle-time-desc': 'Mede o tempo em que o item esteve efetivamente <strong>em desenvolvimento</strong> (de \'Em Progresso\' até a conclusão). Foca na eficiência da execução.',
+        'metric-cycle-time-desc':
+            "Mede o tempo em que o item esteve efetivamente <strong>em desenvolvimento</strong> (de 'Em Progresso' até a conclusão). Foca na eficiência da execução.",
         'metric-comparison-title': 'Lead vs Cycle Time',
-        'metric-comparison-desc': 'Compara o Lead e Cycle Time médio do período atual com o anterior, permitindo identificar tendências ou gargalos.',
+        'metric-comparison-desc':
+            'Compara o Lead e Cycle Time médio do período atual com o anterior, permitindo identificar tendências ou gargalos.',
         'metric-portfolio-title': 'Features & Portfolio',
-        'metric-portfolio-desc': 'Visualização macro do progresso de Epics e Features, mostrando a distribuição dos itens por etapa do fluxo.',
+        'metric-portfolio-desc':
+            'Visualização macro do progresso de Epics e Features, mostrando a distribuição dos itens por etapa do fluxo.',
         'global-filter-title': 'Tipos de Itens Visíveis',
         'metric-aging-title': 'Work Item Aging',
-        'metric-aging-desc': 'Mede quantos dias um item em <strong>Em Progresso</strong> está sem atualizações. Ajuda a identificar itens travados ou gargalos.',
+        'metric-aging-desc':
+            'Mede quantos dias um item em <strong>Em Progresso</strong> está sem atualizações. Ajuda a identificar itens travados ou gargalos.',
         'metric-gantt-title': 'Gantt Hierárquico',
-        'metric-gantt-desc': 'Linha do tempo hierárquica que mostra a duração e o aninhamento dos itens, permitindo visualizar o sequenciamento e dependências.',
+        'metric-gantt-desc':
+            'Linha do tempo hierárquica que mostra a duração e o aninhamento dos itens, permitindo visualizar o sequenciamento e dependências.',
         'chart-aging-title': 'Envelhecimento dos Itens (Em Progresso)',
         'chart-assignee-title': 'Carga de Trabalho por Responsável',
         'chart-cfd-title': 'Diagrama de Fluxo Cumulativo (CFD)',
@@ -190,9 +204,11 @@ export const translations: Translations = {
         'aria-gantt-next': 'Próximo período',
         'items-view-subtitle': 'Análise detalhada de inatividade e saúde dos itens',
         'empty-state-title': 'Nenhum item encontrado',
-        'empty-state-desc': 'A consulta selecionada não retornou nenhum item de trabalho. Por favor, verifique sua consulta ou tente outra.',
+        'empty-state-desc':
+            'A consulta selecionada não retornou nenhum item de trabalho. Por favor, verifique sua consulta ou tente outra.',
         'setup-security-warning-title': 'Segurança para GitHub Pages',
-        'setup-security-warning-text': 'Como esta aplicação é estática, o seu PAT será enviado diretamente do navegador para o Azure. Use um PAT de curta duração por segurança.',
+        'setup-security-warning-text':
+            'Como esta aplicação é estática, o seu PAT será enviado diretamente do navegador para o Azure. Use um PAT de curta duração por segurança.',
         'placeholder-org': 'ex: minha-org',
         'placeholder-project': 'ex: meu-projeto',
         'placeholder-pat': 'Seu Token do Azure DevOps',

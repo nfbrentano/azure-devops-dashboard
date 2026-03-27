@@ -8,6 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint src/**/*.ts",
+    "format": "prettier --write src/**/*.ts",
+    "format:check": "prettier --check src/**/*.ts",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist",
     "test": "vitest"
@@ -15,10 +17,13 @@
   "devDependencies": {
     "@eslint/js": "^9.39.4",
     "eslint": "^9.39.4",
+    "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-import": "^2.32.0",
     "gh-pages": "^6.3.0",
     "globals": "^17.4.0",
+    "prettier": "^3.8.1",
     "typescript": "^6.0.2",
+    "typescript-eslint": "^8.57.2",
     "vite": "^5.4.21",
     "vitest": "^4.1.1"
   },

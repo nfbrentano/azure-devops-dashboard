@@ -56,19 +56,17 @@ describe('api.ts', () => {
             expect(roots.length).toBe(1);
             expect(roots[0].id).toBe(1);
             expect(roots[0].children.length).toBe(2);
-            expect(roots[0].children.map(c => c.id)).toContain(2);
-            expect(roots[0].children.map(c => c.id)).toContain(3);
+            expect(roots[0].children.map((c) => c.id)).toContain(2);
+            expect(roots[0].children.map((c) => c.id)).toContain(3);
         });
 
         it('should handle relations for parent linking', () => {
             const items = [
                 { id: 1, fields: { 'System.WorkItemType': 'Epic' } },
-                { 
-                    id: 2, 
+                {
+                    id: 2,
                     fields: { 'System.WorkItemType': 'Feature' },
-                    relations: [
-                        { rel: 'System.LinkTypes.Hierarchy-Reverse', url: 'https://.../workitems/1' }
-                    ]
+                    relations: [{ rel: 'System.LinkTypes.Hierarchy-Reverse', url: 'https://.../workitems/1' }]
                 }
             ] as unknown as WorkItem[];
 
@@ -102,6 +100,22 @@ describe('api.ts', () => {
 
             expect(roots.length).toBe(1);
             expect(roots[0].id).toBe(2);
+        });
+
+        it('should build a 3-level hierarchy correctly', () => {
+            const items = [
+                { id: 1, fields: { 'System.WorkItemType': 'Epic' } },
+                { id: 2, fields: { 'System.WorkItemType': 'Feature', 'System.Parent': 1 } },
+                { id: 3, fields: { 'System.WorkItemType': 'User Story', 'System.Parent': 2 } }
+            ] as unknown as WorkItem[];
+
+            const { roots, nodes } = buildTree(items, mockMetadata);
+
+            expect(roots.length).toBe(1);
+            expect(roots[0].id).toBe(1);
+            expect(roots[0].children[0].id).toBe(2);
+            expect(roots[0].children[0].children[0].id).toBe(3);
+            expect(nodes.length).toBe(3);
         });
     });
 });
