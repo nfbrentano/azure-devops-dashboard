@@ -22,5 +22,7 @@ export const state = {
         types: {},
         backlogs: [],
         states: {}
-    }
+    },
+    /** Latest snapshot from apiCache.getStats() – updated after each data load */
+    cacheStats: null
 };

@@ -498,7 +498,36 @@
       </div>
     </div>
 
+    <!-- ── Loading Overlay ─────────────────────────────────── -->
+    <div id="loading" class="loading-overlay hidden" role="status" aria-live="polite">
+      <div class="loading-card glass">
+        <div class="loading-spinner">
+          <svg viewBox="0 0 50 50" class="spinner-svg">
+            <circle class="spinner-track" cx="25" cy="25" r="20" fill="none" stroke-width="4"/>
+            <circle class="spinner-fill"  cx="25" cy="25" r="20" fill="none" stroke-width="4"
+                    stroke-dasharray="62.83" stroke-dashoffset="62.83"/>
+          </svg>
+        </div>
+
+        <p id="loading-status-label" class="loading-status">Carregando...</p>
+
+        <div id="loading-progress-container" class="loading-progress-wrap hidden">
+          <div class="loading-progress-track">
+            <div id="loading-progress-fill" class="loading-progress-fill"></div>
+          </div>
+          <span id="loading-progress-text" class="loading-progress-pct">0%</span>
+        </div>
+
+        <div id="loading-steps" class="loading-steps">
+          <div id="step-queries"    class="loading-step step-pending"><i class="ph-bold ph-database"></i>       <span>Queries</span></div>
+          <div id="step-items"      class="loading-step step-pending"><i class="ph-bold ph-stack"></i>          <span>Work Items</span></div>
+          <div id="step-revisions"  class="loading-step step-pending"><i class="ph-bold ph-clock-clockwise"></i><span>Revisions</span></div>
+        </div>
+      </div>
+    </div>
+
     <script type="module" src="/src/main.js"></script>
+
 </body>
 
 </html>

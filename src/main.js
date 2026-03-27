@@ -7,12 +7,14 @@ import './style.css';
 import { state } from './state.js';
 import { translations } from './translations.js';
 import { 
-    showLoading, showToast, encryptPAT, decryptPAT, updateLoadingProgress 
+    showLoading, showToast, encryptPAT, decryptPAT, updateLoadingProgress,
+    setLoadingStatus, setLoadingStep
 } from './utils.js';
 import { 
     fetchQueries, fetchFullDetails, buildTree, fetchWithRetry, getAuthHeader, fetchMetadata,
     fetchRevisionsForItems
 } from './api.js';
+import { apiCache } from './cache.js';
 import { 
     renderCharts, renderThroughputChart, renderAgingChart, 
     renderAssigneeChart, renderWIPChart, renderCFDChart, renderPortfolioFilters, 
@@ -169,7 +171,7 @@ async function initApp() {
             }
             if (elements.refreshBtn.classList.contains('spinning') || !elements.querySelector.value) return;
             elements.refreshBtn.classList.add('spinning');
-            await loadQueryData(elements.querySelector.value);
+            await loadQueryData(elements.querySelector.value, { bust: true });
             elements.refreshBtn.classList.remove('spinning');
         },
 
@@ -213,9 +215,16 @@ async function showDashboard(initialQueries = null) {
     await metadataPromise;
 }
 
-async function loadQueryData(queryId) {
+async function loadQueryData(queryId, { bust = false } = {}) {
     if (!queryId) return;
+
+    // ── Phase: start ──────────────────────────────────────────
     showLoading(true, 0);
+    setLoadingStatus('Buscando consulta...');
+    setLoadingStep('step-queries', 'active');
+
+    // Capture hit count before load to detect cache usage
+    const statsBefore = apiCache.getStats();
 
     try {
         const url = `https://dev.azure.com/${state.azureConfig.org}/${state.azureConfig.project}/_apis/wit/wiql/${queryId}?api-version=6.0`;
@@ -224,6 +233,7 @@ async function loadQueryData(queryId) {
             cache: 'no-cache'
         });
         const result = await response.json();
+        setLoadingStep('step-queries', 'done');
         
         let ids = [];
         if (result.workItems) {
@@ -238,24 +248,42 @@ async function loadQueryData(queryId) {
             return;
         }
 
+        // ── Phase: work items ─────────────────────────────────
         showEmptyState(false);
+        setLoadingStatus(`Carregando ${ids.length} itens...`);
+        setLoadingStep('step-items', 'active');
         const items = await fetchFullDetails(state.azureConfig, ids, (p) => {
             updateLoadingProgress(p);
-        });
+        }, { bust });
+        setLoadingStep('step-items', 'done');
 
-        // 2. Fetch Revisions for Bottleneck analysis
-        showLoading(true, 0); // Reset progress for revisions
+        // ── Phase: revisions ──────────────────────────────────
+        showLoading(true, 0); // Reset progress bar for revisions
+        setLoadingStatus(`Carregando histórico de ${ids.length} itens...`);
+        setLoadingStep('step-revisions', 'active');
         const revisions = await fetchRevisionsForItems(state.azureConfig, ids, (p) => {
             updateLoadingProgress(p);
-        });
+        }, { bust });
+        setLoadingStep('step-revisions', 'done');
 
         const { roots, nodes } = buildTree(items, state.workItemMetadata);
         state.currentData = { items: nodes, tree: roots, revisions: revisions };
 
+        // Update cache stats in state
+        const statsAfter = apiCache.getStats();
+        state.cacheStats = statsAfter;
+        const hitsThisLoad = statsAfter.hits - statsBefore.hits;
+        const missesThisLoad = statsAfter.misses - statsBefore.misses;
+        const fromCache = hitsThisLoad > 0 && missesThisLoad === 0;
+
         const activeNameEl = document.getElementById('active-query-name');
         if (activeNameEl) {
             const selectedOption = elements.querySelector.options[elements.querySelector.selectedIndex];
-            activeNameEl.textContent = `${translations[state.currentLanguage]['label-query']}: ${selectedOption ? selectedOption.text : ''}`;
+            const queryLabel = `${translations[state.currentLanguage]['label-query']}: ${selectedOption ? selectedOption.text : ''}`;
+            const badgeClass = fromCache ? 'cache-badge cache-badge--hit' : 'cache-badge cache-badge--miss';
+            const badgeIcon = fromCache ? '🗃' : '🌐';
+            const badgeText = fromCache ? 'cached' : 'live';
+            activeNameEl.innerHTML = `${queryLabel} <span class="${badgeClass}">${badgeIcon} ${badgeText}</span>`;
         }
 
         runAnalytics();

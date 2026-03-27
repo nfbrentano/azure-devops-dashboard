@@ -188,7 +188,33 @@ export function showLoading(show = true, progress = null) {
     } else {
         loading.classList.add('hidden');
         updateLoadingProgress(0); // Reset for next time
+        // Reset all steps to pending
+        ['step-queries', 'step-items', 'step-revisions'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.className = 'loading-step step-pending';
+        });
+        setLoadingStatus('');
     }
+}
+
+/**
+ * Updates the status label text inside the loading overlay.
+ * @param {string} text
+ */
+export function setLoadingStatus(text) {
+    const el = document.getElementById('loading-status-label');
+    if (el) el.textContent = text || 'Carregando...';
+}
+
+/**
+ * Marks a loading step as active or done.
+ * @param {'step-queries'|'step-items'|'step-revisions'} stepId
+ * @param {'active'|'done'|'pending'} state
+ */
+export function setLoadingStep(stepId, state) {
+    const el = document.getElementById(stepId);
+    if (!el) return;
+    el.className = `loading-step step-${state}`;
 }
 
 export function updateLoadingProgress(percentage) {

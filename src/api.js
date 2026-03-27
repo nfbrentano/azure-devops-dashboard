@@ -4,10 +4,17 @@
 import { showToast } from './utils.js';
 import { translations } from './translations.js';
 import { state } from './state.js';
+import { apiCache, TTL } from './cache.js';
 
 export const getAuthHeader = (pat) => `Basic ${btoa(':' + pat)}`;
 
 export async function fetchWithRetry(url, options = {}, maxRetries = 3, initialDelay = 1000) {
+    // Skip if this origin is currently throttled
+    if (apiCache.isThrottled(url)) {
+        console.warn(`[cache] Throttled — skipping request to ${url}`);
+        return new Response(JSON.stringify({ value: [] }), { status: 429, headers: { 'Content-Type': 'application/json' } });
+    }
+
     let delay = initialDelay;
     for (let i = 0; i < maxRetries; i++) {
         try {
@@ -15,10 +22,15 @@ export async function fetchWithRetry(url, options = {}, maxRetries = 3, initialD
             
             // Retry on rate limit (429) or server errors (5xx)
             if (response.status === 429 || (response.status >= 500 && response.status <= 504)) {
-                if (i === maxRetries - 1) return response;
-                
                 const retryAfter = response.headers.get('Retry-After');
                 const waitTime = retryAfter ? parseInt(retryAfter) * 1000 : delay;
+
+                // Mark origin as throttled so other requests bail out gracefully
+                if (response.status === 429) {
+                    apiCache.markThrottled(url, waitTime);
+                }
+
+                if (i === maxRetries - 1) return response;
                 
                 await new Promise(res => setTimeout(res, waitTime));
                 delay *= 2; // Exponential backoff
@@ -34,37 +46,40 @@ export async function fetchWithRetry(url, options = {}, maxRetries = 3, initialD
     }
 }
 
-export async function fetchQueries(config) {
+export async function fetchQueries(config, { bust = false } = {}) {
     const url = `https://dev.azure.com/${config.org}/${config.project}/_apis/wit/queries?$depth=2&api-version=6.0`;
-    try {
-        const response = await fetchWithRetry(url, {
-            headers: { 'Authorization': getAuthHeader(config.pat) },
-            cache: 'no-cache'
-        });
-        if (!response.ok) return null;
-        const data = await response.json();
-        
-        const allQueries = [];
-        const flatten = (items) => {
-            items.forEach(item => {
-                if (item.isFolder && item.children) {
-                    flatten(item.children);
-                } else if (!item.isFolder) {
-                    allQueries.push(item);
-                }
+
+    return apiCache.getOrFetch(url, async () => {
+        try {
+            const response = await fetchWithRetry(url, {
+                headers: { 'Authorization': getAuthHeader(config.pat) },
+                cache: 'no-cache'
             });
-        };
-        
-        flatten(data.value);
-        return allQueries;
-    } catch {
-        const errMsg = translations[state.currentLanguage]['msg-error-loading'];
-        showToast(errMsg, 'error');
-        return null;
-    }
+            if (!response.ok) return null;
+            const data = await response.json();
+            
+            const allQueries = [];
+            const flatten = (items) => {
+                items.forEach(item => {
+                    if (item.isFolder && item.children) {
+                        flatten(item.children);
+                    } else if (!item.isFolder) {
+                        allQueries.push(item);
+                    }
+                });
+            };
+            
+            flatten(data.value);
+            return allQueries;
+        } catch {
+            const errMsg = translations[state.currentLanguage]['msg-error-loading'];
+            showToast(errMsg, 'error');
+            return null;
+        }
+    }, TTL.QUERIES, bust);
 }
 
-export async function fetchFullDetails(config, ids, onProgress = null) {
+export async function fetchFullDetails(config, ids, onProgress = null, { bust = false } = {}) {
     const chunkSize = 200;
     let allItems = [];
     const auth = getAuthHeader(config.pat);
@@ -76,25 +91,32 @@ export async function fetchFullDetails(config, ids, onProgress = null) {
             onProgress((i / total) * 100);
         }
         
-        try {
-            const chunk = ids.slice(i, i + chunkSize);
-            const url = `https://dev.azure.com/${config.org}/${config.project}/_apis/wit/workitems?ids=${chunk.join(',')}&$expand=all&api-version=6.0`;
-            const response = await fetchWithRetry(url, {
-                headers: { 'Authorization': auth },
-                cache: 'no-cache'
-            });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status} fetching chunk ${i/chunkSize + 1}`);
+        const chunk = ids.slice(i, i + chunkSize).sort((a, b) => a - b);
+        const chunkKey = chunk.join(',');
+        const url = `https://dev.azure.com/${config.org}/${config.project}/_apis/wit/workitems?ids=${chunkKey}&$expand=all&api-version=6.0`;
+
+        const chunkData = await apiCache.getOrFetch(url, async () => {
+            try {
+                const response = await fetchWithRetry(url, {
+                    headers: { 'Authorization': auth },
+                    cache: 'no-cache'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status} fetching chunk ${i / chunkSize + 1}`);
+                }
+
+                const data = await response.json();
+                return (data && data.value) ? data.value : [];
+            } catch (e) {
+                console.error(`Error loading chunk starting at index ${i}:`, e);
+                failedChunks++;
+                return null;
             }
-            
-            const data = await response.json();
-            if (data && data.value) {
-                allItems = allItems.concat(data.value);
-            }
-        } catch (e) {
-            console.error(`Error loading chunk starting at index ${i}:`, e);
-            failedChunks++;
+        }, TTL.WORK_ITEMS, bust);
+
+        if (chunkData) {
+            allItems = allItems.concat(chunkData);
         }
     }
     
@@ -113,31 +135,34 @@ export async function fetchFullDetails(config, ids, onProgress = null) {
     return allItems;
 }
 
-export async function fetchWorkItemRevisions(config, id) {
+export async function fetchWorkItemRevisions(config, id, { bust = false } = {}) {
     const url = `https://dev.azure.com/${config.org}/${config.project}/_apis/wit/workItems/${id}/revisions?api-version=6.0`;
     const auth = getAuthHeader(config.pat);
-    try {
-        const response = await fetchWithRetry(url, {
-            headers: { 'Authorization': auth },
-            cache: 'no-cache'
-        });
-        if (!response.ok) return null;
-        const data = await response.json();
-        return data.value || [];
-    } catch (e) {
-        console.error(`Error fetching revisions for item ${id}:`, e);
-        return null;
-    }
+
+    return apiCache.getOrFetch(url, async () => {
+        try {
+            const response = await fetchWithRetry(url, {
+                headers: { 'Authorization': auth },
+                cache: 'no-cache'
+            });
+            if (!response.ok) return null;
+            const data = await response.json();
+            return data.value || [];
+        } catch (e) {
+            console.error(`Error fetching revisions for item ${id}:`, e);
+            return null;
+        }
+    }, TTL.REVISIONS, bust);
 }
 
-export async function fetchRevisionsForItems(config, ids, onProgress = null) {
+export async function fetchRevisionsForItems(config, ids, onProgress = null, { bust = false } = {}) {
     const total = ids.length;
     const results = {};
     const concurrency = 10;
     let completed = 0;
 
     const fetchTask = async (id) => {
-        const revisions = await fetchWorkItemRevisions(config, id);
+        const revisions = await fetchWorkItemRevisions(config, id, { bust });
         if (revisions) {
             results[id] = revisions;
         }
@@ -157,7 +182,19 @@ export async function fetchRevisionsForItems(config, ids, onProgress = null) {
     return results;
 }
 
-export async function fetchMetadata(config, workItemMetadata, renderLegends) {
+export async function fetchMetadata(config, workItemMetadata, renderLegends, { bust = false } = {}) {
+    const metaCacheKey = `metadata:${config.org}:${config.project}`;
+
+    const cached = bust ? undefined : apiCache.get(metaCacheKey);
+    if (cached) {
+        // Restore from cache into the shared metadata object
+        Object.assign(workItemMetadata.types, cached.types);
+        Object.assign(workItemMetadata.states, cached.states);
+        workItemMetadata.backlogs = cached.backlogs;
+        if (renderLegends) renderLegends();
+        return;
+    }
+
     try {
         const auth = getAuthHeader(config.pat);
         
@@ -221,6 +258,15 @@ export async function fetchMetadata(config, workItemMetadata, renderLegends) {
                 workItemTypes: b.workItemTypes.map(wit => wit.name.toLowerCase())
             }));
         }
+
+        // Store snapshot in cache (deep copies of the plain data — no icons to save memory)
+        apiCache.set(metaCacheKey, {
+            types: Object.fromEntries(
+                Object.entries(workItemMetadata.types).map(([k, v]) => [k, { ...v, iconData: null }])
+            ),
+            states: { ...workItemMetadata.states },
+            backlogs: [...workItemMetadata.backlogs]
+        }, TTL.METADATA);
 
         if (renderLegends) renderLegends();
     } catch {
