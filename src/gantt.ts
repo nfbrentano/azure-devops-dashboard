@@ -234,7 +234,6 @@ function renderRecursive(nodes, depth, parentSiblingsActive, totalMs, viewStart,
             treeLinesHtml += `<div class="tree-line connector"></div>`;
         }
 
-        const assignedTo = fields['System.AssignedTo']?.displayName || fields['System.AssignedTo'] || '';
 
         let iconHtml = `<i class="${iconInfo.icon} ${iconInfo.iconClass}" style="flex-shrink: 0; color: ${iconInfo.color}"></i>`;
         if (iconInfo.iconData) {
@@ -253,7 +252,6 @@ function renderRecursive(nodes, depth, parentSiblingsActive, totalMs, viewStart,
                     <div class="status-dot" style="background: ${statusInfo.color}"></div>
                     <span>${state}</span>
                 </div>
-                <div class="assigned-user" title="${assignedTo}">${assignedTo}</div>
             </div>
             <div class="gantt-track">
                 ${

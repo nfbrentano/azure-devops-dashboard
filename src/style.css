@@ -934,15 +934,6 @@ button:active { transform: scale(0.98); }
     border-radius: 50%;
 }
 
-.assigned-user {
-    font-size: 0.7rem;
-    color: var(--text-muted);
-    min-width: 120px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    opacity: 0.8;
-}
 
 .tree-line.connector::before {
     content: '';
