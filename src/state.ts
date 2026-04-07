@@ -25,5 +25,7 @@ export const state: AppState = {
         states: {}
     },
     /** Latest snapshot from apiCache.getStats() – updated after each data load */
-    cacheStats: null
+    cacheStats: null,
+    timelineData: { items: [], tree: [] },
+    timelineActiveTypes: []
 };

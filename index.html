@@ -25,6 +25,8 @@
           Dashboard</button>
         <button id="tab-items" class="tab-btn" data-i18n="tab-items"><i class="ph-bold ph-hourglass"></i> Item
           Details</button>
+        <button id="tab-timeline" class="tab-btn" data-i18n="tab-timeline"><i class="ph-bold ph-calendar"></i>
+          Timeline</button>
         <button id="tab-setup" class="tab-btn" data-i18n="tab-setup"><i class="ph-bold ph-gear"></i> Setup</button>
       </div>
 
@@ -330,6 +332,56 @@
           </div>
           <div id="heatmap-container" class="heatmap-wrapper">
             <!-- Heatmap will be rendered here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Timeline View -->
+    <div id="timeline-view" class="hidden">
+      <header>
+        <div>
+          <h1 data-i18n="timeline-section-title">Project Timeline (Portfolio)</h1>
+          <p style="color: var(--text-muted); margin-top: 0.5rem;" data-i18n="timeline-section-subtitle">Roadmap view of all Portfolio Work Items (Epics, Features) in the configured project</p>
+        </div>
+      </header>
+
+      <div id="timeline-content" class="dashboard-grid">
+        <div class="card glass full-width">
+          <div class="card-title" style="justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <i class="ph-bold ph-projector-screen-chart"></i>
+              <span data-i18n="gantt-section-title">Timeline</span>
+            </div>
+            
+            <div class="gantt-controls">
+                <div class="gantt-period-nav">
+                    <button id="timeline-gantt-prev" class="glass"><i class="ph-bold ph-caret-left"></i></button>
+                    <span id="timeline-gantt-period-label">Carregando...</span>
+                    <button id="timeline-gantt-next" class="glass"><i class="ph-bold ph-caret-right"></i></button>
+                </div>
+                <div class="gantt-nav-divider"></div>
+                <select id="timeline-gantt-period" class="glass gantt-period-select">
+                    <option value="total" data-i18n="gantt-period-total">Visão Geral (Auto)</option>
+                    <option value="year" data-i18n="gantt-period-year">Anual</option>
+                    <option value="trimester" data-i18n="gantt-period-trimester">Trimestral</option>
+                    <option value="bimester" data-i18n="gantt-period-bimester">Bimestral</option>
+                    <option value="month" selected data-i18n="gantt-period-month">Mensal</option>
+                    <option value="week" data-i18n="gantt-period-week">Semanal</option>
+                </select>
+                <div class="gantt-nav-divider"></div>
+                <button class="glass btn-icon-glass export-btn" data-target="timeline-gantt-container" title="Export Chart (PNG)">
+                    <i class="ph-bold ph-download-simple"></i>
+                </button>
+            </div>
+          </div>
+          
+          <div id="timeline-type-legend" class="legend-container" style="margin: 0 1.5rem 1.5rem 1.5rem; justify-content: flex-start;">
+            <!-- Type filters will be rendered here -->
+          </div>
+          
+          <div id="timeline-gantt-container" style="overflow-x: auto; padding-bottom: 1rem; position: relative; min-height: 400px;">
+            <!-- Timeline will be rendered here -->
           </div>
         </div>
       </div>

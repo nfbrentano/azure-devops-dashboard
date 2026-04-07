@@ -83,9 +83,10 @@ export async function decryptPAT(enc: string, password?: string): Promise<string
     }
 }
 
-export function getWorkItemUrl(azureConfig: AzureConfig | null, id: number | string): string {
+export function getWorkItemUrl(azureConfig: AzureConfig | null, id: number | string, projectName?: string): string {
     if (!azureConfig) return '#';
-    return `https://dev.azure.com/${azureConfig.org}/${azureConfig.project}/_workitems/edit/${id}`;
+    const project = projectName || azureConfig.project;
+    return `https://dev.azure.com/${azureConfig.org}/${project}/_workitems/edit/${id}`;
 }
 
 export function getStatusInfo(stateName: string, workItemMetadata: WorkItemMetadata): StatusInfo {

@@ -783,3 +783,48 @@ export function renderBottlenecksChart(bottleneckData, charts, currentTheme, cur
         }
     });
 }
+export function renderTimelineTypeFilters(items, workItemMetadata, currentLanguage, onFilterChange) {
+    const container = document.getElementById('timeline-type-legend');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    const uniqueTypes = new Set();
+    items.forEach((item) => {
+        const t = item.fields['System.WorkItemType'];
+        if (t) uniqueTypes.add(t);
+    });
+
+    const typesArray = Array.from(uniqueTypes).sort();
+
+    typesArray.forEach((typeName) => {
+        const typeMeta = Object.values(workItemMetadata.types).find(
+            (t) => t.name.toLowerCase() === typeName.toLowerCase()
+        ) || { name: typeName, color: '#64748b' };
+
+        const iconInfo = getItemIcon(typeName, workItemMetadata);
+        const label = document.createElement('label');
+        label.className = 'filter-item';
+
+        let iconHtml = `<i class="${iconInfo.icon}" style="color: ${typeMeta.color}"></i>`;
+        if (iconInfo.iconData) {
+            iconHtml = `<img src="${iconInfo.iconData}" style="width: 16px; height: 16px;" alt="">`;
+        }
+
+        label.innerHTML = `
+            <input type="checkbox" data-timeline-type="${typeName}" checked>
+            ${iconHtml} <span>${typeMeta.name}</span>
+        `;
+
+        const checkbox = label.querySelector('input');
+        checkbox.addEventListener('change', () => {
+            const selectedTypes = [];
+            container.querySelectorAll('input').forEach((cb) => {
+                if (cb.checked) selectedTypes.push(cb.getAttribute('data-timeline-type'));
+            });
+            onFilterChange(selectedTypes);
+        });
+
+        container.appendChild(label);
+    });
+}

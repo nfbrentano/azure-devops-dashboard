@@ -16,14 +16,15 @@ import {
     setLoadingStatus,
     setLoadingStep
 } from './utils.ts';
-import {
-    fetchQueries,
-    fetchFullDetails,
-    buildTree,
-    fetchWithRetry,
-    getAuthHeader,
-    fetchMetadata,
-    fetchRevisionsForItems
+import { 
+    fetchTimelineData, 
+    fetchFullDetails, 
+    buildTree, 
+    fetchQueries, 
+    fetchWithRetry, 
+    getAuthHeader, 
+    fetchMetadata, 
+    fetchRevisionsForItems 
 } from './api.ts';
 import { apiCache } from './cache.ts';
 import {
@@ -35,9 +36,11 @@ import {
     renderCFDChart,
     renderPortfolioFilters,
     renderProgress,
-    renderLegends
+    renderLegends,
+    renderTimelineTypeFilters
 } from './charts.ts';
 import { renderGantt } from './gantt.ts';
+import { renderTimeline } from './timeline_render.ts';
 import { switchTab, updateThemeIcon, applyTranslations, showEmptyState, populateQueries } from './ui.ts';
 import { processAnalytics } from './analytics.ts';
 import { initEvents } from './events.ts';
@@ -65,7 +68,13 @@ const elements = {
     forgotPasswordBtn: document.getElementById('forgot-password-btn'),
     tabDashboard: document.getElementById('tab-dashboard'),
     tabItems: document.getElementById('tab-items'),
-    tabSetup: document.getElementById('tab-setup')
+    tabTimeline: document.getElementById('tab-timeline'),
+    tabSetup: document.getElementById('tab-setup'),
+    timelineView: document.getElementById('timeline-view'),
+    timelineGanttContainer: document.getElementById('timeline-gantt-container'),
+    timelineGanttPeriod: document.getElementById('timeline-gantt-period'),
+    timelineGanttPrev: document.getElementById('timeline-gantt-prev'),
+    timelineGanttNext: document.getElementById('timeline-gantt-next')
 };
 
 // Initialize application
@@ -105,7 +114,16 @@ async function initApp() {
     }
 
     const handlers = {
-        handleTabSwitch: (tabId) => switchTab(tabId, elements),
+        handleTabSwitch: (tabId) => {
+            switchTab(tabId, elements);
+            if (tabId === 'timeline') {
+                if (state.timelineData.items.length === 0) {
+                    loadTimelineData();
+                } else {
+                    callRenderTimeline();
+                }
+            }
+        },
 
         handleAuth: async (e) => {
             e.preventDefault();
@@ -208,6 +226,20 @@ async function initApp() {
 
         handleGanttFilterChange: () => {
             if (state.currentData.tree.length > 0) callRenderGantt();
+        },
+
+        handleTimelinePeriodChange: () => {
+            state.ganttOffset = 0;
+            const isTotal = elements.timelineGanttPeriod.value === 'total';
+            elements.timelineGanttPrev.disabled = elements.timelineGanttNext.disabled = isTotal;
+            elements.timelineGanttPrev.style.opacity = elements.timelineGanttNext.style.opacity = isTotal ? '0.3' : '1';
+            if (state.timelineData.tree.length > 0) callRenderTimeline();
+        },
+
+        handleTimelineNav: (dir) => {
+            if (elements.timelineGanttPeriod.value === 'total') return;
+            state.ganttOffset += dir;
+            callRenderTimeline();
         }
     };
 
@@ -357,6 +389,76 @@ function callRenderGantt() {
         ganttContainer: elements.ganttContainer,
         azureConfig: state.azureConfig
     });
+}
+
+function callRenderTimeline() {
+    renderTimeline(state.timelineData.tree, {
+        ganttPeriod: elements.timelineGanttPeriod,
+        currentData: state.timelineData,
+        ganttOffset: state.ganttOffset,
+        currentLanguage: state.currentLanguage,
+        translations,
+        workItemMetadata: state.workItemMetadata,
+        ganttContainer: elements.timelineGanttContainer,
+        azureConfig: state.azureConfig,
+        periodLabelId: 'timeline-gantt-period-label',
+        activeTypes: state.timelineActiveTypes
+    });
+}
+
+async function loadTimelineData() {
+    showLoading(true, 0);
+    setLoadingStatus('Buscando Portfolio (Initiatives/Epics/Features) do projeto...');
+    setLoadingStep('step-queries', 'active');
+
+    const startTime = performance.now();
+
+    try {
+        const items = await fetchTimelineData(state.azureConfig, state.workItemMetadata);
+        const fetchTime = performance.now();
+        console.log(`[Timeline] Fetched ${items.length} items in ${(fetchTime - startTime).toFixed(2)}ms`);
+        
+        setLoadingStep('step-queries', 'done');
+        
+        if (items.length === 0) {
+            showToast('Nenhum item encontrado no portfolio.', 'info');
+            showLoading(false);
+            return;
+        }
+
+        setLoadingStatus(`Processando ${items.length} itens...`);
+        setLoadingStep('step-items', 'active');
+        
+        const treeStartTime = performance.now();
+        const { roots, nodes } = buildTree(items, state.workItemMetadata);
+        const treeTime = performance.now();
+        console.log(`[Timeline] Tree built: ${roots.length} roots, ${nodes.length} total nodes in ${(treeTime - treeStartTime).toFixed(2)}ms`);
+        
+        state.timelineData = { items: nodes, tree: roots };
+        
+        // Initial active types (all fetched)
+        state.timelineActiveTypes = [...new Set(nodes.map(n => n.fields['System.WorkItemType']))];
+        
+        // Render filters
+        renderTimelineTypeFilters(nodes, state.workItemMetadata, state.currentLanguage, (selectedTypes) => {
+            state.timelineActiveTypes = selectedTypes;
+            callRenderTimeline();
+        });
+
+        setLoadingStep('step-items', 'done');
+        setLoadingStep('step-revisions', 'done'); 
+        
+        const renderStartTime = performance.now();
+        callRenderTimeline();
+        const renderTime = performance.now();
+        console.log(`[Timeline] Rendered in ${(renderTime - renderStartTime).toFixed(2)}ms`);
+
+    } catch (e) {
+        console.error('CRITICAL: loadTimelineData failed:', e);
+        showToast(`Erro na Timeline: ${e.message || 'Erro desconhecido'}`, 'error');
+    } finally {
+        showLoading(false);
+    }
 }
 
 // Run initialization

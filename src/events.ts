@@ -81,7 +81,11 @@ export function initEvents(elements, handlers) {
         ganttNext,
         tabDashboard,
         tabItems,
-        tabSetup
+        tabTimeline,
+        tabSetup,
+        timelineGanttPeriod,
+        timelineGanttPrev,
+        timelineGanttNext
     } = elements;
 
     const {
@@ -93,12 +97,15 @@ export function initEvents(elements, handlers) {
         handleRefresh,
         handleGanttPeriodChange,
         handleGanttNav,
-        handleTabSwitch
+        handleTabSwitch,
+        handleTimelinePeriodChange,
+        handleTimelineNav
     } = handlers;
 
     // Tabs
     tabDashboard.addEventListener('click', () => handleTabSwitch('dashboard'));
     tabItems.addEventListener('click', () => handleTabSwitch('items'));
+    tabTimeline.addEventListener('click', () => handleTabSwitch('timeline'));
     tabSetup.addEventListener('click', () => handleTabSwitch('setup'));
 
     // Auth Forms
@@ -128,6 +135,11 @@ export function initEvents(elements, handlers) {
     ganttPeriod.addEventListener('change', handleGanttPeriodChange);
     ganttPrev.addEventListener('click', () => handleGanttNav(-1));
     ganttNext.addEventListener('click', () => handleGanttNav(1));
+
+    // Timeline
+    timelineGanttPeriod.addEventListener('change', handleTimelinePeriodChange);
+    timelineGanttPrev.addEventListener('click', () => handleTimelineNav(-1));
+    timelineGanttNext.addEventListener('click', () => handleTimelineNav(1));
 
     document.querySelectorAll('.gantt-status-filters input').forEach((cb) => {
         cb.addEventListener('change', () => {

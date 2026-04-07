@@ -6,14 +6,16 @@ import { translations } from './translations.ts';
 import { renderLegends } from './charts.ts';
 
 export function switchTab(tabId, elements) {
-    const { tabDashboard, tabItems, tabSetup, dashboardView, itemsView, setupView, unlockView, dataControls } =
+    const { tabDashboard, tabItems, tabTimeline, tabSetup, dashboardView, itemsView, timelineView, setupView, unlockView, dataControls } =
         elements;
 
     tabDashboard.classList.toggle('active', tabId === 'dashboard');
     tabItems.classList.toggle('active', tabId === 'items');
+    tabTimeline.classList.toggle('active', tabId === 'timeline');
     tabSetup.classList.toggle('active', tabId === 'setup');
     dashboardView.classList.toggle('hidden', tabId !== 'dashboard');
     itemsView.classList.toggle('hidden', tabId !== 'items');
+    timelineView.classList.toggle('hidden', tabId !== 'timeline');
     setupView.classList.toggle('hidden', tabId !== 'setup');
     unlockView.classList.toggle('hidden', tabId !== 'unlock');
     dataControls.classList.toggle('hidden', tabId === 'setup' || tabId === 'unlock');

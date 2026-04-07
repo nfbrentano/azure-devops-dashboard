@@ -7,6 +7,7 @@ export const translations: Translations = {
     en: {
         'tab-dashboard': 'Dashboard',
         'tab-items': 'Item Details',
+        'tab-timeline': 'Timeline',
         'tab-setup': 'Setup',
         'btn-logout': 'Logout',
         'btn-refresh': 'Refresh Data',
@@ -27,6 +28,8 @@ export const translations: Translations = {
         'chart-throughput-title': 'Throughput (Items per Week) — Requirement Backlog',
         'portfolio-section-title': 'Features & Portfolio',
         'gantt-section-title': 'Hierarchical Gantt',
+        'timeline-section-title': 'Project Timeline (Portfolio)',
+        'timeline-section-subtitle': 'Roadmap view of all Portfolio items (Epics, Features) in the configured project',
         'gantt-period-total': 'General View (Auto)',
         'gantt-period-year': 'Yearly',
         'gantt-period-trimester': 'Trimester',
@@ -129,6 +132,7 @@ export const translations: Translations = {
     'pt-br': {
         'tab-dashboard': 'Painel',
         'tab-items': 'Detalhes de Itens',
+        'tab-timeline': 'Timeline',
         'tab-setup': 'Configuração',
         'setup-title': 'Dashboard Azure DevOps',
         'setup-subtitle': 'Conecte sua conta para visualizar métricas',
@@ -145,6 +149,8 @@ export const translations: Translations = {
         'chart-throughput-title': 'Throughput (Itens por Semana) — Requirement Backlog',
         'portfolio-section-title': 'Features & Portfolio',
         'gantt-section-title': 'Gantt Hierárquico',
+        'timeline-section-title': 'Timeline do Projeto (Portfólio)',
+        'timeline-section-subtitle': 'Visão consolidada de Epics e Features do projeto configurado',
         'gantt-period-total': 'Visão Geral (Auto)',
         'gantt-period-year': 'Anual',
         'gantt-period-trimester': 'Trimestral',

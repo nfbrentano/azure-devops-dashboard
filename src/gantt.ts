@@ -66,11 +66,17 @@ export function getGanttDates(period, items = [], ganttOffset) {
 
 export function filterTreeByDate(tree, start, end, activeStatusCategories, activeItemTypes, workItemMetadata) {
     return tree.flatMap((node) => {
-        const fields = node.fields;
-        const itemStart = new Date(fields['Microsoft.VSTS.Scheduling.StartDate'] || fields['System.CreatedDate']);
-        const itemEnd = new Date(
-            fields['Microsoft.VSTS.Scheduling.TargetDate'] || fields['Microsoft.VSTS.Common.ClosedDate'] || new Date()
-        );
+        const fields = node.fields || {};
+        const startFields = ['Microsoft.VSTS.Scheduling.StartDate', 'System.CreatedDate'];
+        const endFields = ['Microsoft.VSTS.Scheduling.TargetDate', 'Microsoft.VSTS.Common.ClosedDate', 'Microsoft.VSTS.Common.ProposedDate'];
+        
+        let sVal = null;
+        for(const f of startFields) { if(fields[f]) { sVal = fields[f]; break; } }
+        let eVal = null;
+        for(const f of endFields) { if(fields[f]) { eVal = fields[f]; break; } }
+
+        const itemStart = new Date(sVal || new Date());
+        const itemEnd = new Date(eVal || new Date());
 
         const dateMatch = itemStart <= end && itemEnd >= start;
 
@@ -82,8 +88,9 @@ export function filterTreeByDate(tree, start, end, activeStatusCategories, activ
 
         let typeMatch = true;
         if (activeItemTypes) {
-            const itemType = fields['System.WorkItemType'];
-            typeMatch = activeItemTypes.includes(itemType ? itemType.toLowerCase() : '');
+            const itemType = (fields['System.WorkItemType'] || '').toLowerCase();
+            const activeLower = activeItemTypes.map(t => t.toLowerCase());
+            typeMatch = activeLower.includes(itemType);
         }
 
         const overlaps = dateMatch && statusMatch && typeMatch;

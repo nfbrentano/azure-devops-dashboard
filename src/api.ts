@@ -375,7 +375,6 @@ export function buildTree(
 
     const roots: WorkItemNode[] = [];
     nodes.forEach((node) => {
-        // Type-safe parent ID extraction — fixes the ambiguous ?.id || . pattern
         const parentField = node.fields['System.Parent'];
         let parentId: number | null = typeof parentField === 'number' ? parentField : null;
 
@@ -386,26 +385,26 @@ export function buildTree(
             }
         }
 
-        if (parentId) {
-            const parent = nodeMap.get(parentId);
-            if (parent) {
-                parent.children.push(node);
-            } else {
-                roots.push(node);
-            }
+        // Prevent infinite loops and ensure parent exists in our set
+        if (parentId && parentId !== node.id && nodeMap.has(parentId)) {
+            const parent = nodeMap.get(parentId)!;
+            parent.children.push(node);
         } else {
             roots.push(node);
         }
     });
 
-    roots.sort((a, b) => sortByPriority(a, b, workItemMetadata));
-    const sortChildren = (node: WorkItemNode): void => {
-        if (node.children && node.children.length > 0) {
-            node.children.sort((a, b) => sortByPriority(a, b, workItemMetadata));
-            node.children.forEach(sortChildren);
+    // Sort hierarchy recursively
+    const sortFn = (a: WorkItemNode, b: WorkItemNode) => sortByPriority(a, b, workItemMetadata);
+    roots.sort(sortFn);
+    
+    const visit = (node: WorkItemNode) => {
+        if (node.children?.length > 0) {
+            node.children.sort(sortFn);
+            node.children.forEach(visit);
         }
     };
-    roots.forEach(sortChildren);
+    roots.forEach(visit);
 
     return { roots, nodes };
 }
@@ -414,12 +413,13 @@ export function getTypePriority(type: string | undefined, workItemMetadata: Work
     const t = (type || '').toLowerCase();
     if (workItemMetadata && workItemMetadata.backlogs) {
         for (let i = 0; i < workItemMetadata.backlogs.length; i++) {
-            if (workItemMetadata.backlogs[i].workItemTypes.includes(t)) {
+            if (workItemMetadata.backlogs[i].workItemTypes.map(type => type.toLowerCase()).includes(t)) {
                 return i + 1;
             }
         }
     }
     // Fallbacks
+    if (t === 'initiative') return 0;
     if (t === 'epic') return 1;
     if (t === 'feature') return 2;
     if (['user story', 'product backlog item', 'requirement', 'issue'].includes(t)) return 3;
@@ -433,3 +433,86 @@ function sortByPriority(a: WorkItemNode, b: WorkItemNode, workItemMetadata: Work
     if (pA !== pB) return pA - pB;
     return a.id - b.id;
 }
+
+export async function fetchProjects(config: AzureConfig): Promise<{ id: string; name: string }[]> {
+    const url = `https://dev.azure.com/${config.org}/_apis/projects?api-version=6.0`;
+    const response = await fetchWithRetry(url, {
+        headers: { Authorization: getAuthHeader(config.pat) }
+    });
+    if (!response.ok) return [];
+    const data = await response.json();
+    return (data.value || []).map((p: any) => ({ id: p.id, name: p.name }));
+}
+
+export async function fetchTimelineData(config: AzureConfig, workItemMetadata: WorkItemMetadata): Promise<WorkItem[]> {
+    // Determine all portfolio-level types, including "Initiative" as a common custom type
+    let portfolioTypes = ['Initiative', 'Epic', 'Feature'];
+    if (workItemMetadata && workItemMetadata.backlogs && workItemMetadata.backlogs.length > 0) {
+        const types = workItemMetadata.backlogs
+            .filter(b => b.type === 'portfolio')
+            .flatMap(b => b.workItemTypes);
+        if (types.length > 0) portfolioTypes = types;
+    }
+
+    const typesFilter = portfolioTypes.map(t => `'${t}'`).join(', ');
+
+    const decodedProject = decodeURIComponent(config.project);
+    const url = `https://dev.azure.com/${config.org}/${encodeURIComponent(decodedProject)}/_apis/wit/wiql?api-version=6.0`;
+    const wiql = {
+        query: `SELECT [System.Id] FROM WorkItems WHERE [System.WorkItemType] IN (${typesFilter}) AND [System.State] <> 'Removed'`
+    };
+
+    console.log(`[API] Fetching Timeline Items from: ${url}`);
+    console.log(`[API] Filtering by Project: "${config.project}"`);
+    console.log(`[API] Query: ${wiql.query}`);
+
+    const response = await fetchWithRetry(url, {
+        method: 'POST',
+        headers: {
+            Authorization: getAuthHeader(config.pat),
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(wiql)
+    });
+
+    if (!response.ok) {
+        console.error(`[API] WIQL failed with status ${response.status}`);
+        return [];
+    }
+    const result = await response.json();
+    const ids = (result.workItems || []).map((wi: any) => wi.id);
+
+    console.log(`[API] Found ${ids.length} Items for project ${config.project}`);
+
+    if (ids.length === 0) return [];
+
+    // Fetch details for these IDs at the ORG level
+    const auth = getAuthHeader(config.pat);
+    const chunkSize = 200;
+    let allItems: WorkItem[] = [];
+
+    for (let i = 0; i < ids.length; i += chunkSize) {
+        const chunk = ids.slice(i, i + chunkSize);
+        const chunkKey = chunk.join(',');
+        const detailsUrl = `https://dev.azure.com/${config.org}/_apis/wit/workitems?ids=${chunkKey}&$expand=all&api-version=6.0`;
+        const detailsResp = await fetchWithRetry(detailsUrl, {
+            headers: { Authorization: auth }
+        });
+        if (detailsResp.ok) {
+            const data = await detailsResp.json();
+            const value = data.value || [];
+            const p1 = (decodedProject || '').trim().toLowerCase();
+            const p2 = (config.project || '').trim().toLowerCase();
+
+            const filtered = value.filter((wi: any) => {
+                const project = (wi.fields['System.TeamProject'] || '').trim().toLowerCase();
+                return (project === p1 || project === p2) && project !== '';
+            });
+            allItems = allItems.concat(filtered);
+        }
+    }
+
+    console.log(`[API] Returning ${allItems.length} Items after client-side project filtering`);
+    return allItems;
+}
+

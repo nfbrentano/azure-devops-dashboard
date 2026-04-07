@@ -122,6 +122,11 @@ export interface AppState {
     globalActiveTypes: string[] | null;
     workItemMetadata: WorkItemMetadata;
     cacheStats: CacheStats | null;
+    timelineData: {
+        items: WorkItemNode[];
+        tree: WorkItemNode[];
+    };
+    timelineActiveTypes: string[];
 }
 
 // ─── UI Helpers ─────────────────────────────────────────────────────────────
@@ -183,9 +188,11 @@ export interface DashboardElements {
     ganttNext: HTMLButtonElement;
     tabDashboard: HTMLButtonElement;
     tabItems: HTMLButtonElement;
+    tabTimeline: HTMLButtonElement;
     tabSetup: HTMLButtonElement;
     dashboardView: HTMLElement;
     itemsView: HTMLElement;
+    timelineView: HTMLElement;
     setupView: HTMLElement;
     unlockView: HTMLElement;
     dataControls: HTMLElement;
