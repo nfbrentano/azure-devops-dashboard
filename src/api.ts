@@ -299,23 +299,33 @@ export async function fetchMetadata(
         }
 
         // 3. Fetch Backlog Configurations
-        const teamsUrl = `https://dev.azure.com/${config.org}/${config.project}/_apis/teams?api-version=6.0-preview.3`;
-        const teamsResp = await fetchWithRetry(teamsUrl, { headers: { Authorization: auth } });
-        const teamsData = await teamsResp.json();
+        try {
+            const teamsUrl = `https://dev.azure.com/${config.org}/${config.project}/_apis/teams?api-version=6.0-preview.3`;
+            const teamsResp = await fetchWithRetry(teamsUrl, { headers: { Authorization: auth } });
+            
+            if (teamsResp.ok) {
+                const teamsData = await teamsResp.json();
 
-        if (teamsData.value && teamsData.value.length > 0) {
-            const teamId = teamsData.value[0].id;
-            const backlogsUrl = `https://dev.azure.com/${config.org}/${config.project}/${teamId}/_apis/work/backlogs?api-version=6.0-preview.1`;
-            const backlogsResp = await fetchWithRetry(backlogsUrl, { headers: { Authorization: auth } });
-            const backlogsData = await backlogsResp.json();
+                if (teamsData.value && teamsData.value.length > 0) {
+                    const teamId = teamsData.value[0].id;
+                    const backlogsUrl = `https://dev.azure.com/${config.org}/${config.project}/${teamId}/_apis/work/backlogs?api-version=6.0-preview.1`;
+                    const backlogsResp = await fetchWithRetry(backlogsUrl, { headers: { Authorization: auth } });
+                    
+                    if (backlogsResp.ok) {
+                        const backlogsData = await backlogsResp.json();
 
-            workItemMetadata.backlogs = backlogsData.value.map(
-                (b: { name: string; type: string; workItemTypes: { name: string }[] }) => ({
-                    name: b.name,
-                    type: b.type,
-                    workItemTypes: b.workItemTypes.map((wit) => wit.name.toLowerCase())
-                })
-            );
+                        workItemMetadata.backlogs = backlogsData.value.map(
+                            (b: { name: string; type: string; workItemTypes: { name: string }[] }) => ({
+                                name: b.name,
+                                type: b.type,
+                                workItemTypes: b.workItemTypes.map((wit) => wit.name.toLowerCase())
+                            })
+                        );
+                    }
+                }
+            }
+        } catch (e) {
+            console.log('Informação: As configurações de times/backlogs não puderam ser carregadas (provavelmente devido a CORS ou permissões do PAT). O app usará as configurações padrão.');
         }
 
         // Store snapshot in cache
