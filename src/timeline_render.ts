@@ -110,6 +110,7 @@ function renderRecursive(nodes, depth, parentSiblingsActive, totalMs, viewStart,
             const iconInfo = getItemIcon(fields['System.WorkItemType'], workItemMetadata);
             const statusInfo = getStatusInfo(state, workItemMetadata);
 
+            const hasPlannedDates = fields['Microsoft.VSTS.Scheduling.StartDate'] && fields['Microsoft.VSTS.Scheduling.TargetDate'];
             const itemStart = new Date(fields['Microsoft.VSTS.Scheduling.StartDate'] || fields['System.CreatedDate']);
             const itemEnd = new Date(
                 fields['Microsoft.VSTS.Scheduling.TargetDate'] || fields['Microsoft.VSTS.Common.ClosedDate'] || new Date()
@@ -143,8 +144,8 @@ function renderRecursive(nodes, depth, parentSiblingsActive, totalMs, viewStart,
                 ? `<span class="project-tag" style="background: rgba(100, 116, 139, 0.1); padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-right: 0.5rem; color: var(--text-muted); border: 1px solid var(--border-glass);">${fields['System.TeamProject']}</span>`
                 : '';
 
-            const startDateStr = itemStart.toLocaleDateString(currentLanguage, { day: '2-digit', month: '2-digit', year: '2-digit' });
-            const endDateStr = itemEnd.toLocaleDateString(currentLanguage, { day: '2-digit', month: '2-digit', year: '2-digit' });
+            const startDateStr = hasPlannedDates ? itemStart.toLocaleDateString(currentLanguage, { day: '2-digit', month: '2-digit', year: '2-digit' }) : '---';
+            const endDateStr = hasPlannedDates ? itemEnd.toLocaleDateString(currentLanguage, { day: '2-digit', month: '2-digit', year: '2-digit' }) : '---';
 
             row.innerHTML = `
                 <div class="gantt-label" title="${fields['System.Title']}" style="min-width: 300px;">
@@ -173,12 +174,17 @@ function renderRecursive(nodes, depth, parentSiblingsActive, totalMs, viewStart,
                 </div>
                 <div class="gantt-track">
                     ${
-                        !isOutside
+                        hasPlannedDates && !isOutside
                             ? `
                     <div class="gantt-bar ${statusInfo.class}" style="left: ${Math.max(0, left)}%; width: ${Math.min(100, width)}%; padding-left: 0.5rem; background-color: ${statusInfo.color}">
                         <span>${progress}%</span>
                     </div>
                     `
+                            : !hasPlannedDates 
+                            ? `<div class="no-dates-msg" style="font-size: 0.7rem; color: var(--text-muted); opacity: 0.6; display: flex; align-items: center; gap: 0.25rem; font-style: italic; padding: 0 1rem;">
+                                <i class="ph ph-warning-circle"></i>
+                                ${translations[currentLanguage]['label-no-planned-dates']}
+                               </div>`
                             : ''
                     }
                 </div>

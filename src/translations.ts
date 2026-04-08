@@ -129,6 +129,7 @@ export const translations: Translations = {
         'heatmap-days': 'Sun,Mon,Tue,Wed,Thu,Fri,Sat',
         'chart-bottlenecks-title': 'Work Item Bottlenecks (Avg Time per Column)',
         'label-avg-days': 'Avg Days',
+        'label-no-planned-dates': 'No dates planned',
         'msg-bottlenecks-empty': 'No data available for bottleneck analysis.'
     },
     'pt-br': {
@@ -252,6 +253,7 @@ export const translations: Translations = {
         'heatmap-days': 'Dom,Seg,Ter,Qua,Qui,Sex,Sáb',
         'chart-bottlenecks-title': 'Gargalos de Work Items (Tempo Médio por Coluna)',
         'label-avg-days': 'Média de Dias',
+        'label-no-planned-dates': 'Sem datas planejadas',
         'msg-bottlenecks-empty': 'Nenhum dado disponível para análise de gargalos.'
     }
 };
