@@ -301,19 +301,15 @@ export async function fetchMetadata(
         // 3. Fetch Backlog Configurations
         try {
             const teamsUrl = `https://dev.azure.com/${config.org}/${config.project}/_apis/teams?api-version=6.0-preview.3`;
-            const teamsResp = await fetchWithRetry(teamsUrl, { headers: { Authorization: auth } });
-            
+            const teamsResp = await fetchWithRetry(teamsUrl, { headers: { Authorization: auth } }, 1);
             if (teamsResp.ok) {
                 const teamsData = await teamsResp.json();
-
                 if (teamsData.value && teamsData.value.length > 0) {
                     const teamId = teamsData.value[0].id;
                     const backlogsUrl = `https://dev.azure.com/${config.org}/${config.project}/${teamId}/_apis/work/backlogs?api-version=6.0-preview.1`;
-                    const backlogsResp = await fetchWithRetry(backlogsUrl, { headers: { Authorization: auth } });
-                    
+                    const backlogsResp = await fetchWithRetry(backlogsUrl, { headers: { Authorization: auth } }, 1);
                     if (backlogsResp.ok) {
                         const backlogsData = await backlogsResp.json();
-
                         workItemMetadata.backlogs = backlogsData.value.map(
                             (b: { name: string; type: string; workItemTypes: { name: string }[] }) => ({
                                 name: b.name,

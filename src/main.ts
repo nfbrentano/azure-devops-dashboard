@@ -37,7 +37,8 @@ import {
     renderPortfolioFilters,
     renderProgress,
     renderLegends,
-    renderTimelineTypeFilters
+    renderTimelineTypeFilters,
+    renderTimelineStateFilters
 } from './charts.ts';
 import { renderGantt } from './gantt.ts';
 import { renderTimeline } from './timeline_render.ts';
@@ -402,7 +403,8 @@ function callRenderTimeline() {
         ganttContainer: elements.timelineGanttContainer,
         azureConfig: state.azureConfig,
         periodLabelId: 'timeline-gantt-period-label',
-        activeTypes: state.timelineActiveTypes
+        activeTypes: state.timelineActiveTypes,
+        activeStates: state.timelineActiveStates
     });
 }
 
@@ -436,12 +438,18 @@ async function loadTimelineData() {
         
         state.timelineData = { items: nodes, tree: roots };
         
-        // Initial active types (all fetched)
+        // Initial active types and states (all fetched)
         state.timelineActiveTypes = [...new Set(nodes.map(n => n.fields['System.WorkItemType']))];
+        state.timelineActiveStates = [...new Set(nodes.map(n => n.fields['System.State']))];
         
         // Render filters
         renderTimelineTypeFilters(nodes, state.workItemMetadata, state.currentLanguage, (selectedTypes) => {
             state.timelineActiveTypes = selectedTypes;
+            callRenderTimeline();
+        });
+
+        renderTimelineStateFilters(nodes, state.workItemMetadata, state.currentLanguage, (selectedStates) => {
+            state.timelineActiveStates = selectedStates;
             callRenderTimeline();
         });
 

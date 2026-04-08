@@ -828,3 +828,41 @@ export function renderTimelineTypeFilters(items, workItemMetadata, currentLangua
         container.appendChild(label);
     });
 }
+
+export function renderTimelineStateFilters(items, workItemMetadata, currentLanguage, onFilterChange) {
+    const container = document.getElementById('timeline-state-filters');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    const uniqueStates = new Set();
+    items.forEach((item) => {
+        const s = item.fields['System.State'];
+        if (s) uniqueStates.add(s);
+    });
+
+    const statesArray = Array.from(uniqueStates).sort();
+
+    statesArray.forEach((stateName) => {
+        const statusInfo = getStatusInfo(stateName, workItemMetadata);
+        const label = document.createElement('label');
+        label.className = 'filter-item';
+
+        label.innerHTML = `
+            <input type="checkbox" data-timeline-state="${stateName}" checked>
+            <div class="status-dot" style="background: ${statusInfo.color}; width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px;"></div>
+            <span>${stateName}</span>
+        `;
+
+        const checkbox = label.querySelector('input');
+        checkbox.addEventListener('change', () => {
+            const selectedStates = [];
+            container.querySelectorAll('input').forEach((cb) => {
+                if (cb.checked) selectedStates.push(cb.getAttribute('data-timeline-state'));
+            });
+            onFilterChange(selectedStates);
+        });
+
+        container.appendChild(label);
+    });
+}

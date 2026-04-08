@@ -35,15 +35,17 @@ export function renderTimeline(tree, context) {
     }
 
     const activeTypes = context.activeTypes || [];
+    const activeStates = context.activeStates || [];
     
-    // Timeline defaults to showing all statuses for now, or we could add specific filters
+    // Timeline now uses both type and state filters
     const displayTree = filterTreeByDate(
         tree,
         viewStart,
         viewEnd,
-        ['Backlog', 'InProgress', 'Completed', 'Done'], // default categories
-        activeTypes, // Use the active types from context
-        workItemMetadata
+        ['Backlog', 'InProgress', 'Completed', 'Done'], // default categories as fallback
+        activeTypes,
+        workItemMetadata,
+        activeStates
     );
 
     // Sort by Start Date

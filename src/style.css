@@ -1158,6 +1158,13 @@ button:active { transform: scale(0.98); }
     align-items: center;
 }
 
+.legend-container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+}
+
 .filter-item {
     display: flex;
     align-items: center;

@@ -64,9 +64,10 @@ export function getGanttDates(period, items = [], ganttOffset) {
     return { start, end };
 }
 
-export function filterTreeByDate(tree, start, end, activeStatusCategories, activeItemTypes, workItemMetadata) {
+export function filterTreeByDate(tree, start, end, activeStatusCategories, activeItemTypes, workItemMetadata, activeStates) {
     return tree.flatMap((node) => {
         const fields = node.fields || {};
+        // ... (dates part) ...
         const startFields = ['Microsoft.VSTS.Scheduling.StartDate', 'System.CreatedDate'];
         const endFields = ['Microsoft.VSTS.Scheduling.TargetDate', 'Microsoft.VSTS.Common.ClosedDate', 'Microsoft.VSTS.Common.ProposedDate'];
         
@@ -81,7 +82,9 @@ export function filterTreeByDate(tree, start, end, activeStatusCategories, activ
         const dateMatch = itemStart <= end && itemEnd >= start;
 
         let statusMatch = true;
-        if (activeStatusCategories) {
+        if (activeStates && activeStates.length > 0) {
+            statusMatch = activeStates.includes(fields['System.State']);
+        } else if (activeStatusCategories) {
             const statusInfo = getStatusInfo(fields['System.State'], workItemMetadata);
             statusMatch = activeStatusCategories.includes(statusInfo.label.replace(' ', ''));
         }
@@ -100,7 +103,8 @@ export function filterTreeByDate(tree, start, end, activeStatusCategories, activ
             end,
             activeStatusCategories,
             activeItemTypes,
-            workItemMetadata
+            workItemMetadata,
+            activeStates
         );
 
         if (overlaps) {
