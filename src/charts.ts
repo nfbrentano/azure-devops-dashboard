@@ -609,7 +609,7 @@ export function renderLegends(activeItems, workItemMetadata, translations, curre
     });
 
     typeLegend.innerHTML = '';
-    let typesToRender = [];
+    let typesToRender;
     if (hasActiveItems) {
         typesToRender = Array.from(activeTypesSet);
     } else {

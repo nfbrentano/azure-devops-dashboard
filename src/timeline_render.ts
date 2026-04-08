@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { getWorkItemUrl, getStatusInfo, getItemIcon, calculateProgress } from './utils.ts';
-import { getGanttDates, filterTreeByDate } from './gantt.ts';
+import { getGanttDates } from './gantt.ts';
 
 /**
  * Timeline specific rendering logic (copied and adapted from gantt.ts to avoid breaking it)
@@ -13,7 +13,6 @@ export function renderTimeline(tree, context) {
         ganttOffset, 
         currentLanguage, 
         translations, 
-        workItemMetadata, 
         ganttContainer,
         periodLabelId = 'timeline-gantt-period-label'
     } = context;
@@ -46,9 +45,6 @@ export function renderTimeline(tree, context) {
             const fields = node.fields || {};
             const startDateRaw = fields['Microsoft.VSTS.Scheduling.StartDate'];
             const endDateRaw = fields['Microsoft.VSTS.Scheduling.TargetDate'];
-            
-            const itemStart = new Date(startDateRaw || fields['System.CreatedDate']);
-            const itemEnd = new Date(endDateRaw || fields['Microsoft.VSTS.Common.ClosedDate'] || new Date());
             
             const hasPlannedDates = !!startDateRaw && !!endDateRaw && isValidDate(new Date(startDateRaw)) && isValidDate(new Date(endDateRaw));
 
@@ -152,7 +148,7 @@ function renderRecursive(nodes, depth, parentSiblingsActive, totalMs, viewStart,
 
             const left = Math.max(-10, ((itemStart - viewStart) / totalMs) * 100);
             const right = Math.min(110, ((itemEnd - viewStart) / totalMs) * 100);
-            let width = Math.max(0.1, right - left);
+            const width = Math.max(0.1, right - left);
 
             const isOutside = hasPlannedDates && (right <= 0 || left >= 100);
             const progress = calculateProgress(item, workItemMetadata);
