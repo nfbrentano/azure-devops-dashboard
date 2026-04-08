@@ -6,7 +6,7 @@ import { state } from './state.ts';
 import { LOGO_LIGHT, LOGO_DARK } from './logos.ts';
 
 async function drawWatermark(canvas, isDark) {
-    let { companyName } = state.azureConfig || {};
+    const { companyName } = state.azureConfig || {};
 
     // Use hardcoded theme-aware logo
     const companyLogo = isDark ? LOGO_DARK : LOGO_LIGHT;

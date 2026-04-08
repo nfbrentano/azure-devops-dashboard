@@ -92,8 +92,8 @@ export function processAnalytics(items, tree, options = {}) {
         }
 
         if (!iconInfo.isPortfolio) {
-            let assignee = f['System.AssignedTo'];
-            let name =
+            const assignee = f['System.AssignedTo'];
+            const name =
                 assignee?.displayName ||
                 assignee?.uniqueName ||
                 (typeof assignee === 'string' ? assignee : translations[currentLanguage]['label-unassigned']);

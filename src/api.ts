@@ -320,7 +320,7 @@ export async function fetchMetadata(
                     }
                 }
             }
-        } catch (e) {
+        } catch {
             console.log('Informação: As configurações de times/backlogs não puderam ser carregadas (provavelmente devido a CORS ou permissões do PAT). O app usará as configurações padrão.');
         }
 

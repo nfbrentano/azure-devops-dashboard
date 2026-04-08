@@ -9,7 +9,6 @@ import { getGanttDates, filterTreeByDate } from './gantt.ts';
 export function renderTimeline(tree, context) {
     const { 
         ganttPeriod, 
-        currentData, 
         ganttOffset, 
         currentLanguage, 
         translations, 
@@ -191,8 +190,8 @@ function renderRecursive(nodes, depth, parentSiblingsActive, totalMs, viewStart,
                 if (depth > 0) nextActiveSiblings.push(!isLastChild);
                 renderRecursive(item.children, depth + 1, nextActiveSiblings, totalMs, viewStart, context, container);
             }
-        } catch (e) {
-            console.error('Error rendering work item:', item.id, e);
+        } catch {
+            console.error('Error rendering work item:', item.id);
         }
     });
 }

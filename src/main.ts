@@ -28,14 +28,6 @@ import {
 } from './api.ts';
 import { apiCache } from './cache.ts';
 import {
-    renderCharts,
-    renderThroughputChart,
-    renderAgingChart,
-    renderAssigneeChart,
-    renderWIPChart,
-    renderCFDChart,
-    renderPortfolioFilters,
-    renderProgress,
     renderLegends,
     renderTimelineTypeFilters,
     renderTimelineStateFilters

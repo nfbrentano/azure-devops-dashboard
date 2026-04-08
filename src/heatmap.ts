@@ -38,7 +38,7 @@ export function renderActivityHeatmap(heatmapData, currentLanguage, translations
 
     const weeks = [];
     let currentWeek = [];
-    let iterDate = new Date(startDate);
+    const iterDate = new Date(startDate);
 
     while (iterDate <= now) {
         currentWeek.push(new Date(iterDate));
