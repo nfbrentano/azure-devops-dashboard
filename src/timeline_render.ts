@@ -5,6 +5,7 @@ import { getGanttDates, filterTreeByDate } from './gantt.ts';
 /**
  * Timeline specific rendering logic (copied and adapted from gantt.ts to avoid breaking it)
  */
+const isValidDate = (d) => d instanceof Date && !isNaN(d.getTime());
 
 export function renderTimeline(tree, context) {
     const { 
@@ -18,9 +19,13 @@ export function renderTimeline(tree, context) {
     } = context;
 
     const periodValue = ganttPeriod.value;
-    // We use the same getGanttDates as the original Gantt for consistency
-    const { start: viewStart, end: viewEnd } = getGanttDates(periodValue, tree.flatMap(n => [n, ...(n.children || [])]), ganttOffset);
-    const totalMs = viewEnd - viewStart;
+    
+    // Use the flat list of items already available in state to calculate the range
+    const allItems = (context.currentData && context.currentData.items) ? context.currentData.items : [];
+    
+    // Calculate dates based on ALL items fetched
+    const { start: viewStart, end: viewEnd } = getGanttDates(periodValue, allItems, ganttOffset);
+    const totalMs = viewEnd.getTime() - viewStart.getTime();
 
     const periodLabel = document.getElementById(periodLabelId);
     if (periodLabel) {
@@ -39,22 +44,26 @@ export function renderTimeline(tree, context) {
     const filterTreeForTimeline = (nodes) => {
         return nodes.flatMap(node => {
             const fields = node.fields || {};
-            const hasPlannedDates = fields['Microsoft.VSTS.Scheduling.StartDate'] && fields['Microsoft.VSTS.Scheduling.TargetDate'];
+            const startDateRaw = fields['Microsoft.VSTS.Scheduling.StartDate'];
+            const endDateRaw = fields['Microsoft.VSTS.Scheduling.TargetDate'];
             
-            const itemStart = new Date(fields['Microsoft.VSTS.Scheduling.StartDate'] || fields['System.CreatedDate']);
-            const itemEnd = new Date(
-                fields['Microsoft.VSTS.Scheduling.TargetDate'] || fields['Microsoft.VSTS.Common.ClosedDate'] || new Date()
-            );
+            const itemStart = new Date(startDateRaw || fields['System.CreatedDate']);
+            const itemEnd = new Date(endDateRaw || fields['Microsoft.VSTS.Common.ClosedDate'] || new Date());
+            
+            const hasPlannedDates = !!startDateRaw && !!endDateRaw && isValidDate(new Date(startDateRaw)) && isValidDate(new Date(endDateRaw));
 
-            // Match by date range OR if it has NO planned dates (user wants to see items with missing dates)
-            const dateMatch = hasPlannedDates ? (itemStart <= viewEnd && itemEnd >= viewStart) : true;
-            
+            // permissive match: active filters
             const typeLower = (fields['System.WorkItemType'] || '').toLowerCase();
             const typeMatch = activeTypes.length === 0 || activeTypes.map(t => t.toLowerCase()).includes(typeLower);
             const stateMatch = activeStates.length === 0 || activeStates.includes(fields['System.State']);
-
-            const finalMatch = dateMatch && typeMatch && stateMatch;
+            
+            // Include if type and state match. Date range is for Gantt bar rendering, not for inclusion in the list.
+            const finalMatch = typeMatch && stateMatch;
             const filteredChildren = filterTreeForTimeline(node.children || []);
+
+            if (!hasPlannedDates) {
+                console.log(`[Timeline Debug] Item ${node.id} (${fields['System.Title']}) - NO DATES. TypeMatch: ${typeMatch}, StateMatch: ${stateMatch}, FinalMatch: ${finalMatch}`);
+            }
 
             if (finalMatch) {
                 return [{
@@ -125,26 +134,27 @@ export function renderTimeline(tree, context) {
 }
 
 function renderRecursive(nodes, depth, parentSiblingsActive, totalMs, viewStart, context, container) {
-    const { currentLanguage, workItemMetadata, azureConfig } = context;
+    const { currentLanguage, workItemMetadata, azureConfig, translations } = context;
 
     nodes.forEach((item, index) => {
         try {
-            const fields = item.fields;
-            const state = fields['System.State'];
+            const fields = item.fields || {};
+            const state = fields['System.State'] || 'Unknown';
             const iconInfo = getItemIcon(fields['System.WorkItemType'], workItemMetadata);
             const statusInfo = getStatusInfo(state, workItemMetadata);
 
-            const hasPlannedDates = fields['Microsoft.VSTS.Scheduling.StartDate'] && fields['Microsoft.VSTS.Scheduling.TargetDate'];
-            const itemStart = new Date(fields['Microsoft.VSTS.Scheduling.StartDate'] || fields['System.CreatedDate']);
-            const itemEnd = new Date(
-                fields['Microsoft.VSTS.Scheduling.TargetDate'] || fields['Microsoft.VSTS.Common.ClosedDate'] || new Date()
-            );
+            const startDateRaw = fields['Microsoft.VSTS.Scheduling.StartDate'];
+            const endDateRaw = fields['Microsoft.VSTS.Scheduling.TargetDate'];
+            const hasPlannedDates = !!startDateRaw && !!endDateRaw && isValidDate(new Date(startDateRaw)) && isValidDate(new Date(endDateRaw));
+
+            const itemStart = new Date(startDateRaw || fields['System.CreatedDate']);
+            const itemEnd = new Date(endDateRaw || fields['Microsoft.VSTS.Common.ClosedDate'] || new Date());
 
             const left = Math.max(-10, ((itemStart - viewStart) / totalMs) * 100);
             const right = Math.min(110, ((itemEnd - viewStart) / totalMs) * 100);
-            const width = Math.max(0.1, right - left);
+            let width = Math.max(0.1, right - left);
 
-            const isOutside = right <= 0 || left >= 100;
+            const isOutside = hasPlannedDates && (right <= 0 || left >= 100);
             const progress = calculateProgress(item, workItemMetadata);
             const row = document.createElement('div');
             const hasChildren = item.children && item.children.length > 0;
@@ -164,7 +174,7 @@ function renderRecursive(nodes, depth, parentSiblingsActive, totalMs, viewStart,
                 : `<i class="${iconInfo.icon} ${iconInfo.iconClass}" style="flex-shrink: 0; color: ${iconInfo.color}"></i>`;
 
             const missingDatesExclamation = !hasPlannedDates 
-                ? `<i class="ph-fill ph-warning-octagon" style="color: #ef4444; font-size: 1.1rem;" title="${translations[currentLanguage]['label-no-planned-dates']}"></i>`
+                ? `<i class="ph-fill ph-warning-octagon" style="color: #ef4444; font-size: 1.1rem; margin-right: 0.25rem;" title="${translations[currentLanguage]['label-no-planned-dates']}"></i>`
                 : '';
 
             const projectBadge = fields['System.TeamProject'] 
@@ -209,8 +219,8 @@ function renderRecursive(nodes, depth, parentSiblingsActive, totalMs, viewStart,
                     </div>
                     `
                             : !hasPlannedDates 
-                            ? `<div class="no-dates-msg" style="font-size: 0.7rem; color: var(--text-muted); opacity: 0.6; display: flex; align-items: center; gap: 0.25rem; font-style: italic; padding: 0 1rem;">
-                                <i class="ph ph-warning-circle"></i>
+                            ? `<div class="no-dates-msg" style="font-size: 0.75rem; color: #ef4444; opacity: 0.8; display: flex; align-items: center; gap: 0.4rem; font-style: italic; padding: 0 1rem;">
+                                <i class="ph-fill ph-warning-octagon"></i>
                                 ${translations[currentLanguage]['label-no-planned-dates']}
                                </div>`
                             : ''

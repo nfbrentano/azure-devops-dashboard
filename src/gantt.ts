@@ -23,11 +23,16 @@ export function getGanttDates(period, items = [], ganttOffset) {
             if (!isNaN(s) && s < minDate) minDate = s;
             if (!isNaN(e) && e > maxDate) maxDate = e;
         });
-        start = new Date(minDate);
-        end = new Date(maxDate);
-        const diff = end - start;
-        start = new Date(start.getTime() - diff * 0.05);
-        end = new Date(end.getTime() + diff * 0.05);
+        if (minDate.getTime() === maxDate.getTime()) {
+            start = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+            end = new Date(minDate.getFullYear(), minDate.getMonth() + 1, 1);
+        } else {
+            start = new Date(minDate);
+            end = new Date(maxDate);
+            const diff = end.getTime() - start.getTime();
+            start = new Date(start.getTime() - diff * 0.05);
+            end = new Date(end.getTime() + diff * 0.05);
+        }
         return { start, end };
     }
 
