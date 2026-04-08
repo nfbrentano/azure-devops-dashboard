@@ -15,6 +15,9 @@ env:
   NODE_VERSION: '24' 
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
+permissions:
+  contents: read
+
 jobs:
   # ── 0. Versioning ─────────────────────────────────────────────────────────────
   bump_version:
