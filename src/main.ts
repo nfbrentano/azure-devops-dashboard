@@ -14,7 +14,8 @@ import {
     decryptPAT,
     updateLoadingProgress,
     setLoadingStatus,
-    setLoadingStep
+    setLoadingStep,
+    getStatusInfo
 } from './utils.ts';
 import { 
     fetchTimelineData, 
@@ -430,17 +431,21 @@ async function loadTimelineData() {
         
         state.timelineData = { items: nodes, tree: roots };
         
-        // Initial active types and states (all fetched)
+        // Initial active types and states
         state.timelineActiveTypes = [...new Set(nodes.map(n => n.fields['System.WorkItemType']))];
-        state.timelineActiveStates = [...new Set(nodes.map(n => n.fields['System.State']))];
-        
+        const allStates = [...new Set(nodes.map(n => n.fields['System.State']))];
+        state.timelineActiveStates = allStates.filter(s => {
+            const info = getStatusInfo(s, state.workItemMetadata);
+            return info.label !== 'Done' && info.label !== 'Removed';
+        });
+
         // Render filters
         renderTimelineTypeFilters(nodes, state.workItemMetadata, state.currentLanguage, (selectedTypes) => {
             state.timelineActiveTypes = selectedTypes;
             callRenderTimeline();
         });
 
-        renderTimelineStateFilters(nodes, state.workItemMetadata, state.currentLanguage, (selectedStates) => {
+        renderTimelineStateFilters(nodes, state.timelineActiveStates, state.workItemMetadata, state.currentLanguage, (selectedStates) => {
             state.timelineActiveStates = selectedStates;
             callRenderTimeline();
         });

@@ -829,7 +829,7 @@ export function renderTimelineTypeFilters(items, workItemMetadata, currentLangua
     });
 }
 
-export function renderTimelineStateFilters(items, workItemMetadata, currentLanguage, onFilterChange) {
+export function renderTimelineStateFilters(items, activeStates, workItemMetadata, currentLanguage, onFilterChange) {
     const container = document.getElementById('timeline-state-filters');
     if (!container) return;
 
@@ -848,8 +848,10 @@ export function renderTimelineStateFilters(items, workItemMetadata, currentLangu
         const label = document.createElement('label');
         label.className = 'filter-item';
 
+        const isChecked = activeStates.includes(stateName);
+
         label.innerHTML = `
-            <input type="checkbox" data-timeline-state="${stateName}" checked>
+            <input type="checkbox" data-timeline-state="${stateName}" ${isChecked ? 'checked' : ''}>
             <div class="status-dot" style="background: ${statusInfo.color}; width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px;"></div>
             <span>${stateName}</span>
         `;
