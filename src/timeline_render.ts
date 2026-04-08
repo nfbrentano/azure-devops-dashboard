@@ -36,16 +36,40 @@ export function renderTimeline(tree, context) {
     const activeTypes = context.activeTypes || [];
     const activeStates = context.activeStates || [];
     
-    // Timeline now uses both type and state filters
-    const displayTree = filterTreeByDate(
-        tree,
-        viewStart,
-        viewEnd,
-        ['Backlog', 'InProgress', 'Completed', 'Done'], // default categories as fallback
-        activeTypes,
-        workItemMetadata,
-        activeStates
-    );
+    const filterTreeForTimeline = (nodes) => {
+        return nodes.flatMap(node => {
+            const fields = node.fields || {};
+            const hasPlannedDates = fields['Microsoft.VSTS.Scheduling.StartDate'] && fields['Microsoft.VSTS.Scheduling.TargetDate'];
+            
+            const itemStart = new Date(fields['Microsoft.VSTS.Scheduling.StartDate'] || fields['System.CreatedDate']);
+            const itemEnd = new Date(
+                fields['Microsoft.VSTS.Scheduling.TargetDate'] || fields['Microsoft.VSTS.Common.ClosedDate'] || new Date()
+            );
+
+            // Match by date range OR if it has NO planned dates (user wants to see items with missing dates)
+            const dateMatch = hasPlannedDates ? (itemStart <= viewEnd && itemEnd >= viewStart) : true;
+            
+            const typeLower = (fields['System.WorkItemType'] || '').toLowerCase();
+            const typeMatch = activeTypes.length === 0 || activeTypes.map(t => t.toLowerCase()).includes(typeLower);
+            const stateMatch = activeStates.length === 0 || activeStates.includes(fields['System.State']);
+
+            const finalMatch = dateMatch && typeMatch && stateMatch;
+            const filteredChildren = filterTreeForTimeline(node.children || []);
+
+            if (finalMatch) {
+                return [{
+                    ...node,
+                    children: filteredChildren,
+                    allChildren: node.children
+                }];
+            } else if (filteredChildren.length > 0) {
+                return filteredChildren;
+            }
+            return [];
+        });
+    };
+
+    const displayTree = filterTreeForTimeline(tree);
 
     // Sort by Start Date
     const getStartDate = (n) => {
@@ -135,10 +159,13 @@ function renderRecursive(nodes, depth, parentSiblingsActive, totalMs, viewStart,
                 treeLinesHtml += `<div class="tree-line connector"></div>`;
             }
 
-            let iconHtml = `<i class="${iconInfo.icon} ${iconInfo.iconClass}" style="flex-shrink: 0; color: ${iconInfo.color}"></i>`;
-            if (iconInfo.iconData) {
-                iconHtml = `<img src="${iconInfo.iconData}" style="width: 16px; height: 16px; flex-shrink: 0;" alt="">`;
-            }
+            const iconHtml = iconInfo.iconData 
+                ? `<img src="${iconInfo.iconData}" style="width: 16px; height: 16px; flex-shrink: 0;" alt="">`
+                : `<i class="${iconInfo.icon} ${iconInfo.iconClass}" style="flex-shrink: 0; color: ${iconInfo.color}"></i>`;
+
+            const missingDatesExclamation = !hasPlannedDates 
+                ? `<i class="ph-fill ph-warning-octagon" style="color: #ef4444; font-size: 1.1rem;" title="${translations[currentLanguage]['label-no-planned-dates']}"></i>`
+                : '';
 
             const projectBadge = fields['System.TeamProject'] 
                 ? `<span class="project-tag" style="background: rgba(100, 116, 139, 0.1); padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-right: 0.5rem; color: var(--text-muted); border: 1px solid var(--border-glass);">${fields['System.TeamProject']}</span>`
@@ -152,6 +179,7 @@ function renderRecursive(nodes, depth, parentSiblingsActive, totalMs, viewStart,
                     ${treeLinesHtml}
                     <div style="display: flex; flex-direction: column; overflow: hidden; flex: 1;">
                     <div style="display: flex; align-items: center; gap: 0.4rem; overflow: hidden;">
+                            ${missingDatesExclamation}
                             <a href="${getWorkItemUrl(azureConfig, item.id, fields['System.TeamProject'])}" target="_blank" class="item-link" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                                 ${iconHtml}
                                 <span style="overflow: hidden; text-overflow: ellipsis;">${fields['System.Title']}</span>
