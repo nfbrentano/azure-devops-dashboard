@@ -440,7 +440,7 @@ async function loadTimelineData() {
         });
 
         // Render filters
-        renderTimelineTypeFilters(nodes, state.workItemMetadata, state.currentLanguage, (selectedTypes) => {
+        renderTimelineTypeFilters(nodes, state.timelineActiveTypes, state.workItemMetadata, state.currentLanguage, (selectedTypes) => {
             state.timelineActiveTypes = selectedTypes;
             callRenderTimeline();
         });

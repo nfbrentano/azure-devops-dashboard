@@ -783,7 +783,7 @@ export function renderBottlenecksChart(bottleneckData, charts, currentTheme, cur
         }
     });
 }
-export function renderTimelineTypeFilters(items, workItemMetadata, currentLanguage, onFilterChange) {
+export function renderTimelineTypeFilters(items, activeTypes, workItemMetadata, currentLanguage, onFilterChange) {
     const container = document.getElementById('timeline-type-legend');
     if (!container) return;
 
@@ -811,8 +811,10 @@ export function renderTimelineTypeFilters(items, workItemMetadata, currentLangua
             iconHtml = `<img src="${iconInfo.iconData}" style="width: 16px; height: 16px;" alt="">`;
         }
 
+        const isChecked = activeTypes.includes(typeName);
+
         label.innerHTML = `
-            <input type="checkbox" data-timeline-type="${typeName}" checked>
+            <input type="checkbox" data-timeline-type="${typeName}" ${isChecked ? 'checked' : ''}>
             ${iconHtml} <span>${typeMeta.name}</span>
         `;
 
