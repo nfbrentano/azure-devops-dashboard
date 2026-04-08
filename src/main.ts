@@ -96,6 +96,11 @@ async function initApp() {
 
     updateLogos();
 
+    const versionEl = document.getElementById('app-version');
+    if (versionEl && typeof __APP_VERSION__ !== 'undefined') {
+        versionEl.textContent = `v${__APP_VERSION__}`;
+    }
+
     if (state.azureConfig?.org && state.azureConfig?.project && state.azureConfig?.pat) {
         if (state.azureConfig.pat.includes(':')) {
             switchTab('unlock', elements);

@@ -574,7 +574,21 @@ h2 { margin: 0 0 1rem 0; }
     margin: 2rem auto;
     padding: 2.5rem;
     text-align: center;
+    position: relative;
+    padding-bottom: 3.5rem; /* Space for footer */
 }
+
+.version-footer {
+    position: absolute;
+    bottom: 1rem;
+    left: 0;
+    width: 100%;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    opacity: 0.6;
+    font-weight: 500;
+}
+
 
 .hidden { display: none !important; }
 

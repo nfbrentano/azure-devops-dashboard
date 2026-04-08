@@ -16,12 +16,50 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 jobs:
+  # ── 0. Versioning ─────────────────────────────────────────────────────────────
+  bump_version:
+    name: 🔢 Bump Version
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, 'chore(release)')
+    permissions:
+      contents: write
+    outputs:
+      new_version: ${{ steps.get_version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+      - name: Bump version
+        id: get_version
+        run: |
+          npm version patch -m "chore(release): v%s"
+          echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+          git push origin main --follow-tags
+
   # ── 1. Setup & Checks ────────────────────────────────────────────────────────
   setup:
     name: 📦 Setup & Checks
     runs-on: ubuntu-latest
+    # If it's a push to main, wait for version bump. Otherwise run normally.
+    needs: [bump_version]
+    if: always() && (needs.bump_version.result == 'success' || needs.bump_version.result == 'skipped')
     steps:
       - uses: actions/checkout@v6
+        with:
+          # If version was bumped, we need the latest commit
+          ref: ${{ github.ref }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -45,6 +83,8 @@ jobs:
     needs: setup
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.ref }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -75,6 +115,8 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.ref }}
 
       - name: Download build artifact
         uses: actions/download-artifact@v5
