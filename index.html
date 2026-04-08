@@ -8,8 +8,8 @@
   <title>Azure DevOps Metrics</title>
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <script type="module" crossorigin src="/azure-devops-dashboard/assets/index-fb7CcyA3.js"></script>
-  <link rel="stylesheet" crossorigin href="/azure-devops-dashboard/assets/index-CuuIz_pk.css">
+  <script type="module" crossorigin src="/azure-devops-dashboard/assets/index-DHmDsXF3.js"></script>
+  <link rel="stylesheet" crossorigin href="/azure-devops-dashboard/assets/index-wWB4Gfb0.css">
 </head>
 
 <body>
@@ -378,8 +378,20 @@
             </div>
           </div>
           
-          <div id="timeline-type-legend" class="legend-container" style="margin: 0 1.5rem 1.5rem 1.5rem; justify-content: flex-start;">
+          <div class="filter-group-label" style="margin: 0 1.5rem 0.5rem 1.5rem; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem;">
+            <i class="ph ph-stack" style="font-size: 0.9rem;"></i>
+            <span data-i18n="timeline-filter-types">Work Item Types</span>
+          </div>
+          <div id="timeline-type-legend" class="legend-container" style="margin: 0 1.5rem 1rem 1.5rem; justify-content: flex-start; gap: 0.75rem;">
             <!-- Type filters will be rendered here -->
+          </div>
+          
+          <div class="filter-group-label" style="margin: 0 1.5rem 0.5rem 1.5rem; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem;">
+            <i class="ph ph-activity" style="font-size: 0.9rem;"></i>
+            <span data-i18n="timeline-filter-states">Work Item States</span>
+          </div>
+          <div id="timeline-state-filters" class="legend-container" style="margin: 0 1.5rem 1.5rem 1.5rem; justify-content: flex-start; gap: 0.75rem;">
+            <!-- State filters will be rendered here -->
           </div>
           
           <div id="timeline-gantt-container" style="overflow-x: auto; padding-bottom: 1rem; position: relative; min-height: 400px;">
@@ -465,7 +477,7 @@
         <div class="card glass" style="grid-column: 1 / -1; margin-top: 1rem;">
           <div class="card-title"
             style="justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
-            <div style="display: flex; align-items: center; gap: 0.75rem;" data-i18n="gantt-section-title">
+          <div style="display: flex; align-items: center; gap: 0.75rem;" data-i18n="timeline-gantt-title">
               <i class="ph-bold ph-projector-screen-chart"></i>
               Hierarchical Gantt
             </div>
