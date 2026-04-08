@@ -19,11 +19,12 @@ async function drawWatermark(canvas, isDark) {
     newCanvas.height = canvas.height + padding;
     const ctx = newCanvas.getContext('2d');
 
-    ctx.fillStyle = isDark ? '#1e293b' : '#ffffff';
+    // Use solid theme colors
+    ctx.fillStyle = isDark ? '#0f172a' : '#f8fafc';
     ctx.fillRect(0, 0, newCanvas.width, newCanvas.height);
     ctx.drawImage(canvas, 0, padding);
 
-    const textColor = isDark ? '#e2e8f0' : '#334155';
+    const textColor = isDark ? '#e2e8f0' : '#1e293b';
 
     if (companyLogo) {
         try {
@@ -35,32 +36,36 @@ async function drawWatermark(canvas, isDark) {
                 img.src = companyLogo;
             });
             const aspect = img.width / img.height;
-            const h = 50; // Increased from 30
+            const h = 40; 
             const w = h * aspect;
             const logoY = (padding - h) / 2;
-            ctx.drawImage(img, 20, logoY, w, h);
+            
+            // Draw logo with smooth scaling
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(img, 30, logoY, w, h);
 
             if (companyName) {
                 ctx.fillStyle = textColor;
-                ctx.font = 'bold 20px sans-serif'; // Slightly larger font too
+                ctx.font = '600 20px "Inter", sans-serif'; 
                 ctx.textBaseline = 'middle';
                 const textY = padding / 2;
-                ctx.fillText(companyName, 20 + w + 20, textY);
+                ctx.fillText(companyName, 30 + w + 15, textY);
             }
         } catch (e) {
             console.warn('Failed to load watermark logo', e);
             if (companyName) {
                 ctx.fillStyle = textColor;
-                ctx.font = 'bold 20px sans-serif';
+                ctx.font = '600 20px "Inter", sans-serif';
                 ctx.textBaseline = 'middle';
-                ctx.fillText(companyName, 20, padding / 2);
+                ctx.fillText(companyName, 30, padding / 2);
             }
         }
     } else if (companyName) {
         ctx.fillStyle = textColor;
-        ctx.font = 'bold 20px sans-serif';
+        ctx.font = '600 20px "Inter", sans-serif';
         ctx.textBaseline = 'middle';
-        ctx.fillText(companyName, 20, padding / 2);
+        ctx.fillText(companyName, 30, padding / 2);
     }
 
     return newCanvas;
@@ -161,60 +166,47 @@ export function initEvents(elements, handlers) {
         const exportBtn = e.target.closest('.export-btn');
         if (exportBtn) {
             const targetId = exportBtn.getAttribute('data-target');
-            const element = document.getElementById(targetId);
+            let element = document.getElementById(targetId);
 
             if (!element) return;
 
+            // Better context: If target is inside a card, export the card instead
+            const card = element.closest('.card');
+            const targetToCapture = card || element;
+
             const isDark = state.currentTheme === 'dark';
-            const bgColor = isDark ? '#1e293b' : '#ffffff';
+            const bgColor = isDark ? '#0f172a' : '#f8fafc'; // Matches --bg-color
 
             const icon = exportBtn.querySelector('i');
             const originalClass = icon.className;
             icon.className = 'ph-bold ph-spinner ph-spin';
             exportBtn.disabled = true;
 
+            // Add exporting class to cleanup UI
+            targetToCapture.classList.add('exporting');
+
             try {
-                if (element.tagName === 'CANVAS') {
-                    const canvas = element;
-                    const tempCanvas = document.createElement('canvas');
-                    tempCanvas.width = canvas.width;
-                    tempCanvas.height = canvas.height;
-                    const ctx = tempCanvas.getContext('2d');
+                // If it's a simple canvas, we still want the card if possible
+                // But specifically for Chart.js, we might need a small delay for CSS to apply
+                await new Promise(r => setTimeout(r, 100));
 
-                    ctx.fillStyle = bgColor;
-                    ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-                    ctx.drawImage(canvas, 0, 0);
+                const canvas = await window.html2canvas(targetToCapture, {
+                    backgroundColor: bgColor,
+                    scale: window.devicePixelRatio || 2,
+                    logging: false,
+                    useCORS: true,
+                    allowTaint: true
+                });
 
-                    const withWatermark = await drawWatermark(tempCanvas, isDark);
-                    const link = document.createElement('a');
-                    link.download = `${targetId}_export.png`;
-                    link.href = withWatermark.toDataURL('image/png');
-                    link.click();
-                } else {
-                    // Export DOM Element (Gantt, Heatmap)
-                    const originalOverflow = element.style.overflowX;
-                    const originalMaxHeight = element.style.maxHeight;
-                    element.style.overflowX = 'visible';
-                    element.style.maxHeight = 'none';
-
-                    const canvas = await window.html2canvas(element, {
-                        backgroundColor: bgColor,
-                        scale: window.devicePixelRatio || 2,
-                        logging: false
-                    });
-
-                    element.style.overflowX = originalOverflow;
-                    element.style.maxHeight = originalMaxHeight;
-
-                    const withWatermark = await drawWatermark(canvas, isDark);
-                    const link = document.createElement('a');
-                    link.download = `${targetId}_export.png`;
-                    link.href = withWatermark.toDataURL('image/png');
-                    link.click();
-                }
+                const withWatermark = await drawWatermark(canvas, isDark);
+                const link = document.createElement('a');
+                link.download = `${targetId}_export.png`;
+                link.href = withWatermark.toDataURL('image/png');
+                link.click();
             } catch (err) {
                 console.error('Export failed', err);
             } finally {
+                targetToCapture.classList.remove('exporting');
                 icon.className = originalClass;
                 exportBtn.disabled = false;
             }
