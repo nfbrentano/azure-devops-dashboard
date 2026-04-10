@@ -31,6 +31,6 @@
   "dependencies": {
     "@phosphor-icons/web": "^2.1.2",
     "chart.js": "^4.5.1",
-    "lucide": "^1.7.0"
+    "lucide": "^1.8.0"
   }
 }
