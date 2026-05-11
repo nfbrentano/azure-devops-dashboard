@@ -7,9 +7,10 @@ This guide will help you find the necessary credentials to connect your Azure De
 ## 🇧🇷 Português
 
 ### 1. Obtendo seu Personal Access Token (PAT)
+
 O PAT é a "senha" que permite que o dashboard acesse seus dados de forma segura.
 
-1.  Acesse seu [Azure DevOps](https://dev.azure.com/).
+1.  Acesse seu [Azure DevOps](https://dev.azure.com/pixforce2).
 2.  No canto superior direito, clique no ícone de **User Settings** (Configurações do Usuário) ao lado da sua foto.
 3.  Selecione **Personal Access Tokens**.
 4.  Clique em **+ New Token**.
@@ -24,6 +25,7 @@ O PAT é a "senha" que permite que o dashboard acesse seus dados de forma segura
 7.  **IMPORTANTE**: Copie o token agora! Ele não será exibido novamente.
 
 ### 2. Identificando sua Organização e Projeto
+
 Você pode encontrar esses dados diretamente na URL do seu navegador quando estiver visualizando seu projeto no Azure DevOps.
 
 A estrutura da URL é: `https://dev.azure.com/{Organização}/{Projeto}`
@@ -31,7 +33,8 @@ A estrutura da URL é: `https://dev.azure.com/{Organização}/{Projeto}`
 - **Organização**: É o primeiro nome após `dev.azure.com/`.
 - **Projeto**: É o nome que vem logo após a organização.
 
-*Exemplo:* `https://dev.azure.com/acme-corp/portal-v3`
+_Exemplo:_ `https://dev.azure.com/acme-corp/portal-v3`
+
 - Organização: `acme-corp`
 - Projeto: `portal-v3`
 
@@ -40,9 +43,10 @@ A estrutura da URL é: `https://dev.azure.com/{Organização}/{Projeto}`
 ## 🇺🇸 English
 
 ### 1. Getting your Personal Access Token (PAT)
+
 The PAT is the "password" that allows the dashboard to access your data securely.
 
-1.  Log in to your [Azure DevOps](https://dev.azure.com/).
+1.  Log in to your [Azure DevOps](https://dev.azure.com/pixforce2).
 2.  In the top right corner, click the **User Settings** icon next to your profile picture.
 3.  Select **Personal Access Tokens**.
 4.  Click **+ New Token**.
@@ -57,6 +61,7 @@ The PAT is the "password" that allows the dashboard to access your data securely
 7.  **IMPORTANT**: Copy the token now! It will not be shown again.
 
 ### 2. Identifying your Organization and Project
+
 You can find these details directly in your browser's URL when viewing your project in Azure DevOps.
 
 The URL structure is: `https://dev.azure.com/{Organization}/{Project}`
@@ -64,11 +69,13 @@ The URL structure is: `https://dev.azure.com/{Organization}/{Project}`
 - **Organization**: The first name after `dev.azure.com/`.
 - **Project**: The name that follows the organization.
 
-*Example:* `https://dev.azure.com/acme-corp/portal-v3`
+_Example:_ `https://dev.azure.com/acme-corp/portal-v3`
+
 - Organization: `acme-corp`
 - Project: `portal-v3`
 
 ---
 
 ### 🔒 Security Note
+
 This dashboard is a **static application**. Your PAT is encrypted in your browser's memory and sent directly to Azure DevOps APIs. It is never stored on any server other than your own browser's local storage (if you choose to save it).
