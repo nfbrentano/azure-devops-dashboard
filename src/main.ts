@@ -253,6 +253,10 @@ async function showDashboard(initialQueries = null) {
     });
 
     const queries = initialQueries || (await fetchQueries(state.azureConfig));
+    if (!queries) {
+        switchTab('setup', elements);
+        return;
+    }
     populateQueries(queries, elements.querySelector, state.currentLanguage);
 
     await metadataPromise;

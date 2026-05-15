@@ -126,6 +126,7 @@ export function populateQueries(queries, querySelector, currentLanguage) {
     const currentVal = querySelector.value;
     const lang = translations[currentLanguage];
     querySelector.innerHTML = `<option value="">${lang['query-selector-placeholder']}</option>`;
+    if (!queries) return;
     queries
         .sort((a, b) => a.name.localeCompare(b.name))
         .forEach((q) => {
