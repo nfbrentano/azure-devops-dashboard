@@ -18,6 +18,9 @@ export function renderCharts(
 ) {
     if (charts.comparison) charts.comparison.destroy();
 
+    const canvas = document.getElementById('comparisonChart');
+    if (!canvas) return;
+
     const isLight = currentTheme === 'light';
     const gridColor = isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)';
     const textColor = isLight ? '#64748b' : '#94a3b8';
@@ -58,7 +61,7 @@ export function renderCharts(
         }
     };
 
-    charts.comparison = new Chart(document.getElementById('comparisonChart'), {
+    charts.comparison = new Chart(canvas, {
         type: 'line',
         data: {
             labels: labels,
@@ -92,11 +95,14 @@ export function renderCharts(
 export function renderThroughputChart(throughputData, charts, currentTheme, currentLanguage, translations) {
     if (charts.throughput) charts.throughput.destroy();
 
+    const canvas = document.getElementById('throughputChart');
+    if (!canvas) return;
+
     const isLight = currentTheme === 'light';
     const gridColor = isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)';
     const textColor = isLight ? '#64748b' : '#94a3b8';
 
-    charts.throughput = new Chart(document.getElementById('throughputChart'), {
+    charts.throughput = new Chart(canvas, {
         type: 'bar',
         data: {
             labels: throughputData.map((d) => d.label),
