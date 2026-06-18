@@ -1,9 +1,12 @@
-// @ts-nocheck
 /**
  * Activity Heatmap rendering logic
  */
 
-export function renderActivityHeatmap(heatmapData, currentLanguage, translations) {
+export function renderActivityHeatmap(
+    heatmapData: Record<string, number> | null,
+    currentLanguage: string,
+    translations: Record<string, Record<string, string>>
+) {
     const container = document.getElementById('heatmap-container');
     if (!container || !heatmapData) return;
 
@@ -36,8 +39,8 @@ export function renderActivityHeatmap(heatmapData, currentLanguage, translations
     startDate.setDate(startDate.getDate() - startDate.getDay());
     startDate.setHours(0, 0, 0, 0);
 
-    const weeks = [];
-    let currentWeek = [];
+    const weeks: Date[][] = [];
+    let currentWeek: Date[] = [];
     const iterDate = new Date(startDate);
 
     while (iterDate <= now) {

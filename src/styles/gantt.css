@@ -1,0 +1,396 @@
+/* Gantt Chart Layout */
+.gantt-header {
+    display: flex;
+    margin-bottom: 0.5rem;
+    border-bottom: 2px solid var(--border-glass);
+    padding-bottom: 0.5rem;
+    min-width: 800px;
+}
+
+.gantt-row {
+    display: flex;
+    align-items: stretch; /* Modified to allow lines to stretch */
+    gap: 1rem;
+    min-width: 800px;
+    border-bottom: 1px solid var(--border-glass);
+    position: relative;
+    height: 36px; /* Fixed height for consistent lines */
+}
+
+.gantt-label {
+    width: var(--gantt-label-width);
+    min-width: 200px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 500;
+    transition: font-weight 0.2s;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.gantt-row.parent .gantt-label {
+    font-weight: 800;
+    color: var(--text-main);
+}
+
+.gantt-track {
+    flex-grow: 1;
+    height: 20px;
+    position: relative;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 4px;
+    margin: auto 0;
+}
+[data-theme='light'] .gantt-track {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.gantt-timeline {
+    display: flex;
+    flex-grow: 1;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+.timeline-milestone {
+    flex: 1;
+    text-align: center;
+    border-left: 1px solid var(--border-glass);
+}
+
+.gantt-bar {
+    position: absolute;
+    height: 100%;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    padding-left: 0.5rem;
+    font-size: 0.65rem;
+    font-weight: bold;
+    color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.today-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #f43f5e;
+    z-index: 10;
+    pointer-events: none;
+}
+
+/* Status Classes */
+.bg-backlog {
+    background: var(--status-backlog);
+}
+.bg-inprogress {
+    background: var(--status-inprogress);
+}
+.bg-done {
+    background: var(--status-done);
+}
+.bg-removed {
+    background: var(--status-removed);
+    color: #0f172a !important;
+}
+[data-theme='light'] .bg-removed {
+    color: #f8fafc !important;
+}
+
+/* Legend Styles */
+.legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-glass);
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.05);
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.3rem;
+}
+
+.legend-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.legend-group-title {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+}
+
+.legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+}
+
+.item-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    margin-right: 0.5rem;
+    font-size: 1rem;
+}
+
+.icon-epic {
+    color: var(--color-epic);
+}
+.icon-feature {
+    color: var(--color-feature);
+}
+.icon-userstory {
+    color: var(--color-userstory);
+}
+.icon-task {
+    color: var(--color-task);
+}
+.icon-bug {
+    color: var(--color-bug);
+}
+
+.missing-dates-warning {
+    color: #f59e0b; /* Amber 500 */
+    font-size: 1.1rem;
+    margin-right: 0.25rem;
+    cursor: help;
+    flex-shrink: 0;
+    filter: drop-shadow(0 0 2px rgba(245, 158, 11, 0.3));
+}
+
+.item-link {
+    text-decoration: none;
+    color: inherit;
+    transition:
+        color 0.2s,
+        opacity 0.2s;
+    cursor: pointer;
+}
+
+.item-link:hover {
+    color: var(--primary);
+    text-decoration: underline;
+}
+
+.gantt-label .item-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    overflow: hidden;
+    width: 100%;
+}
+
+/* Tree Lines refined */
+.tree-line {
+    width: 24px;
+    height: 100%;
+    flex-shrink: 0;
+    position: relative;
+}
+
+/* Status Dot and Info */
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    min-width: 100px;
+    margin-left: auto;
+    padding: 0 0.5rem;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.tree-line.connector::before {
+    content: '';
+    position: absolute;
+    left: 12px;
+    top: 0;
+    bottom: 50%;
+    width: 1.5px;
+    background: var(--border-glass);
+}
+
+.tree-line.connector::after {
+    content: '';
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    width: 12px;
+    height: 1.5px;
+    background: var(--border-glass);
+}
+
+/* For continuous vertical lines */
+.tree-line.spacer.active::before {
+    content: '';
+    position: absolute;
+    left: 12px;
+    top: 0;
+    bottom: 0;
+    width: 1.5px;
+    background: var(--border-glass);
+}
+
+/* Specific logic for last child needs JS class or clever CSS */
+.gantt-row.last-child .tree-line.connector::before {
+    bottom: 50%; /* Stop at middle */
+}
+
+/* Gantt Status Filters */
+.gantt-status-filters {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.legend-container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.filter-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0.2rem 0.5rem;
+    border-radius: 0.4rem;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid transparent;
+}
+
+.filter-item:hover {
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--border-glass);
+}
+
+.filter-item input[type='checkbox'] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border: 1.5px solid var(--text-muted);
+    border-radius: 3px;
+    background: transparent;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+    margin: 0;
+}
+
+.filter-item input[type='checkbox']:checked {
+    background: var(--primary);
+    border-color: var(--primary);
+}
+
+.filter-item input[type='checkbox']:checked::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    width: 3px;
+    height: 6px;
+    border: solid white;
+    border-width: 0 1.5px 1.5px 0;
+    transform: rotate(45deg);
+}
+
+.filter-item span {
+    user-select: none;
+}
+
+.gantt-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.gantt-period-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--bg-input);
+    border-radius: 0.5rem;
+    border: 1px solid var(--border-glass);
+    padding: 0.25rem;
+    flex-shrink: 0;
+}
+
+.gantt-period-nav button {
+    padding: 0.4rem;
+    border-radius: 0.4rem;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+}
+
+.gantt-period-nav span {
+    font-weight: 600;
+    font-size: 0.85rem;
+    min-width: 180px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.gantt-nav-divider {
+    width: 1px;
+    height: 24px;
+    background: var(--border-glass);
+    margin: 0 0.25rem;
+}
+
+.gantt-period-select {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    width: auto;
+}
+
+.gantt-chart-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}

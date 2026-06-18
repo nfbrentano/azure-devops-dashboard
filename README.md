@@ -64,7 +64,7 @@ We welcome contributions! To maintain a high quality of code and UI:
 
 1.  **Fork the repository** and create your branch from `main`.
 2.  **Lint your code**: Run `npm run lint` before committing.
-3.  **Add Tests**: If you add logic, add a corresponding test in `src/*.test.js`.
+3.  **Add Tests**: If you add logic, add a corresponding test in `src/*.test.ts`.
 4.  **Run Tests**: Ensure `npm test` passes completely.
 5.  **Submit a PR**: Describe your changes clearly and link any related issues.
 

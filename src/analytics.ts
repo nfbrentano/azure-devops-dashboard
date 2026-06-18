@@ -1,10 +1,11 @@
-// @ts-nocheck
 /**
  * Analytics and Data Processing for Azure DevOps Dashboard
  */
 import { state } from './state.ts';
+import type { WorkItemNode, WorkItemMetadata } from './types.ts';
 import { translations } from './translations.ts';
 import { getItemIcon, getStatusInfo } from './utils.ts';
+import { logger } from './logger.ts';
 import {
     renderCharts,
     renderThroughputChart,
@@ -17,140 +18,145 @@ import {
     renderProgress,
     renderLegends,
     renderGlobalTypeFilters
-} from './charts.ts';
+} from './charts/index.ts';
 import { renderActivityHeatmap } from './heatmap.ts';
 
-export function processAnalytics(items, tree, options = {}) {
-    const { currentTheme, currentLanguage, workItemMetadata, charts, azureConfig, progressList, callRenderGantt } =
-        options;
+export interface ComputedMetrics {
+    filteredItems: WorkItemNode[];
+    leadTimes: string[];
+    cycleTimes: (string | number)[];
+    labels: string[];
+    agingData: any[];
+    assigneeWorkload: Record<string, number>;
+    boardColumnWIP: Record<string, number>;
+    kpis: {
+        total: number;
+        backlog: number;
+        inprogress: number;
+        doneRemoved: number;
+    };
+    cfdSeries: any[];
+    heatmapData: Record<string, number>;
+    throughputData: any[];
+    bottleneckData: any[] | null;
+}
 
-    // Global Type Filters Initialization
-    if (!state.globalActiveTypes) {
-        state.globalActiveTypes = [];
-        const seenTypes = new Set();
-        items.forEach((item) => {
-            const t = item.fields['System.WorkItemType'];
-            if (t && !seenTypes.has(t)) {
-                seenTypes.add(t);
-                state.globalActiveTypes.push(t);
-            }
-        });
-        state.globalActiveTypes.sort();
-    }
-
-    renderGlobalTypeFilters(state.globalActiveTypes, items, workItemMetadata, currentLanguage, (newActiveTypes) => {
-        state.globalActiveTypes = newActiveTypes;
-        processAnalytics(state.currentData.items, state.currentData.tree, options);
-    });
-
-    const filteredItems = items.filter((item) => {
-        const type = item.fields['System.WorkItemType'];
-        return state.globalActiveTypes.includes(type);
-    });
-
-    const leadTimes = [],
-        cycleTimes = [],
-        labels = [],
-        agingData = [];
-    const assigneeWorkload = {};
-    const boardColumnWIP = {};
+export function computeMetrics(
+    filteredItems: WorkItemNode[],
+    revisionsData: Record<number, any[]> | undefined,
+    workItemMetadata: WorkItemMetadata,
+    currentLanguage: string
+): ComputedMetrics {
+    const leadTimes: string[] = [],
+        cycleTimes: (string | number)[] = [],
+        labels: string[] = [],
+        agingData: any[] = [];
+    const assigneeWorkload: Record<string, number> = {};
+    const boardColumnWIP: Record<string, number> = {};
     const kpis = { total: filteredItems.length, backlog: 0, inprogress: 0, doneRemoved: 0 };
     const now = new Date();
 
     filteredItems.forEach((item) => {
         const f = item.fields;
-        const createdDate = new Date(f['System.CreatedDate']);
+        const createdDate = new Date(f['System.CreatedDate'] as string);
         const activatedDate = f['Microsoft.VSTS.Common.ActivatedDate']
-            ? new Date(f['Microsoft.VSTS.Common.ActivatedDate'])
+            ? new Date(f['Microsoft.VSTS.Common.ActivatedDate'] as string)
             : null;
         const closedDateStr = f['Microsoft.VSTS.Common.ClosedDate'] || f['System.ClosedDate'];
-        const closedDate = closedDateStr ? new Date(closedDateStr) : null;
-        const stateName = f['System.State'];
-        const changedDate = new Date(f['System.ChangedDate']);
+        const closedDate = closedDateStr ? new Date(closedDateStr as string) : null;
+        const stateName = f['System.State'] as string;
+        const changedDate = new Date(f['System.ChangedDate'] as string);
 
         const statusInfo = getStatusInfo(stateName, workItemMetadata);
         if (statusInfo.label === 'Backlog') kpis.backlog++;
         else if (statusInfo.label === 'In Progress') kpis.inprogress++;
         else if (statusInfo.label === 'Done' || statusInfo.label === 'Removed') kpis.doneRemoved++;
 
-        if (closedDate && !isNaN(closedDate)) {
-            leadTimes.push(((closedDate - createdDate) / (1000 * 60 * 60 * 24)).toFixed(1));
-            cycleTimes.push(activatedDate ? ((closedDate - activatedDate) / (1000 * 60 * 60 * 24)).toFixed(1) : 0);
+        if (closedDate && !isNaN(closedDate.getTime())) {
+            leadTimes.push(((closedDate.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24)).toFixed(1));
+            cycleTimes.push(activatedDate ? ((closedDate.getTime() - activatedDate.getTime()) / (1000 * 60 * 60 * 24)).toFixed(1) : 0);
             labels.push(`ID ${item.id}`);
         }
 
-        const type = f['System.WorkItemType']?.toLowerCase();
+        const type = (f['System.WorkItemType'] as string)?.toLowerCase();
         const iconInfo = getItemIcon(type, workItemMetadata);
 
-        if (statusInfo.label === 'In Progress' && !iconInfo.isPortfolio && !isNaN(changedDate)) {
+        if (statusInfo.label === 'In Progress' && !iconInfo.isPortfolio && !isNaN(changedDate.getTime())) {
             agingData.push({
                 id: item.id,
-                title: f['System.Title'] || translations[currentLanguage]['label-no-title'],
-                age: Math.max(0, Math.floor((now - changedDate) / (1000 * 60 * 60 * 24))),
+                title: (f['System.Title'] as string) || translations[currentLanguage]['label-no-title'],
+                age: Math.max(0, Math.floor((now.getTime() - changedDate.getTime()) / (1000 * 60 * 60 * 24))),
                 state: stateName
             });
         }
 
         if (!iconInfo.isPortfolio) {
-            const assignee = f['System.AssignedTo'];
+            const assignee = f['System.AssignedTo'] as any;
             const name =
                 assignee?.displayName ||
                 assignee?.uniqueName ||
                 (typeof assignee === 'string' ? assignee : translations[currentLanguage]['label-unassigned']);
             assigneeWorkload[name] = (assigneeWorkload[name] || 0) + 1;
 
-            const boardColumn = f['System.BoardColumn'] || f['System.State'];
+            const boardColumn = (f['System.BoardColumn'] as string) || (f['System.State'] as string);
             boardColumnWIP[boardColumn] = (boardColumnWIP[boardColumn] || 0) + 1;
         }
     });
 
-    // CFD and Heatmap processing
-    const cfdSeries = [];
+    // Pré-computa os dados relevantes dos itens para o CFD para evitar instanciar datas e rodar checks redundantes no loop
+    const cfdItems = filteredItems
+        .filter((item) => !getItemIcon(item.fields['System.WorkItemType'] as string, workItemMetadata).isPortfolio)
+        .map((item) => {
+            const f = item.fields;
+            const createdVal = f['System.CreatedDate'];
+            const activatedVal = f['Microsoft.VSTS.Common.ActivatedDate'];
+            const closedVal = f['Microsoft.VSTS.Common.ClosedDate'];
+
+            return {
+                createdTime: typeof createdVal === 'string' ? new Date(createdVal).getTime() : 0,
+                activatedTime: typeof activatedVal === 'string' ? new Date(activatedVal).getTime() : null,
+                closedTime: typeof closedVal === 'string' ? new Date(closedVal).getTime() : null
+            };
+        });
+
+    const cfdSeries: any[] = [];
     for (let i = 179; i >= 0; i--) {
         const d = new Date(now);
         d.setDate(d.getDate() - i);
         d.setHours(0, 0, 0, 0);
+        const t = d.getTime();
         const counts = { date: d, Proposed: 0, InProgress: 0, Done: 0 };
-        filteredItems.forEach((item) => {
-            const f = item.fields;
-            if (getItemIcon(f['System.WorkItemType'], workItemMetadata).isPortfolio) return;
-            const created = new Date(f['System.CreatedDate']);
-            const activated = f['Microsoft.VSTS.Common.ActivatedDate']
-                ? new Date(f['Microsoft.VSTS.Common.ActivatedDate'])
-                : null;
-            const closed = f['Microsoft.VSTS.Common.ClosedDate']
-                ? new Date(f['Microsoft.VSTS.Common.ClosedDate'])
-                : null;
-            if (created <= d) {
-                if (closed && closed <= d) counts.Done++;
-                else if (activated && activated <= d) counts.InProgress++;
+
+        cfdItems.forEach((item) => {
+            if (item.createdTime <= t) {
+                if (item.closedTime !== null && item.closedTime <= t) counts.Done++;
+                else if (item.activatedTime !== null && item.activatedTime <= t) counts.InProgress++;
                 else counts.Proposed++;
             }
         });
         cfdSeries.push(counts);
     }
 
-    state.heatmapData = {};
+    const heatmapData: Record<string, number> = {};
     filteredItems.forEach((item) => {
         const f = item.fields;
         const closedDateStr = f['Microsoft.VSTS.Common.ClosedDate'] || f['System.ClosedDate'];
         if (closedDateStr) {
-            const dateStr = new Date(closedDateStr).toISOString().split('T')[0];
-            state.heatmapData[dateStr] = (state.heatmapData[dateStr] || 0) + 1;
+            const dateStr = new Date(closedDateStr as string).toISOString().split('T')[0];
+            heatmapData[dateStr] = (heatmapData[dateStr] || 0) + 1;
         }
     });
 
-    const throughputData = [];
+    const throughputData: any[] = [];
     const requirementBacklogTypes =
         workItemMetadata.backlogs.find((b) => b.name.toLowerCase().includes('requirement'))?.workItemTypes || [];
 
-    // Find earliest completion date for requirement-level items
-    let earliestClosedDate = null;
+    let earliestClosedDate: Date | null = null;
     filteredItems.forEach((item) => {
         const f = item.fields;
         const closedDateStr = f['Microsoft.VSTS.Common.ClosedDate'] || f['System.ClosedDate'];
         if (!closedDateStr) return;
-        const type = item.fields['System.WorkItemType']?.toLowerCase();
+        const type = (item.fields['System.WorkItemType'] as string)?.toLowerCase();
         if (
             !(
                 requirementBacklogTypes.includes(type) ||
@@ -159,22 +165,20 @@ export function processAnalytics(items, tree, options = {}) {
         )
             return;
 
-        const closed = new Date(closedDateStr);
+        const closed = new Date(closedDateStr as string);
         if (!earliestClosedDate || closed < earliestClosedDate) earliestClosedDate = closed;
     });
 
     if (earliestClosedDate) {
-        // Find the absolute start of the week for the first completion
         const firstWeekStart = new Date(earliestClosedDate);
         firstWeekStart.setDate(earliestClosedDate.getDate() - earliestClosedDate.getDay());
         firstWeekStart.setHours(0, 0, 0, 0);
 
-        // Find the absolute start of the current week
         const currentWeekStart = new Date(now);
         currentWeekStart.setDate(now.getDate() - now.getDay());
         currentWeekStart.setHours(0, 0, 0, 0);
 
-        const diffDays = Math.ceil((currentWeekStart - firstWeekStart) / (1000 * 60 * 60 * 24));
+        const diffDays = Math.ceil((currentWeekStart.getTime() - firstWeekStart.getTime()) / (1000 * 60 * 60 * 24));
         const numWeeks = Math.max(1, Math.floor(diffDays / 7) + 1);
 
         for (let i = 0; i < numWeeks; i++) {
@@ -189,7 +193,7 @@ export function processAnalytics(items, tree, options = {}) {
                 const f = item.fields;
                 const closedDateStr = f['Microsoft.VSTS.Common.ClosedDate'] || f['System.ClosedDate'];
                 if (!closedDateStr) return;
-                const type = item.fields['System.WorkItemType']?.toLowerCase();
+                const type = (item.fields['System.WorkItemType'] as string)?.toLowerCase();
                 if (
                     !(
                         requirementBacklogTypes.includes(type) ||
@@ -198,7 +202,7 @@ export function processAnalytics(items, tree, options = {}) {
                 )
                     return;
 
-                const closed = new Date(closedDateStr);
+                const closed = new Date(closedDateStr as string);
                 if (closed >= startOfWeek && closed <= endOfWeek) count++;
             });
 
@@ -210,45 +214,110 @@ export function processAnalytics(items, tree, options = {}) {
         }
     }
 
-    // Rendering via charts.js
-    renderCharts(labels, leadTimes, cycleTimes, charts, currentTheme, currentLanguage, translations, azureConfig);
-    renderAgingChart(agingData, charts, currentTheme, currentLanguage, translations, azureConfig);
-    renderAssigneeChart(assigneeWorkload, charts, currentTheme, currentLanguage, translations);
-    renderWIPChart(boardColumnWIP, charts, currentTheme, currentLanguage, translations);
-    renderCFDChart(cfdSeries, charts, currentTheme, currentLanguage, translations);
-    renderActivityHeatmap(state.heatmapData, currentLanguage, translations);
-
-    renderThroughputChart(throughputData, charts, currentTheme, currentLanguage, translations);
-
-    // Bottleneck Analysis (based on revisions data if available)
-    if (options.revisionsData) {
-        const bottleneckData = calculateBottlenecks(filteredItems, options.revisionsData, workItemMetadata);
-        renderBottlenecksChart(bottleneckData, charts, currentTheme, currentLanguage, translations);
+    // Bottlenecks
+    let bottleneckData: any[] | null = null;
+    if (revisionsData) {
+        bottleneckData = calculateBottlenecks(filteredItems, revisionsData, workItemMetadata);
     }
 
-    renderPortfolioFilters(items, workItemMetadata, translations, currentLanguage, () =>
-        renderProgress(items, progressList, translations, currentLanguage, workItemMetadata, azureConfig)
-    );
-    renderProgress(items, progressList, translations, currentLanguage, workItemMetadata, azureConfig);
+    return {
+        filteredItems,
+        leadTimes,
+        cycleTimes,
+        labels,
+        agingData,
+        assigneeWorkload,
+        boardColumnWIP,
+        kpis,
+        cfdSeries,
+        heatmapData,
+        throughputData,
+        bottleneckData
+    };
+}
 
-    renderLegends(items, workItemMetadata, translations, currentLanguage);
+export function renderAll(metrics: ComputedMetrics, originalItems: WorkItemNode[], options: any) {
+    const { currentTheme, currentLanguage, workItemMetadata, charts, azureConfig, progressList, callRenderGantt } =
+        options;
+
+    // Rendering via charts.js
+    renderCharts(metrics.labels, metrics.leadTimes, metrics.cycleTimes, charts, currentTheme, currentLanguage, translations, azureConfig);
+    renderAgingChart(metrics.agingData, charts, currentTheme, currentLanguage, translations, azureConfig);
+    renderAssigneeChart(metrics.assigneeWorkload, charts, currentTheme, currentLanguage, translations);
+    renderWIPChart(metrics.boardColumnWIP, charts, currentTheme, currentLanguage, translations);
+    renderCFDChart(metrics.cfdSeries, charts, currentTheme, currentLanguage, translations);
+    renderActivityHeatmap(metrics.heatmapData, currentLanguage, translations);
+
+    renderThroughputChart(metrics.throughputData, charts, currentTheme, currentLanguage, translations);
+
+    // Bottleneck Analysis
+    if (metrics.bottleneckData) {
+        renderBottlenecksChart(metrics.bottleneckData, charts, currentTheme, currentLanguage, translations);
+    }
+
+    renderPortfolioFilters(originalItems, workItemMetadata, translations, currentLanguage, () =>
+        renderProgress(originalItems, progressList, translations, currentLanguage, workItemMetadata, azureConfig)
+    );
+    renderProgress(originalItems, progressList, translations, currentLanguage, workItemMetadata, azureConfig);
+
+    renderLegends(originalItems, workItemMetadata, translations, currentLanguage);
     if (callRenderGantt) callRenderGantt();
 
     // Update KPIs (counts + percentages)
-    const pct = (val) => (kpis.total > 0 ? Math.round((val / kpis.total) * 100) : 0);
+    const pct = (val: number) => (metrics.kpis.total > 0 ? Math.round((val / metrics.kpis.total) * 100) : 0);
 
-    document.getElementById('kpi-total').textContent = kpis.total;
-    document.getElementById('kpi-total-pct').textContent = '100%';
-    document.getElementById('kpi-backlog').textContent = kpis.backlog;
-    document.getElementById('kpi-backlog-pct').textContent = `${pct(kpis.backlog)}%`;
-    document.getElementById('kpi-inprogress').textContent = kpis.inprogress;
-    document.getElementById('kpi-inprogress-pct').textContent = `${pct(kpis.inprogress)}%`;
-    document.getElementById('kpi-done').textContent = kpis.doneRemoved;
-    document.getElementById('kpi-done-pct').textContent = `${pct(kpis.doneRemoved)}%`;
+    const updateTextContent = (id: string, text: string | number) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = String(text);
+    };
+
+    updateTextContent('kpi-total', metrics.kpis.total);
+    updateTextContent('kpi-total-pct', '100%');
+    updateTextContent('kpi-backlog', metrics.kpis.backlog);
+    updateTextContent('kpi-backlog-pct', `${pct(metrics.kpis.backlog)}%`);
+    updateTextContent('kpi-inprogress', metrics.kpis.inprogress);
+    updateTextContent('kpi-inprogress-pct', `${pct(metrics.kpis.inprogress)}%`);
+    updateTextContent('kpi-done', metrics.kpis.doneRemoved);
+    updateTextContent('kpi-done-pct', `${pct(metrics.kpis.doneRemoved)}%`);
 }
 
-export function calculateBottlenecks(items, revisionsData, workItemMetadata) {
-    const columnTimes = {}; // { column: [durations] }
+export function processAnalytics(items: WorkItemNode[], tree: WorkItemNode[], options: any = {}) {
+    const { currentLanguage, workItemMetadata, revisionsData } = options;
+
+    // Global Type Filters Initialization
+    if (!state.globalActiveTypes) {
+        state.globalActiveTypes = [];
+        const seenTypes = new Set<string>();
+        items.forEach((item) => {
+            const t = item.fields['System.WorkItemType'] as string;
+            if (t && !seenTypes.has(t)) {
+                seenTypes.add(t);
+                state.globalActiveTypes?.push(t);
+            }
+        });
+        state.globalActiveTypes.sort();
+    }
+
+    renderGlobalTypeFilters(state.globalActiveTypes, items, workItemMetadata, currentLanguage, (newActiveTypes) => {
+        state.globalActiveTypes = newActiveTypes;
+        processAnalytics(state.currentData.items, state.currentData.tree, options);
+    });
+
+    const filteredItems = items.filter((item) => {
+        const type = item.fields['System.WorkItemType'] as string;
+        return state.globalActiveTypes?.includes(type);
+    });
+
+    const metrics = computeMetrics(filteredItems, revisionsData, workItemMetadata, currentLanguage);
+    renderAll(metrics, items, options);
+}
+
+export function calculateBottlenecks(
+    items: WorkItemNode[],
+    revisionsData: Record<number, any[]>,
+    workItemMetadata: WorkItemMetadata
+) {
+    const columnTimes: Record<string, number[]> = {}; // { column: [durations] }
     let itemsWithRevisions = 0;
 
     items.forEach((item) => {
@@ -258,7 +327,7 @@ export function calculateBottlenecks(items, revisionsData, workItemMetadata) {
 
         // Sort revisions by date
         const sorted = [...revisions].sort(
-            (a, b) => new Date(a.fields['System.ChangedDate']) - new Date(b.fields['System.ChangedDate'])
+            (a, b) => new Date(a.fields['System.ChangedDate'] as string).getTime() - new Date(b.fields['System.ChangedDate'] as string).getTime()
         );
 
         // Time spent between transitions
@@ -266,12 +335,12 @@ export function calculateBottlenecks(items, revisionsData, workItemMetadata) {
             const current = sorted[i];
             const next = sorted[i + 1];
 
-            const col = current.fields['System.BoardColumn'] || current.fields['System.State'];
+            const col = (current.fields['System.BoardColumn'] as string) || (current.fields['System.State'] as string);
             if (!col) continue;
 
-            const start = new Date(current.fields['System.ChangedDate']);
-            const end = new Date(next.fields['System.ChangedDate']);
-            const durationDays = (end - start) / (1000 * 60 * 60 * 24);
+            const start = new Date(current.fields['System.ChangedDate'] as string);
+            const end = new Date(next.fields['System.ChangedDate'] as string);
+            const durationDays = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
 
             if (!columnTimes[col]) columnTimes[col] = [];
             columnTimes[col].push(durationDays);
@@ -279,18 +348,18 @@ export function calculateBottlenecks(items, revisionsData, workItemMetadata) {
 
         // Add time in current state for active items
         const lastRev = sorted[sorted.length - 1];
-        const stateInfo = getStatusInfo(lastRev.fields['System.State'], workItemMetadata);
+        const stateInfo = getStatusInfo(lastRev.fields['System.State'] as string, workItemMetadata);
         if (stateInfo.label !== 'Done' && stateInfo.label !== 'Removed') {
-            const col = lastRev.fields['System.BoardColumn'] || lastRev.fields['System.State'];
-            const start = new Date(lastRev.fields['System.ChangedDate']);
-            const durationDays = (new Date() - start) / (1000 * 60 * 60 * 24);
+            const col = (lastRev.fields['System.BoardColumn'] as string) || (lastRev.fields['System.State'] as string);
+            const start = new Date(lastRev.fields['System.ChangedDate'] as string);
+            const durationDays = (new Date().getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
 
             if (!columnTimes[col]) columnTimes[col] = [];
             columnTimes[col].push(durationDays);
         }
     });
 
-    console.log(`Bottlenecks: Calculated for ${itemsWithRevisions}/${items.length} items`);
+    logger.info(`Bottlenecks: Calculated for ${itemsWithRevisions}/${items.length} items`);
 
     // Calculate averages
     const results = Object.entries(columnTimes)
@@ -301,6 +370,6 @@ export function calculateBottlenecks(items, revisionsData, workItemMetadata) {
         .filter((d) => d.avgDays > 0.01) // Show almost everything with some time
         .sort((a, b) => b.avgDays - a.avgDays);
 
-    console.log('Bottlenecks data:', results);
+    logger.debug('Bottlenecks data:', results);
     return results;
 }

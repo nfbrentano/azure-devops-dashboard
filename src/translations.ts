@@ -132,7 +132,15 @@ export const translations: Translations = {
         'chart-bottlenecks-title': 'Work Item Bottlenecks (Avg Time per Column)',
         'label-avg-days': 'Avg Days',
         'label-no-planned-dates': 'No dates planned',
-        'msg-bottlenecks-empty': 'No data available for bottleneck analysis.'
+        'msg-bottlenecks-empty': 'No data available for bottleneck analysis.',
+        'loading-fetching-query': 'Fetching query...',
+        'loading-items': 'Loading {count} items...',
+        'loading-history': 'Loading history for {count} items...',
+        'loading-portfolio': 'Fetching project Portfolio (Initiatives/Epics/Features)...',
+        'msg-portfolio-empty-toast': 'No items found in the portfolio.',
+        'loading-processing-items': 'Processing {count} items...',
+        'msg-timeline-error': 'Timeline error: {message}',
+        'label-load-more': 'Load More'
     },
     'pt-br': {
         'tab-dashboard': 'Painel',
@@ -258,6 +266,14 @@ export const translations: Translations = {
         'chart-bottlenecks-title': 'Gargalos de Work Items (Tempo Médio por Coluna)',
         'label-avg-days': 'Média de Dias',
         'label-no-planned-dates': 'Sem datas planejadas',
-        'msg-bottlenecks-empty': 'Nenhum dado disponível para análise de gargalos.'
+        'msg-bottlenecks-empty': 'Nenhum dado disponível para análise de gargalos.',
+        'loading-fetching-query': 'Buscando consulta...',
+        'loading-items': 'Carregando {count} itens...',
+        'loading-history': 'Carregando histórico de {count} itens...',
+        'loading-portfolio': 'Buscando Portfolio (Initiatives/Epics/Features) do projeto...',
+        'msg-portfolio-empty-toast': 'Nenhum item encontrado no portfólio.',
+        'loading-processing-items': 'Processando {count} itens...',
+        'msg-timeline-error': 'Erro na Timeline: {message}',
+        'label-load-more': 'Carregar Mais'
     }
 };

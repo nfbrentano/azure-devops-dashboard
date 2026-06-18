@@ -1,0 +1,144 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
+:root {
+    font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    font-weight: 400;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+
+    /* Default Dark Theme Variables */
+    --bg-color: #0f172a;
+    --bg-card: rgba(30, 41, 59, 0.7);
+    --bg-input: rgba(0, 0, 0, 0.2);
+    --border-glass: rgba(255, 255, 255, 0.1);
+    --text-main: rgba(255, 255, 255, 0.87);
+    --text-muted: #94a3b8;
+    --primary: #6366f1;
+    --primary-hover: #4f46e5;
+    --accent: #10b981;
+
+    --bg-gradient:
+        radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0, transparent 50%),
+        radial-gradient(at 50% 0%, hsla(225, 39%, 30%, 1) 0, transparent 50%),
+        radial-gradient(at 100% 0%, hsla(339, 49%, 30%, 1) 0, transparent 50%);
+
+    /* Status Colors */
+    --status-backlog: #64748b;
+    --status-inprogress: #3b82f6;
+    --status-done: #10b981;
+    --status-removed: #f8fafc;
+
+    /* Work Item Type Colors (ADO Official) */
+    --color-epic: #f24423;
+    --color-feature: #773b93;
+    --color-userstory: #009ccc;
+    --color-task: #f2cb1d;
+    --color-bug: #cc293d;
+
+    --gantt-label-width: clamp(250px, 45vw, 600px); /* Increased for info */
+}
+
+/* Light Theme Overrides */
+[data-theme='light'] {
+    --bg-color: #f8fafc;
+    --bg-card: rgba(255, 255, 255, 0.8);
+    --bg-input: rgba(255, 255, 255, 0.5);
+    --border-glass: rgba(0, 0, 0, 0.15);
+    --text-main: #1e293b;
+    --text-muted: #475569;
+    --primary: #4f46e5;
+    --bg-gradient:
+        radial-gradient(at 0% 0%, hsla(253, 16%, 95%, 1) 0, transparent 50%),
+        radial-gradient(at 50% 0%, hsla(225, 39%, 90%, 1) 0, transparent 50%),
+        radial-gradient(at 100% 0%, hsla(339, 49%, 90%, 1) 0, transparent 50%);
+    --status-removed: #0f172a;
+}
+
+body {
+    margin: 0;
+    display: block;
+    min-width: 320px;
+    min-height: 100vh;
+    color: var(--text-main);
+    background-color: var(--bg-color);
+    background-image: var(--bg-gradient);
+    background-attachment: fixed;
+    transition:
+        background 0.3s ease,
+        color 0.3s ease;
+}
+
+#app {
+    width: 100%;
+    max-width: 1800px;
+    margin: 0 auto;
+    padding: clamp(0.75rem, 3vw, 2rem);
+    box-sizing: border-box;
+}
+
+.glass {
+    background: var(--bg-card);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-glass);
+    border-radius: 1rem;
+}
+
+/* Exporting state to clean up images */
+.exporting .export-btn,
+.exporting .no-print,
+.exporting .gantt-controls,
+.exporting .gantt-period-nav,
+.exporting .filter-item input {
+    display: none !important;
+}
+
+.exporting.card,
+.exporting .card {
+    background: var(--bg-color) !important; /* Solid background for better capture */
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.spinning i {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.hidden {
+    display: none !important;
+}
+

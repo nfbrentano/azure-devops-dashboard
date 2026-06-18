@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calculateProgress, getStatusInfo, getItemIcon } from './utils.ts';
+import { calculateProgress, getStatusInfo, getItemIcon, encryptPAT, decryptPAT } from './utils.ts';
 import type { WorkItemMetadata, WorkItemNode } from './types.ts';
 
 describe('utils.ts', () => {
@@ -115,6 +115,43 @@ describe('utils.ts', () => {
             const result = getItemIcon('Task', mockMetadata);
             expect(result.icon).toContain('ph-check-square');
             expect(result.isPortfolio).toBe(false);
+        });
+    });
+
+    describe('encryptPAT and decryptPAT', () => {
+        const testPAT = 'my-super-secret-pat';
+        const password = 'my-secure-password';
+
+        it('should encrypt and decrypt correctly', async () => {
+            const encrypted = await encryptPAT(testPAT, password);
+            expect(encrypted).toContain(':');
+            const decrypted = await decryptPAT(encrypted, password);
+            expect(decrypted).toBe(testPAT);
+        });
+
+        it('should return empty/original if pat or password is empty', async () => {
+            expect(await encryptPAT('', password)).toBe('');
+            expect(await encryptPAT(testPAT, '')).toBe(testPAT);
+            expect(await decryptPAT('', password)).toBe('');
+        });
+
+        it('should return null if decrypted with wrong password', async () => {
+            const encrypted = await encryptPAT(testPAT, password);
+            const decrypted = await decryptPAT(encrypted, 'wrong-password');
+            expect(decrypted).toBeNull();
+        });
+
+        it('should fallback to XOR decryption for legacy format without password', async () => {
+            // Legacy format was XOR(42) + base64. Let's encode a alphanumeric legacy PAT using XOR
+            const legacyPAT = 'mysupersecretpat';
+            const xorEncoded = btoa(
+                legacyPAT
+                    .split('')
+                    .map((c) => String.fromCharCode(c.charCodeAt(0) ^ 42))
+                    .join('')
+            );
+            const decrypted = await decryptPAT(xorEncoded);
+            expect(decrypted).toBe(legacyPAT);
         });
     });
 });

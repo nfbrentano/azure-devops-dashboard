@@ -127,6 +127,7 @@ export interface AppState {
         tree: WorkItemNode[];
     };
     timelineActiveTypes: string[];
+    timelineActiveStates: string[];
 }
 
 // ─── UI Helpers ─────────────────────────────────────────────────────────────
@@ -175,27 +176,33 @@ export interface SavedQuery {
 // ─── DOM Element Maps ───────────────────────────────────────────────────────
 
 export interface DashboardElements {
-    setupForm: HTMLFormElement;
-    unlockForm: HTMLFormElement;
-    forgotPasswordBtn: HTMLButtonElement;
-    logoutBtn: HTMLButtonElement;
-    themeToggle: HTMLButtonElement;
-    langToggle: HTMLButtonElement;
-    querySelector: HTMLSelectElement;
-    refreshBtn: HTMLButtonElement;
-    ganttPeriod: HTMLSelectElement;
-    ganttPrev: HTMLButtonElement;
-    ganttNext: HTMLButtonElement;
-    tabDashboard: HTMLButtonElement;
-    tabItems: HTMLButtonElement;
-    tabTimeline: HTMLButtonElement;
-    tabSetup: HTMLButtonElement;
-    dashboardView: HTMLElement;
-    itemsView: HTMLElement;
-    timelineView: HTMLElement;
-    setupView: HTMLElement;
-    unlockView: HTMLElement;
-    dataControls: HTMLElement;
+    setupForm: HTMLFormElement | null;
+    unlockForm: HTMLFormElement | null;
+    forgotPasswordBtn: HTMLButtonElement | null;
+    logoutBtn: HTMLButtonElement | null;
+    themeToggle: HTMLButtonElement | null;
+    langToggle: HTMLButtonElement | null;
+    querySelector: HTMLSelectElement | null;
+    refreshBtn: HTMLButtonElement | null;
+    ganttPeriod: HTMLSelectElement | null;
+    ganttPrev: HTMLButtonElement | null;
+    ganttNext: HTMLButtonElement | null;
+    tabDashboard: HTMLButtonElement | null;
+    tabItems: HTMLButtonElement | null;
+    tabTimeline: HTMLButtonElement | null;
+    tabSetup: HTMLButtonElement | null;
+    dashboardView: HTMLElement | null;
+    itemsView: HTMLElement | null;
+    timelineView: HTMLElement | null;
+    setupView: HTMLElement | null;
+    unlockView: HTMLElement | null;
+    dataControls: HTMLElement | null;
+    progressList: HTMLElement | null;
+    ganttContainer: HTMLElement | null;
+    timelineGanttContainer: HTMLElement | null;
+    timelineGanttPeriod: HTMLSelectElement | null;
+    timelineGanttPrev: HTMLButtonElement | null;
+    timelineGanttNext: HTMLButtonElement | null;
 }
 
 export type Translations = Record<string, Record<string, string>>;

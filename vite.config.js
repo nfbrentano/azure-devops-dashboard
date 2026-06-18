@@ -4,5 +4,8 @@ export default defineConfig({
   base: "/azure-devops-dashboard/",
   build: {
     outDir: "dist"
+  },
+  test: {
+    environment: "happy-dom"
   }
 })

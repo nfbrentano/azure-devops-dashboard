@@ -1,0 +1,184 @@
+/* Responsiveness */
+@media (max-width: 1024px) {
+    .tabs-nav {
+        flex-wrap: wrap;
+        height: auto;
+        position: sticky;
+        top: 0;
+        gap: 0.75rem;
+        padding: 1rem;
+        justify-content: center;
+        margin-top: calc(-1 * 0.75rem);
+        border-radius: 0 0 1rem 1rem;
+    }
+
+    .nav-data-controls {
+        order: 2;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .tabs-center {
+        position: static;
+        transform: none;
+        order: 1;
+        width: 100%;
+        justify-content: center;
+        margin-bottom: 0.25rem;
+    }
+
+    .nav-right-actions {
+        order: 3;
+        width: 100%;
+        justify-content: center;
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    header > div {
+        width: 100%;
+    }
+
+    #data-controls.nav-data-controls {
+        flex-direction: row !important;
+        align-items: center !important;
+        padding: 0 !important;
+        gap: 0.5rem !important;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .nav-data-controls .header-select {
+        flex: 1;
+        max-width: 300px;
+    }
+
+    .header-select {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    #refresh-btn {
+        width: 100% !important;
+        justify-content: center;
+    }
+
+    .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .card {
+        padding: 1.25rem;
+        grid-column: 1 / -1 !important;
+    }
+
+    .gantt-header,
+    .gantt-row {
+        min-width: 900px; /* Force minimum width to allow scrolling */
+    }
+
+    /* Wrap charts in a way that handles overflow or just makes them full width */
+    .card > div[style*='height'] {
+        height: 350px !important; /* Slightly shorter on mobile */
+    }
+
+    .setup-container {
+        padding: 1.5rem;
+        margin: 1rem auto;
+    }
+
+    .gantt-controls {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+    }
+
+    .gantt-period-nav {
+        justify-content: space-between;
+    }
+
+    .gantt-period-nav span {
+        flex-grow: 1;
+        min-width: 0;
+    }
+
+    .gantt-nav-divider {
+        display: none;
+    }
+
+    .gantt-period-select {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    #app {
+        padding: 0.75rem;
+    }
+
+    .tabs-center {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .tab-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 0.5rem;
+        font-size: 0.85rem;
+    }
+
+    .kpi-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .kpi-card {
+        padding: 1rem !important;
+    }
+
+    .kpi-value {
+        font-size: 1.5rem;
+    }
+
+    h1 {
+        font-size: 1.75rem;
+    }
+
+    .legend {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+}
+
+/* Scroll handling for large elements on mobile */
+#items-view .card,
+#dashboard-view .card {
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+
+#heatmap-container,
+.gantt-chart-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+@media print {
+    .no-print {
+        display: none !important;
+    }
+}

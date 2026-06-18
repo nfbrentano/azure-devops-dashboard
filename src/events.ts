@@ -1,11 +1,12 @@
-// @ts-nocheck
 /**
  * Event Handlers for Azure DevOps Dashboard
  */
 import { state } from './state.ts';
 import { LOGO_LIGHT, LOGO_DARK } from './logos.ts';
+import type { DashboardElements } from './types.ts';
 
-async function drawWatermark(canvas, isDark) {
+
+async function drawWatermark(canvas: HTMLCanvasElement, isDark: boolean): Promise<HTMLCanvasElement> {
     const { companyName } = state.azureConfig || {};
 
     // Use hardcoded theme-aware logo
@@ -18,6 +19,7 @@ async function drawWatermark(canvas, isDark) {
     newCanvas.width = canvas.width;
     newCanvas.height = canvas.height + padding;
     const ctx = newCanvas.getContext('2d');
+    if (!ctx) return canvas;
 
     // Use solid theme colors
     ctx.fillStyle = isDark ? '#0f172a' : '#f8fafc';
@@ -71,7 +73,23 @@ async function drawWatermark(canvas, isDark) {
     return newCanvas;
 }
 
-export function initEvents(elements, handlers) {
+export function initEvents(
+    elements: DashboardElements,
+    handlers: {
+        handleAuth: (e: Event) => void;
+        handleUnlock: (e: Event) => void;
+        handleThemeToggle: () => void;
+        handleLangToggle: () => void;
+        handleQueryChange: (e: any) => void;
+        handleRefresh: () => void;
+        handleGanttPeriodChange: () => void;
+        handleGanttNav: (dir: number) => void;
+        handleTabSwitch: (tabId: string) => void;
+        handleTimelinePeriodChange: () => void;
+        handleTimelineNav: (dir: number) => void;
+        handleGanttFilterChange: () => void;
+    }
+) {
     const {
         setupForm,
         unlockForm,
@@ -108,43 +126,43 @@ export function initEvents(elements, handlers) {
     } = handlers;
 
     // Tabs
-    tabDashboard.addEventListener('click', () => handleTabSwitch('dashboard'));
-    tabItems.addEventListener('click', () => handleTabSwitch('items'));
-    tabTimeline.addEventListener('click', () => handleTabSwitch('timeline'));
-    tabSetup.addEventListener('click', () => handleTabSwitch('setup'));
+    tabDashboard?.addEventListener('click', () => handleTabSwitch('dashboard'));
+    tabItems?.addEventListener('click', () => handleTabSwitch('items'));
+    tabTimeline?.addEventListener('click', () => handleTabSwitch('timeline'));
+    tabSetup?.addEventListener('click', () => handleTabSwitch('setup'));
 
     // Auth Forms
-    setupForm.addEventListener('submit', handleAuth);
-    unlockForm.addEventListener('submit', handleUnlock);
+    setupForm?.addEventListener('submit', handleAuth);
+    unlockForm?.addEventListener('submit', handleUnlock);
 
-    forgotPasswordBtn.addEventListener('click', () => {
+    forgotPasswordBtn?.addEventListener('click', () => {
         localStorage.removeItem('azure_config');
         state.azureConfig = { org: '', project: '', pat: '' };
         handleTabSwitch('setup');
     });
 
-    logoutBtn.addEventListener('click', () => {
+    logoutBtn?.addEventListener('click', () => {
         localStorage.removeItem('azure_config');
         location.reload();
     });
 
     // Theme & Language
-    themeToggle.addEventListener('click', handleThemeToggle);
-    langToggle.addEventListener('click', handleLangToggle);
+    themeToggle?.addEventListener('click', handleThemeToggle);
+    langToggle?.addEventListener('click', handleLangToggle);
 
     // Data Controls
-    querySelector.addEventListener('change', handleQueryChange);
-    refreshBtn.addEventListener('click', handleRefresh);
+    querySelector?.addEventListener('change', handleQueryChange);
+    refreshBtn?.addEventListener('click', handleRefresh);
 
     // Gantt
-    ganttPeriod.addEventListener('change', handleGanttPeriodChange);
-    ganttPrev.addEventListener('click', () => handleGanttNav(-1));
-    ganttNext.addEventListener('click', () => handleGanttNav(1));
+    ganttPeriod?.addEventListener('change', handleGanttPeriodChange);
+    ganttPrev?.addEventListener('click', () => handleGanttNav(-1));
+    ganttNext?.addEventListener('click', () => handleGanttNav(1));
 
     // Timeline
-    timelineGanttPeriod.addEventListener('change', handleTimelinePeriodChange);
-    timelineGanttPrev.addEventListener('click', () => handleTimelineNav(-1));
-    timelineGanttNext.addEventListener('click', () => handleTimelineNav(1));
+    timelineGanttPeriod?.addEventListener('change', handleTimelinePeriodChange);
+    timelineGanttPrev?.addEventListener('click', () => handleTimelineNav(-1));
+    timelineGanttNext?.addEventListener('click', () => handleTimelineNav(1));
 
     document.querySelectorAll('.gantt-status-filters input').forEach((cb) => {
         cb.addEventListener('change', () => {
@@ -190,7 +208,8 @@ export function initEvents(elements, handlers) {
                 // But specifically for Chart.js, we might need a small delay for CSS to apply
                 await new Promise(r => setTimeout(r, 100));
 
-                const canvas = await window.html2canvas(targetToCapture, {
+                const { default: html2canvas } = await import('html2canvas');
+                const canvas = await html2canvas(targetToCapture as HTMLElement, {
                     backgroundColor: bgColor,
                     scale: window.devicePixelRatio || 2,
                     logging: false,
