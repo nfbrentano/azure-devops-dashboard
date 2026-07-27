@@ -35,7 +35,9 @@ export function renderAgingChart(
 
     agingData.sort((a, b) => b.age - a.age);
 
-    const labels = agingData.map((d: any) => `ID ${d.id} - ${d.title.substring(0, 30)}${d.title.length > 30 ? '...' : ''}`);
+    const labels = agingData.map(
+        (d: any) => `ID ${d.id} - ${d.title.substring(0, 30)}${d.title.length > 30 ? '...' : ''}`
+    );
     const values = agingData.map((d: any) => d.age);
 
     const { gridColor, textColor } = getChartThemeOptions(currentTheme);

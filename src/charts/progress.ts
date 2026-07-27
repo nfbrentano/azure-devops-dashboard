@@ -13,7 +13,9 @@ export function renderProgress(
     progressList.innerHTML = '';
 
     const activeFilters = new Set(
-        Array.from(document.querySelectorAll('#portfolio-status-filters input:checked')).map((cb) => (cb as HTMLInputElement).value)
+        Array.from(document.querySelectorAll('#portfolio-status-filters input:checked')).map(
+            (cb) => (cb as HTMLInputElement).value
+        )
     );
 
     const filteredItems = items.filter((item) => {
