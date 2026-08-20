@@ -3,6 +3,16 @@
  */
 import type { AzureConfig, WorkItemMetadata, WorkItemNode, StatusInfo, IconInfo } from './types.ts';
 
+export function escapeHtml(str: unknown): string {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 // Encryption constants
 const SALT = new Uint8Array([71, 101, 109, 105, 110, 105, 32, 65, 105, 32, 82, 111, 99, 107, 115, 33]); // 'Gemini Ai Rocks!'
 
@@ -264,7 +274,7 @@ export function showToast(message: string, type: 'error' | 'success' | 'info' | 
 
     toast.innerHTML = `
         <i class="${icon}" style="color: ${color}; font-size: 1.25rem; flex-shrink: 0;"></i>
-        <span>${message}</span>
+        <span>${escapeHtml(message)}</span>
     `;
 
     container.appendChild(toast);

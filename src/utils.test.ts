@@ -1,8 +1,25 @@
 import { describe, it, expect } from 'vitest';
-import { calculateProgress, getStatusInfo, getItemIcon, encryptPAT, decryptPAT } from './utils.ts';
+import { calculateProgress, getStatusInfo, getItemIcon, encryptPAT, decryptPAT, escapeHtml } from './utils.ts';
 import type { WorkItemMetadata, WorkItemNode } from './types.ts';
 
 describe('utils.ts', () => {
+    describe('escapeHtml', () => {
+        it('should escape &, <, >, ", and single quotes', () => {
+            expect(escapeHtml('<script>alert("XSS" & \'test\')</script>')).toBe(
+                '&lt;script&gt;alert(&quot;XSS&quot; &amp; &#39;test&#39;)&lt;/script&gt;'
+            );
+        });
+
+        it('should return empty string for null and undefined', () => {
+            expect(escapeHtml(null)).toBe('');
+            expect(escapeHtml(undefined)).toBe('');
+        });
+
+        it('should handle numbers and boolean values safely', () => {
+            expect(escapeHtml(123)).toBe('123');
+            expect(escapeHtml(false)).toBe('false');
+        });
+    });
     const mockMetadata = {
         types: {
             epic: { color: '#ff0000' },

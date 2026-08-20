@@ -1,4 +1,4 @@
-import { getWorkItemUrl, getStatusInfo, getItemIcon, calculateProgress } from './utils.ts';
+import { getWorkItemUrl, getStatusInfo, getItemIcon, calculateProgress, escapeHtml } from './utils.ts';
 import type { WorkItemNode, WorkItemMetadata, AzureConfig } from './types.ts';
 
 export interface GanttContext {
@@ -369,12 +369,15 @@ function renderRecursive(
             }
 
             let iconHtml = iconInfo.iconData 
-                ? `<img src="${iconInfo.iconData}" style="width: 16px; height: 16px; flex-shrink: 0;" alt="">`
+                ? `<img src="${escapeHtml(iconInfo.iconData)}" style="width: 16px; height: 16px; flex-shrink: 0;" alt="">`
                 : `<i class="${iconInfo.icon} ${iconInfo.iconClass}" style="flex-shrink: 0; color: ${iconInfo.color}"></i>`;
 
             const progress = calculateProgress(item, workItemMetadata);
             const row = document.createElement('div');
             row.className = `gantt-row ${hasChildren ? 'parent' : ''} ${depth === 0 ? 'root' : ''} ${isLastChild ? 'last-child' : ''}`;
+
+            const itemTitle = escapeHtml(String(fields['System.Title'] || ''));
+            const escapedState = escapeHtml(state);
 
             if (options.isTimeline) {
                 const startDateRaw = fields['Microsoft.VSTS.Scheduling.StartDate'];
@@ -391,38 +394,39 @@ function renderRecursive(
                 const isOutside = hasPlannedDates && (right <= 0 || left >= 100);
 
                 const missingDatesExclamation = !hasPlannedDates 
-                    ? `<i class="ph-fill ph-warning-octagon" style="color: #ef4444; font-size: 1.1rem; margin-right: 0.25rem;" title="${translations[currentLanguage]['label-no-planned-dates']}"></i>`
+                    ? `<i class="ph-fill ph-warning-octagon" style="color: #ef4444; font-size: 1.1rem; margin-right: 0.25rem;" title="${escapeHtml(translations[currentLanguage]['label-no-planned-dates'] || '')}"></i>`
                     : '';
 
                 const projectBadge = fields['System.TeamProject'] 
-                    ? `<span class="project-tag" style="background: rgba(100, 116, 139, 0.1); padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-right: 0.5rem; color: var(--text-muted); border: 1px solid var(--border-glass);">${fields['System.TeamProject']}</span>`
+                    ? `<span class="project-tag" style="background: rgba(100, 116, 139, 0.1); padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-right: 0.5rem; color: var(--text-muted); border: 1px solid var(--border-glass);">${escapeHtml(fields['System.TeamProject'])}</span>`
                     : '';
 
                 const startDateStr = hasPlannedDates ? itemStart.toLocaleDateString(currentLanguage, { day: '2-digit', month: '2-digit', year: '2-digit' }) : '---';
                 const endDateStr = hasPlannedDates ? itemEnd.toLocaleDateString(currentLanguage, { day: '2-digit', month: '2-digit', year: '2-digit' }) : '---';
+                const workItemUrl = escapeHtml(getWorkItemUrl(azureConfig, item.id, fields['System.TeamProject'] as string));
 
                 row.innerHTML = `
-                    <div class="gantt-label" title="${String(fields['System.Title'] || '')}" style="min-width: 300px;">
+                    <div class="gantt-label" title="${itemTitle}" style="min-width: 300px;">
                         ${treeLinesHtml}
                         <div style="display: flex; flex-direction: column; overflow: hidden; flex: 1;">
                         <div style="display: flex; align-items: center; gap: 0.4rem; overflow: hidden;">
                                 ${missingDatesExclamation}
-                                <a href="${getWorkItemUrl(azureConfig, item.id, fields['System.TeamProject'] as string)}" target="_blank" class="item-link" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                <a href="${workItemUrl}" target="_blank" class="item-link" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                                     ${iconHtml}
-                                    <span style="overflow: hidden; text-overflow: ellipsis;">${String(fields['System.Title'] || '')}</span>
+                                    <span style="overflow: hidden; text-overflow: ellipsis;">${itemTitle}</span>
                                 </a>
                         </div>
                         <div style="display: flex; align-items: center; margin-top: 2px; flex-wrap: wrap; gap: 0.5rem;">
                                 ${projectBadge}
                                 <div class="status-indicator" style="font-size: 0.7rem;">
                                     <div class="status-dot" style="background: ${statusInfo.color}; width: 6px; height: 6px;"></div>
-                                    <span>${state}</span>
+                                    <span>${escapedState}</span>
                                 </div>
                                 <div style="font-size: 0.7rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.25rem;">
                                     <i class="ph ph-calendar-blank"></i>
-                                    <span>${startDateStr}</span>
+                                    <span>${escapeHtml(startDateStr)}</span>
                                     <span>→</span>
-                                    <span>${endDateStr}</span>
+                                    <span>${escapeHtml(endDateStr)}</span>
                                 </div>
                         </div>
                         </div>
@@ -438,7 +442,7 @@ function renderRecursive(
                                 : !hasPlannedDates 
                                 ? `<div class="no-dates-msg" style="font-size: 0.75rem; color: #ef4444; opacity: 0.8; display: flex; align-items: center; gap: 0.4rem; font-style: italic; padding: 0 1rem;">
                                     <i class="ph-fill ph-warning-octagon"></i>
-                                    ${translations[currentLanguage]['label-no-planned-dates']}
+                                    ${escapeHtml(translations[currentLanguage]['label-no-planned-dates'] || '')}
                                    </div>`
                                 : ''
                         }
@@ -448,7 +452,7 @@ function renderRecursive(
                 const hasMissingDates =
                     !fields['Microsoft.VSTS.Scheduling.StartDate'] || !fields['Microsoft.VSTS.Scheduling.TargetDate'];
                 const missingDatesWarning = hasMissingDates
-                    ? `<i class="ph ph-warning-circle missing-dates-warning" title="${translations[currentLanguage]['gantt-missing-dates-tooltip']}"></i>`
+                    ? `<i class="ph ph-warning-circle missing-dates-warning" title="${escapeHtml(translations[currentLanguage]['gantt-missing-dates-tooltip'] || '')}"></i>`
                     : '';
 
                 const sVal = fields['Microsoft.VSTS.Scheduling.StartDate'] || fields['System.CreatedDate'];
@@ -462,18 +466,19 @@ function renderRecursive(
                 const width = Math.max(0.1, right - left);
 
                 const isOutside = right <= 0 || left >= 100;
+                const workItemUrl = escapeHtml(getWorkItemUrl(azureConfig, item.id));
 
                 row.innerHTML = `
-                    <div class="gantt-label" title="${String(fields['System.Title'] || '')}">
+                    <div class="gantt-label" title="${itemTitle}">
                         ${treeLinesHtml}
-                        <a href="${getWorkItemUrl(azureConfig, item.id)}" target="_blank" class="item-link" style="flex: 1; overflow: hidden; text-overflow: ellipsis;">
+                        <a href="${workItemUrl}" target="_blank" class="item-link" style="flex: 1; overflow: hidden; text-overflow: ellipsis;">
                             ${iconHtml}
                             ${missingDatesWarning}
-                            <span style="overflow: hidden; text-overflow: ellipsis;">${String(fields['System.Title'] || '')}</span>
+                            <span style="overflow: hidden; text-overflow: ellipsis;">${itemTitle}</span>
                         </a>
                         <div class="status-indicator">
                             <div class="status-dot" style="background: ${statusInfo.color}"></div>
-                            <span>${state}</span>
+                            <span>${escapedState}</span>
                         </div>
                     </div>
                     <div class="gantt-track">
