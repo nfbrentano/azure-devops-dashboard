@@ -272,10 +272,17 @@ export function showToast(message: string, type: 'error' | 'success' | 'info' | 
         color = '#3b82f6';
     }
 
-    toast.innerHTML = `
-        <i class="${icon}" style="color: ${color}; font-size: 1.25rem; flex-shrink: 0;"></i>
-        <span>${escapeHtml(message)}</span>
-    `;
+    const iconElem = document.createElement('i');
+    iconElem.className = icon;
+    iconElem.style.color = color;
+    iconElem.style.fontSize = '1.25rem';
+    iconElem.style.flexShrink = '0';
+
+    const textElem = document.createElement('span');
+    textElem.textContent = message;
+
+    toast.appendChild(iconElem);
+    toast.appendChild(textElem);
 
     container.appendChild(toast);
 

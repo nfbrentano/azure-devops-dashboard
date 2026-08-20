@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calculateProgress, getStatusInfo, getItemIcon, encryptPAT, decryptPAT, escapeHtml } from './utils.ts';
+import { calculateProgress, getStatusInfo, getItemIcon, encryptPAT, decryptPAT, escapeHtml, showToast } from './utils.ts';
 import type { WorkItemMetadata, WorkItemNode } from './types.ts';
 
 describe('utils.ts', () => {
@@ -169,6 +169,26 @@ describe('utils.ts', () => {
             );
             const decrypted = await decryptPAT(xorEncoded);
             expect(decrypted).toBe(legacyPAT);
+        });
+    });
+
+    describe('showToast', () => {
+        it('should create toast element safely with textContent and correct icon', () => {
+            document.body.innerHTML = '';
+            showToast('An error occurred: <img src=x onerror=alert(1)>', 'error');
+
+            const container = document.querySelector('.toast-container');
+            expect(container).not.toBeNull();
+
+            const toast = container?.querySelector('.toast.error');
+            expect(toast).not.toBeNull();
+
+            const icon = toast?.querySelector('i');
+            expect(icon?.className).toBe('ph-fill ph-x-circle');
+
+            const span = toast?.querySelector('span');
+            expect(span?.textContent).toBe('An error occurred: <img src=x onerror=alert(1)>');
+            expect(toast?.querySelector('img')).toBeNull();
         });
     });
 });
