@@ -24,8 +24,8 @@ export interface WorkItemFields {
     'System.Title': string;
     'System.State': string;
     'System.WorkItemType': string;
-    'System.CreatedDate': string;
-    'System.ChangedDate': string;
+    'System.CreatedDate'?: string;
+    'System.ChangedDate'?: string;
     'System.AssignedTo'?: AssignedTo | string;
     'System.Parent'?: number;
     'System.BoardColumn'?: string;

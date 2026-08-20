@@ -152,10 +152,10 @@ export function computeMetrics(
         workItemMetadata.backlogs.find((b) => b.name.toLowerCase().includes('requirement'))?.workItemTypes || [];
 
     let earliestClosedDate: Date | null = null;
-    filteredItems.forEach((item) => {
+    for (const item of filteredItems) {
         const f = item.fields;
         const closedDateStr = f['Microsoft.VSTS.Common.ClosedDate'] || f['System.ClosedDate'];
-        if (!closedDateStr) return;
+        if (!closedDateStr) continue;
         const type = (item.fields['System.WorkItemType'] as string)?.toLowerCase();
         if (
             !(
@@ -163,11 +163,11 @@ export function computeMetrics(
                 ['user story', 'product backlog item', 'requirement', 'issue'].includes(type)
             )
         )
-            return;
+            continue;
 
         const closed = new Date(closedDateStr as string);
         if (!earliestClosedDate || closed < earliestClosedDate) earliestClosedDate = closed;
-    });
+    }
 
     if (earliestClosedDate) {
         const firstWeekStart = new Date(earliestClosedDate);

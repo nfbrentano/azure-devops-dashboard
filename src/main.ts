@@ -107,7 +107,8 @@ async function initApp() {
         if (state.azureConfig.pat.includes(':')) {
             switchTab('unlock', elements);
         } else {
-            state.azureConfig.pat = await decryptPAT(state.azureConfig.pat);
+            const decrypted = await decryptPAT(state.azureConfig.pat);
+            state.azureConfig.pat = decrypted || '';
             showDashboard();
         }
     } else {
@@ -205,7 +206,7 @@ async function initApp() {
                 switchTab('setup', elements);
                 return;
             }
-            if (elements.refreshBtn?.classList.contains('spinning') || !elements.querySelector?.value) return;
+            if (!elements.refreshBtn || elements.refreshBtn.classList.contains('spinning') || !elements.querySelector?.value) return;
             elements.refreshBtn.classList.add('spinning');
             await loadQueryData(elements.querySelector.value, { bust: true });
             elements.refreshBtn.classList.remove('spinning');
@@ -297,9 +298,13 @@ async function loadQueryData(queryId: string, { bust = false } = {}) {
         if (result.workItems) {
             ids = result.workItems.map((wi: any) => wi.id);
         } else if (result.workItemRelations) {
-            ids = [
-                ...new Set(result.workItemRelations.flatMap((r: any) => [r.source?.id, r.target?.id]).filter((id: number): id is number => !!id))
-            ];
+            ids = Array.from(
+                new Set<number>(
+                    result.workItemRelations
+                        .flatMap((r: any) => [r.source?.id, r.target?.id])
+                        .filter((id: any): id is number => typeof id === 'number')
+                )
+            );
         }
 
         if (ids.length === 0) {

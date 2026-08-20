@@ -173,7 +173,8 @@ export function initEvents(
     const typeLegend = document.getElementById('type-legend');
     if (typeLegend) {
         typeLegend.addEventListener('change', (e) => {
-            if (e.target.tagName === 'INPUT' && state.currentData.tree.length > 0) {
+            const target = e.target as HTMLElement | null;
+            if (target?.tagName === 'INPUT' && state.currentData.tree.length > 0) {
                 handlers.handleGanttFilterChange();
             }
         });
@@ -181,9 +182,11 @@ export function initEvents(
 
     // Chart Export
     document.addEventListener('click', async (e) => {
-        const exportBtn = e.target.closest('.export-btn');
+        const target = e.target as HTMLElement | null;
+        const exportBtn = target?.closest('.export-btn') as HTMLButtonElement | null;
         if (exportBtn) {
             const targetId = exportBtn.getAttribute('data-target');
+            if (!targetId) return;
             let element = document.getElementById(targetId);
 
             if (!element) return;
@@ -196,8 +199,8 @@ export function initEvents(
             const bgColor = isDark ? '#0f172a' : '#f8fafc'; // Matches --bg-color
 
             const icon = exportBtn.querySelector('i');
-            const originalClass = icon.className;
-            icon.className = 'ph-bold ph-spinner ph-spin';
+            const originalClass = icon ? icon.className : '';
+            if (icon) icon.className = 'ph-bold ph-spinner ph-spin';
             exportBtn.disabled = true;
 
             // Add exporting class to cleanup UI
@@ -226,7 +229,7 @@ export function initEvents(
                 console.error('Export failed', err);
             } finally {
                 targetToCapture.classList.remove('exporting');
-                icon.className = originalClass;
+                if (icon) icon.className = originalClass;
                 exportBtn.disabled = false;
             }
         }
