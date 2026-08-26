@@ -19,7 +19,7 @@ export function renderAssigneeChart(
     // Calculate totals for sorting
     const totals: Record<string, number> = {};
     const allStatuses = new Set<string>();
-    
+
     for (const [name, statuses] of Object.entries(workloadData)) {
         let total = 0;
         for (const [status, count] of Object.entries(statuses)) {
@@ -49,16 +49,16 @@ export function renderAssigneeChart(
     const { gridColor, textColor } = getChartThemeOptions(currentTheme);
 
     const statusColors: Record<string, string> = {
-        'Backlog': '#94a3b8',
+        Backlog: '#94a3b8',
         'In Progress': '#3b82f6',
-        'Done': '#10b981',
-        'Removed': '#ef4444'
+        Done: '#10b981',
+        Removed: '#ef4444'
     };
 
-    const datasets = Array.from(allStatuses).map(status => {
+    const datasets = Array.from(allStatuses).map((status) => {
         return {
             label: status,
-            data: names.map(name => workloadData[name][status] || 0),
+            data: names.map((name) => workloadData[name][status] || 0),
             backgroundColor: statusColors[status] || '#8b5cf6',
             borderRadius: 4
         };
@@ -93,7 +93,7 @@ export function renderAssigneeChart(
                 }
             },
             plugins: {
-                legend: { 
+                legend: {
                     display: true,
                     position: 'top' as const,
                     labels: { color: textColor, font: { size: 10 } }

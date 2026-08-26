@@ -14,7 +14,7 @@ async function drawWatermark(canvas: HTMLCanvasElement, isDark: boolean): Promis
 
     if (!companyName && !companyLogo) return canvas;
 
-    const padding = 80;
+    const padding = 120;
     const newCanvas = document.createElement('canvas');
     newCanvas.width = canvas.width;
     newCanvas.height = canvas.height + padding;
@@ -38,36 +38,36 @@ async function drawWatermark(canvas: HTMLCanvasElement, isDark: boolean): Promis
                 img.src = companyLogo;
             });
             const aspect = img.width / img.height;
-            const h = 40; 
+            const h = 72; 
             const w = h * aspect;
             const logoY = (padding - h) / 2;
             
             // Draw logo with smooth scaling
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = 'high';
-            ctx.drawImage(img, 30, logoY, w, h);
+            ctx.drawImage(img, 40, logoY, w, h);
 
             if (companyName) {
                 ctx.fillStyle = textColor;
-                ctx.font = '600 20px "Inter", sans-serif'; 
+                ctx.font = '600 28px "Inter", sans-serif'; 
                 ctx.textBaseline = 'middle';
                 const textY = padding / 2;
-                ctx.fillText(companyName, 30 + w + 15, textY);
+                ctx.fillText(companyName, 40 + w + 20, textY);
             }
         } catch (e) {
             console.warn('Failed to load watermark logo', e);
             if (companyName) {
                 ctx.fillStyle = textColor;
-                ctx.font = '600 20px "Inter", sans-serif';
+                ctx.font = '600 28px "Inter", sans-serif';
                 ctx.textBaseline = 'middle';
-                ctx.fillText(companyName, 30, padding / 2);
+                ctx.fillText(companyName, 40, padding / 2);
             }
         }
     } else if (companyName) {
         ctx.fillStyle = textColor;
-        ctx.font = '600 20px "Inter", sans-serif';
+        ctx.font = '600 28px "Inter", sans-serif';
         ctx.textBaseline = 'middle';
-        ctx.fillText(companyName, 30, padding / 2);
+        ctx.fillText(companyName, 40, padding / 2);
     }
 
     return newCanvas;

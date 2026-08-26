@@ -42,7 +42,7 @@ export function renderAgingChart(
 
     const sortedValues = [...values].sort((a, b) => a - b);
     const p85Index = Math.floor(sortedValues.length * 0.85);
-    const p50Index = Math.floor(sortedValues.length * 0.50);
+    const p50Index = Math.floor(sortedValues.length * 0.5);
     const p85 = sortedValues.length > 0 ? sortedValues[p85Index] : 14;
     const p50 = sortedValues.length > 0 ? sortedValues[p50Index] : 7;
 
@@ -56,7 +56,9 @@ export function renderAgingChart(
                 {
                     label: translations[currentLanguage]['label-days-inactive'],
                     data: values,
-                    backgroundColor: values.map((v: number) => (v >= p85 ? '#ef4444' : v >= p50 ? '#f59e0b' : '#3b82f6')),
+                    backgroundColor: values.map((v: number) =>
+                        v >= p85 ? '#ef4444' : v >= p50 ? '#f59e0b' : '#3b82f6'
+                    ),
                     borderRadius: 4
                 }
             ]
@@ -106,33 +108,35 @@ export function renderAgingChart(
                 }
             }
         },
-        plugins: [{
-            id: 'thresholdLine',
-            afterDraw(chart: any) {
-                if (!p85 || p85 === 0) return;
-                const ctx = chart.ctx;
-                const xAxis = chart.scales.x;
-                const yAxis = chart.scales.y;
-                
-                const xPos = xAxis.getPixelForValue(p85);
-                
-                if (xPos >= xAxis.left && xPos <= xAxis.right) {
-                    ctx.save();
-                    ctx.beginPath();
-                    ctx.moveTo(xPos, yAxis.top);
-                    ctx.lineTo(xPos, yAxis.bottom);
-                    ctx.lineWidth = 2;
-                    ctx.strokeStyle = '#ef4444';
-                    ctx.setLineDash([5, 5]);
-                    ctx.stroke();
-                    
-                    ctx.fillStyle = '#ef4444';
-                    ctx.font = '10px Arial';
-                    ctx.textAlign = 'center';
-                    ctx.fillText('P85 (' + p85 + 'd)', xPos, yAxis.top - 5);
-                    ctx.restore();
+        plugins: [
+            {
+                id: 'thresholdLine',
+                afterDraw(chart: any) {
+                    if (!p85 || p85 === 0) return;
+                    const ctx = chart.ctx;
+                    const xAxis = chart.scales.x;
+                    const yAxis = chart.scales.y;
+
+                    const xPos = xAxis.getPixelForValue(p85);
+
+                    if (xPos >= xAxis.left && xPos <= xAxis.right) {
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.moveTo(xPos, yAxis.top);
+                        ctx.lineTo(xPos, yAxis.bottom);
+                        ctx.lineWidth = 2;
+                        ctx.strokeStyle = '#ef4444';
+                        ctx.setLineDash([5, 5]);
+                        ctx.stroke();
+
+                        ctx.fillStyle = '#ef4444';
+                        ctx.font = '10px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('P85 (' + p85 + 'd)', xPos, yAxis.top - 5);
+                        ctx.restore();
+                    }
                 }
             }
-        }]
+        ]
     });
 }

@@ -11,7 +11,7 @@ export function renderMonteCarloChart(
 ) {
     const canvas = document.getElementById('monteCarloChart') as HTMLCanvasElement;
     if (!canvas) return;
-    
+
     // Destroy existing
     if (charts.monteCarlo) {
         charts.monteCarlo.destroy();
@@ -25,7 +25,11 @@ export function renderMonteCarloChart(
             ctx.fillStyle = currentTheme === 'dark' ? '#94a3b8' : '#64748b';
             ctx.font = '14px Inter';
             ctx.textAlign = 'center';
-            ctx.fillText(translations[currentLanguage]['empty-state-desc'] || 'No data available', canvas.width / 2, canvas.height / 2);
+            ctx.fillText(
+                translations[currentLanguage]['empty-state-desc'] || 'No data available',
+                canvas.width / 2,
+                canvas.height / 2
+            );
         }
         return;
     }
@@ -34,8 +38,10 @@ export function renderMonteCarloChart(
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const weeks = Object.keys(forecastData.histogram).map(Number).sort((a, b) => a - b);
-    const counts = weeks.map(w => forecastData.histogram[w]);
+    const weeks = Object.keys(forecastData.histogram)
+        .map(Number)
+        .sort((a, b) => a - b);
+    const counts = weeks.map((w) => forecastData.histogram[w]);
 
     const textColor = currentTheme === 'dark' ? '#94a3b8' : '#64748b';
     const gridColor = currentTheme === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
@@ -43,14 +49,16 @@ export function renderMonteCarloChart(
     charts.monteCarlo = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: weeks.map(w => `${w} ${t['label-weeks'] || 'weeks'}`),
-            datasets: [{
-                label: 'Simulations',
-                data: counts,
-                backgroundColor: currentTheme === 'dark' ? 'rgba(56, 189, 248, 0.6)' : 'rgba(14, 165, 233, 0.6)',
-                borderColor: currentTheme === 'dark' ? 'rgb(56, 189, 248)' : 'rgb(14, 165, 233)',
-                borderWidth: 1
-            }]
+            labels: weeks.map((w) => `${w} ${t['label-weeks'] || 'weeks'}`),
+            datasets: [
+                {
+                    label: 'Simulations',
+                    data: counts,
+                    backgroundColor: currentTheme === 'dark' ? 'rgba(56, 189, 248, 0.6)' : 'rgba(14, 165, 233, 0.6)',
+                    borderColor: currentTheme === 'dark' ? 'rgb(56, 189, 248)' : 'rgb(14, 165, 233)',
+                    borderWidth: 1
+                }
+            ]
         },
         options: {
             responsive: true,

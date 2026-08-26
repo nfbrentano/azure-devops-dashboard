@@ -2,7 +2,7 @@ import Chart from 'chart.js/auto';
 
 export function getChartThemeOptions(currentTheme: 'dark' | 'light') {
     const isLight = currentTheme === 'light';
-    
+
     // Set dynamic defaults based on theme
     Chart.defaults.color = isLight ? '#64748b' : '#94a3b8';
     Chart.defaults.plugins.tooltip.backgroundColor = isLight ? 'rgba(255, 255, 255, 0.9)' : 'rgba(15, 23, 42, 0.9)';

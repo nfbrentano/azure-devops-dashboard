@@ -36,9 +36,10 @@ export function renderPortfolioFilters(
             label.className = 'filter-item';
 
             const statusInfo = getStatusInfo(state, workItemMetadata);
-            const isChecked = previousSelection.size > 0 
-                ? previousSelection.has(state) 
-                : (statusInfo.label !== 'Done' && statusInfo.label !== 'Removed');
+            const isChecked =
+                previousSelection.size > 0
+                    ? previousSelection.has(state)
+                    : statusInfo.label !== 'Done' && statusInfo.label !== 'Removed';
 
             label.innerHTML = `
             <input type="checkbox" value="${state}" ${isChecked ? 'checked' : ''}>

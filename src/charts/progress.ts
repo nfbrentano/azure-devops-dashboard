@@ -40,7 +40,7 @@ export function renderProgress(
         const iconInfo = getItemIcon(item.fields['System.WorkItemType'] as string, workItemMetadata);
         const statusInfo = getStatusInfo(item.fields['System.State'] as string, workItemMetadata);
         const childCount = item.allChildren ? item.allChildren.length : 0;
-        
+
         const card = document.createElement('div');
         card.className = 'progress-item';
         card.style.borderLeftColor = statusInfo.color;
@@ -76,7 +76,7 @@ export function renderProgress(
         link.textContent = String(item.fields['System.Title'] || '');
         link.title = String(item.fields['System.Title'] || '');
         titleRow.appendChild(link);
-        
+
         wrapper.appendChild(titleRow);
 
         // Status pill & Child count row
@@ -84,23 +84,23 @@ export function renderProgress(
         metaRow.style.display = 'flex';
         metaRow.style.gap = '0.5rem';
         metaRow.style.alignItems = 'center';
-        
+
         const statusBadge = document.createElement('div');
         statusBadge.style.display = 'flex';
         statusBadge.style.alignItems = 'center';
         statusBadge.style.gap = '0.3rem';
         statusBadge.style.fontSize = '0.7rem';
         statusBadge.style.color = 'var(--text-muted)';
-        
+
         const dot = document.createElement('div');
         dot.style.width = '6px';
         dot.style.height = '6px';
         dot.style.borderRadius = '50%';
         dot.style.backgroundColor = statusInfo.color;
-        
+
         const stateText = document.createElement('span');
         stateText.textContent = item.fields['System.State'] as string;
-        
+
         statusBadge.appendChild(dot);
         statusBadge.appendChild(stateText);
         metaRow.appendChild(statusBadge);
@@ -116,7 +116,7 @@ export function renderProgress(
             childBadge.title = `Total Items: ${childCount}`;
             metaRow.appendChild(childBadge);
         }
-        
+
         wrapper.appendChild(metaRow);
 
         const progressBadge = document.createElement('div');
@@ -131,7 +131,7 @@ export function renderProgress(
 
         const barFill = document.createElement('div');
         barFill.className = 'progress-bar-fill';
-        
+
         // Use a tiny timeout to allow CSS animation to run from 0 to width
         setTimeout(() => {
             barFill.style.width = `${progress}%`;
