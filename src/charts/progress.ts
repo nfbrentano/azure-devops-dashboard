@@ -73,7 +73,7 @@ export function renderProgress(
         link.href = getWorkItemUrl(azureConfig, item.id);
         link.target = '_blank';
         link.className = 'item-link progress-title-text';
-        link.textContent = String(item.fields['System.Title'] || '');
+        link.appendChild(document.createTextNode(String(item.fields['System.Title'] || '')));
         link.title = String(item.fields['System.Title'] || '');
         titleRow.appendChild(link);
 
@@ -112,7 +112,14 @@ export function renderProgress(
             childBadge.style.display = 'flex';
             childBadge.style.alignItems = 'center';
             childBadge.style.gap = '0.2rem';
-            childBadge.innerHTML = `<i class="ph ph-files"></i> ${childCount}`;
+            
+            const icon = document.createElement('i');
+            icon.className = 'ph ph-files';
+            childBadge.appendChild(icon);
+            
+            const countText = document.createTextNode(` ${childCount}`);
+            childBadge.appendChild(countText);
+            
             childBadge.title = `Total Items: ${childCount}`;
             metaRow.appendChild(childBadge);
         }

@@ -132,7 +132,7 @@ export function isRequirementType(type: string, workItemMetadata?: WorkItemMetad
 export function getWorkItemUrl(azureConfig: AzureConfig | null, id: number | string, projectName?: string): string {
     if (!azureConfig) return '#';
     const project = projectName || azureConfig.project;
-    return `https://dev.azure.com/${azureConfig.org}/${project}/_workitems/edit/${id}`;
+    return `https://dev.azure.com/${encodeURIComponent(azureConfig.org)}/${encodeURIComponent(project)}/_workitems/edit/${encodeURIComponent(id)}`;
 }
 
 export function getStatusInfo(stateName: string, workItemMetadata: WorkItemMetadata): StatusInfo {
