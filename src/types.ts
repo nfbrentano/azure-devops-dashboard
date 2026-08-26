@@ -117,6 +117,8 @@ export interface AppState {
     charts: ChartInstances;
     heatmapData: Record<string, number> | null;
     ganttOffset: number;
+    timelineOffset: number;
+    cfdPeriod: number;
     currentTheme: 'dark' | 'light';
     currentLanguage: string;
     globalActiveTypes: string[] | null;
@@ -151,6 +153,8 @@ export interface AgingItem {
     title: string;
     age: number;
     state: string;
+    assignee?: string;
+    updated?: string;
 }
 
 export interface BottleneckResult {
@@ -162,6 +166,41 @@ export interface ThroughputDataPoint {
     label: string;
     range: string;
     count: number;
+}
+
+export interface CFDDataPoint {
+    date: Date;
+    Proposed: number;
+    InProgress: number;
+    Done: number;
+}
+
+export interface AnomalyAlert {
+    type: 'warning' | 'info' | 'error';
+    title: string;
+    message: string;
+    count?: number;
+}
+
+export interface ComputedMetrics {
+    filteredItems: WorkItemNode[];
+    leadTimes: string[];
+    cycleTimes: (string | number)[];
+    labels: string[];
+    agingData: AgingItem[];
+    assigneeWorkload: Record<string, Record<string, number>>;
+    boardColumnWIP: Record<string, number>;
+    kpis: {
+        total: number;
+        backlog: number;
+        inprogress: number;
+        doneRemoved: number;
+    };
+    cfdSeries: CFDDataPoint[];
+    heatmapData: Record<string, number>;
+    throughputData: ThroughputDataPoint[];
+    bottleneckData: BottleneckResult[] | null;
+    anomalies: AnomalyAlert[];
 }
 
 // ─── Query Types ────────────────────────────────────────────────────────────
@@ -203,6 +242,8 @@ export interface DashboardElements {
     timelineGanttPeriod: HTMLSelectElement | null;
     timelineGanttPrev: HTMLButtonElement | null;
     timelineGanttNext: HTMLButtonElement | null;
+    cfdPeriodSelect: HTMLSelectElement | null;
+    itemsSearchInput: HTMLInputElement | null;
 }
 
 export type Translations = Record<string, Record<string, string>>;

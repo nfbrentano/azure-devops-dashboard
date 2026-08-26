@@ -72,13 +72,18 @@ const elements: DashboardElements = {
     timelineGanttContainer: document.getElementById('timeline-gantt-container'),
     timelineGanttPeriod: document.getElementById('timeline-gantt-period') as HTMLSelectElement | null,
     timelineGanttPrev: document.getElementById('timeline-gantt-prev') as HTMLButtonElement | null,
-    timelineGanttNext: document.getElementById('timeline-gantt-next') as HTMLButtonElement | null
+    timelineGanttNext: document.getElementById('timeline-gantt-next') as HTMLButtonElement | null,
+    cfdPeriodSelect: document.getElementById('cfd-period-select') as HTMLSelectElement | null,
+    itemsSearchInput: document.getElementById('items-search-input') as HTMLInputElement | null
 };
 
-// Initialize application
 async function initApp() {
     document.documentElement.setAttribute('data-theme', state.currentTheme);
     updateThemeIcon(elements.themeToggle, state.currentTheme);
+
+    if (elements.cfdPeriodSelect) {
+        elements.cfdPeriodSelect.value = String(state.cfdPeriod);
+    }
 
     const uiOptions = {
         currentLanguage: state.currentLanguage,
@@ -233,7 +238,7 @@ async function initApp() {
         },
 
         handleTimelinePeriodChange: () => {
-            state.ganttOffset = 0;
+            state.timelineOffset = 0;
             const isTotal = elements.timelineGanttPeriod?.value === 'total';
             if (elements.timelineGanttPrev && elements.timelineGanttNext) {
                 elements.timelineGanttPrev.disabled = elements.timelineGanttNext.disabled = isTotal;
@@ -244,8 +249,50 @@ async function initApp() {
 
         handleTimelineNav: (dir: number) => {
             if (elements.timelineGanttPeriod?.value === 'total') return;
-            state.ganttOffset += dir;
+            state.timelineOffset += dir;
             callRenderTimeline();
+        },
+
+        handleCFDPeriodChange: (days: number) => {
+            state.cfdPeriod = days;
+            try {
+                localStorage.setItem('cfd_period', String(days));
+            } catch {
+                // ignore
+            }
+            if (state.currentData.items.length > 0) runAnalytics();
+        },
+
+        handleItemsSearch: (query: string) => {
+            const trimmed = query.trim().toLowerCase();
+            if (state.currentData.items.length > 0) {
+                let itemsToProcess = state.currentData.items;
+                if (trimmed) {
+                    itemsToProcess = itemsToProcess.filter((item) => {
+                        const title = ((item.fields['System.Title'] as string) || '').toLowerCase();
+                        const id = String(item.id);
+                        const assigned = typeof item.fields['System.AssignedTo'] === 'object'
+                            ? ((item.fields['System.AssignedTo'] as any)?.displayName || '').toLowerCase()
+                            : String(item.fields['System.AssignedTo'] || '').toLowerCase();
+                        return title.includes(trimmed) || id.includes(trimmed) || assigned.includes(trimmed);
+                    });
+                }
+                processAnalytics(itemsToProcess, state.currentData.tree, {
+                    currentTheme: state.currentTheme,
+                    currentLanguage: state.currentLanguage,
+                    workItemMetadata: state.workItemMetadata,
+                    charts: state.charts,
+                    azureConfig: state.azureConfig,
+                    progressList: elements.progressList,
+                    revisionsData: state.currentData.revisions,
+                    cfdPeriod: state.cfdPeriod,
+                    callRenderGantt
+                });
+            }
+        },
+
+        handleExportPDF: () => {
+            window.print();
         }
     };
 
@@ -388,6 +435,7 @@ function runAnalytics() {
         azureConfig: state.azureConfig,
         progressList: elements.progressList,
         revisionsData: state.currentData.revisions,
+        cfdPeriod: state.cfdPeriod,
         callRenderGantt
     });
 }
@@ -409,7 +457,7 @@ function callRenderTimeline() {
     renderTimeline(state.timelineData.tree, {
         ganttPeriod: elements.timelineGanttPeriod,
         currentData: state.timelineData,
-        ganttOffset: state.ganttOffset,
+        ganttOffset: state.timelineOffset,
         currentLanguage: state.currentLanguage,
         translations,
         workItemMetadata: state.workItemMetadata,

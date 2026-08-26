@@ -2,56 +2,62 @@
  * Analytics and Data Processing for Azure DevOps Dashboard
  */
 import { state } from './state.ts';
-import type { WorkItemNode, WorkItemMetadata } from './types.ts';
+import type {
+    WorkItemNode,
+    WorkItemMetadata,
+    ComputedMetrics,
+    AgingItem,
+    CFDDataPoint,
+    ThroughputDataPoint,
+    BottleneckResult,
+    AnomalyAlert,
+    ChartInstances,
+    AzureConfig,
+    WorkItem
+} from './types.ts';
 import { translations } from './translations.ts';
-import { getItemIcon, getStatusInfo } from './utils.ts';
+import { getItemIcon, getStatusInfo, isRequirementType } from './utils.ts';
 import { logger } from './logger.ts';
 import {
     renderCharts,
-    renderThroughputChart,
     renderAgingChart,
     renderAssigneeChart,
     renderWIPChart,
     renderCFDChart,
     renderBottlenecksChart,
+    renderThroughputChart,
     renderPortfolioFilters,
     renderProgress,
     renderLegends,
     renderGlobalTypeFilters
 } from './charts/index.ts';
-import { renderActivityHeatmap } from './heatmap.ts';
 
-export interface ComputedMetrics {
-    filteredItems: WorkItemNode[];
-    leadTimes: string[];
-    cycleTimes: (string | number)[];
-    labels: string[];
-    agingData: any[];
-    assigneeWorkload: Record<string, number>;
-    boardColumnWIP: Record<string, number>;
-    kpis: {
-        total: number;
-        backlog: number;
-        inprogress: number;
-        doneRemoved: number;
-    };
-    cfdSeries: any[];
-    heatmapData: Record<string, number>;
-    throughputData: any[];
-    bottleneckData: any[] | null;
+export type { ComputedMetrics };
+
+export interface ProcessAnalyticsOptions {
+    currentTheme?: 'dark' | 'light';
+    currentLanguage?: string;
+    workItemMetadata?: WorkItemMetadata;
+    charts?: ChartInstances;
+    azureConfig?: AzureConfig | null;
+    progressList?: HTMLElement | null;
+    revisionsData?: Record<number, WorkItem[]>;
+    cfdPeriod?: number;
+    callRenderGantt?: () => void;
 }
 
 export function computeMetrics(
     filteredItems: WorkItemNode[],
-    revisionsData: Record<number, any[]> | undefined,
+    revisionsData: Record<number, WorkItem[]> | undefined,
     workItemMetadata: WorkItemMetadata,
-    currentLanguage: string
+    currentLanguage: string,
+    cfdDays = 180
 ): ComputedMetrics {
-    const leadTimes: string[] = [],
-        cycleTimes: (string | number)[] = [],
-        labels: string[] = [],
-        agingData: any[] = [];
-    const assigneeWorkload: Record<string, number> = {};
+    const leadTimes: string[] = [];
+    const cycleTimes: (string | number)[] = [];
+    const labels: string[] = [];
+    const agingData: AgingItem[] = [];
+    const assigneeWorkload: Record<string, Record<string, number>> = {};
     const boardColumnWIP: Record<string, number> = {};
     const kpis = { total: filteredItems.length, backlog: 0, inprogress: 0, doneRemoved: 0 };
     const now = new Date();
@@ -74,7 +80,9 @@ export function computeMetrics(
 
         if (closedDate && !isNaN(closedDate.getTime())) {
             leadTimes.push(((closedDate.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24)).toFixed(1));
-            cycleTimes.push(activatedDate ? ((closedDate.getTime() - activatedDate.getTime()) / (1000 * 60 * 60 * 24)).toFixed(1) : 0);
+            cycleTimes.push(
+                activatedDate ? ((closedDate.getTime() - activatedDate.getTime()) / (1000 * 60 * 60 * 24)).toFixed(1) : 0
+            );
             labels.push(`ID ${item.id}`);
         }
 
@@ -82,21 +90,29 @@ export function computeMetrics(
         const iconInfo = getItemIcon(type, workItemMetadata);
 
         if (statusInfo.label === 'In Progress' && !iconInfo.isPortfolio && !isNaN(changedDate.getTime())) {
+            const assignee = f['System.AssignedTo'] as { displayName?: string; uniqueName?: string } | string | undefined;
+            const name = (typeof assignee === 'object' && assignee !== null ? assignee.displayName || assignee.uniqueName : typeof assignee === 'string' ? assignee : null) || translations[currentLanguage]['label-unassigned'] || 'Unassigned';
+            
             agingData.push({
                 id: item.id,
-                title: (f['System.Title'] as string) || translations[currentLanguage]['label-no-title'],
+                title: (f['System.Title'] as string) || translations[currentLanguage]['label-no-title'] || 'No title',
                 age: Math.max(0, Math.floor((now.getTime() - changedDate.getTime()) / (1000 * 60 * 60 * 24))),
-                state: stateName
+                state: stateName,
+                assignee: name,
+                updated: changedDate.toLocaleDateString(currentLanguage, { day: '2-digit', month: '2-digit', year: 'numeric' })
             });
         }
 
         if (!iconInfo.isPortfolio) {
-            const assignee = f['System.AssignedTo'] as any;
+            const assignee = f['System.AssignedTo'] as { displayName?: string; uniqueName?: string } | string | undefined;
             const name =
-                assignee?.displayName ||
-                assignee?.uniqueName ||
-                (typeof assignee === 'string' ? assignee : translations[currentLanguage]['label-unassigned']);
-            assigneeWorkload[name] = (assigneeWorkload[name] || 0) + 1;
+                (typeof assignee === 'object' && assignee !== null
+                    ? assignee.displayName || assignee.uniqueName
+                    : typeof assignee === 'string'
+                      ? assignee
+                      : null) || translations[currentLanguage]['label-unassigned'] || 'Unassigned';
+            if (!assigneeWorkload[name]) assigneeWorkload[name] = {};
+            assigneeWorkload[name][statusInfo.label] = (assigneeWorkload[name][statusInfo.label] || 0) + 1;
 
             const boardColumn = (f['System.BoardColumn'] as string) || (f['System.State'] as string);
             boardColumnWIP[boardColumn] = (boardColumnWIP[boardColumn] || 0) + 1;
@@ -119,13 +135,14 @@ export function computeMetrics(
             };
         });
 
-    const cfdSeries: any[] = [];
-    for (let i = 179; i >= 0; i--) {
+    const cfdSeries: CFDDataPoint[] = [];
+    const validCfdDays = Math.max(7, Math.min(365, cfdDays || 180));
+    for (let i = validCfdDays - 1; i >= 0; i--) {
         const d = new Date(now);
         d.setDate(d.getDate() - i);
         d.setHours(0, 0, 0, 0);
         const t = d.getTime();
-        const counts = { date: d, Proposed: 0, InProgress: 0, Done: 0 };
+        const counts: CFDDataPoint = { date: d, Proposed: 0, InProgress: 0, Done: 0 };
 
         cfdItems.forEach((item) => {
             if (item.createdTime <= t) {
@@ -147,9 +164,7 @@ export function computeMetrics(
         }
     });
 
-    const throughputData: any[] = [];
-    const requirementBacklogTypes =
-        workItemMetadata.backlogs.find((b) => b.name.toLowerCase().includes('requirement'))?.workItemTypes || [];
+    const throughputData: ThroughputDataPoint[] = [];
 
     let earliestClosedDate: Date | null = null;
     for (const item of filteredItems) {
@@ -157,13 +172,7 @@ export function computeMetrics(
         const closedDateStr = f['Microsoft.VSTS.Common.ClosedDate'] || f['System.ClosedDate'];
         if (!closedDateStr) continue;
         const type = (item.fields['System.WorkItemType'] as string)?.toLowerCase();
-        if (
-            !(
-                requirementBacklogTypes.includes(type) ||
-                ['user story', 'product backlog item', 'requirement', 'issue'].includes(type)
-            )
-        )
-            continue;
+        if (!isRequirementType(type, workItemMetadata)) continue;
 
         const closed = new Date(closedDateStr as string);
         if (!earliestClosedDate || closed < earliestClosedDate) earliestClosedDate = closed;
@@ -194,20 +203,14 @@ export function computeMetrics(
                 const closedDateStr = f['Microsoft.VSTS.Common.ClosedDate'] || f['System.ClosedDate'];
                 if (!closedDateStr) return;
                 const type = (item.fields['System.WorkItemType'] as string)?.toLowerCase();
-                if (
-                    !(
-                        requirementBacklogTypes.includes(type) ||
-                        ['user story', 'product backlog item', 'requirement', 'issue'].includes(type)
-                    )
-                )
-                    return;
+                if (!isRequirementType(type, workItemMetadata)) return;
 
                 const closed = new Date(closedDateStr as string);
                 if (closed >= startOfWeek && closed <= endOfWeek) count++;
             });
 
             throughputData.push({
-                label: `${translations[currentLanguage]['label-week-short']}${i + 1}`,
+                label: `${translations[currentLanguage]['label-week-short'] || 'W'}${i + 1}`,
                 range: `${startOfWeek.toLocaleDateString(currentLanguage, { day: 'numeric', month: 'short' })} - ${endOfWeek.toLocaleDateString(currentLanguage, { day: 'numeric', month: 'short' })}`,
                 count: count
             });
@@ -215,10 +218,26 @@ export function computeMetrics(
     }
 
     // Bottlenecks
-    let bottleneckData: any[] | null = null;
+    let bottleneckData: BottleneckResult[] | null = null;
     if (revisionsData) {
         bottleneckData = calculateBottlenecks(filteredItems, revisionsData, workItemMetadata);
     }
+
+    // Anomalies & alerts
+    const anomalies = calculateAnomalies({
+        filteredItems,
+        leadTimes,
+        cycleTimes,
+        labels,
+        agingData,
+        assigneeWorkload,
+        boardColumnWIP,
+        kpis,
+        cfdSeries,
+        heatmapData,
+        throughputData,
+        bottleneckData
+    }, currentLanguage);
 
     return {
         filteredItems,
@@ -232,13 +251,99 @@ export function computeMetrics(
         cfdSeries,
         heatmapData,
         throughputData,
-        bottleneckData
+        bottleneckData,
+        anomalies
     };
 }
 
-export function renderAll(metrics: ComputedMetrics, originalItems: WorkItemNode[], options: any) {
-    const { currentTheme, currentLanguage, workItemMetadata, charts, azureConfig, progressList, callRenderGantt } =
-        options;
+export function calculateAnomalies(metrics: Omit<ComputedMetrics, 'anomalies'>, currentLanguage: string): AnomalyAlert[] {
+    const alerts: AnomalyAlert[] = [];
+    const t = translations[currentLanguage] || translations['en'];
+
+    // 1. Stuck / Stale In-Progress items (> 14 days)
+    const staleItems = metrics.agingData.filter((i) => i.age >= 14);
+    if (staleItems.length > 0) {
+        alerts.push({
+            type: 'warning',
+            title: t['alert-stale-title'] || 'Itens Estagnados em Progresso',
+            message: `${staleItems.length} ${t['alert-stale-msg'] || 'itens em In Progress estão há mais de 14 dias sem atualização.'}`,
+            count: staleItems.length
+        });
+    }
+
+    // 2. WIP Overload in specific columns (> 8 items)
+    const overloadedColumns = Object.entries(metrics.boardColumnWIP).filter(([col, count]) => {
+        const lower = col.toLowerCase();
+        return count >= 8 && !['done', 'closed', 'removed', 'backlog', 'new'].includes(lower);
+    });
+    if (overloadedColumns.length > 0) {
+        const colNames = overloadedColumns.map(([c, n]) => `${c} (${n})`).join(', ');
+        alerts.push({
+            type: 'error',
+            title: t['alert-wip-title'] || 'Alerta de Limite de WIP',
+            message: `${t['alert-wip-msg'] || 'Colunas com sobrecarga de itens:'} ${colNames}`
+        });
+    }
+
+    // 3. Bottleneck Columns (> 7 days average)
+    if (metrics.bottleneckData && metrics.bottleneckData.length > 0) {
+        const topBottleneck = metrics.bottleneckData[0];
+        if (topBottleneck.avgDays >= 7) {
+            alerts.push({
+                type: 'info',
+                title: t['alert-bottleneck-title'] || 'Principal Gargalo Detectado',
+                message: `${t['alert-bottleneck-msg'] || 'A coluna'} "${topBottleneck.column}" ${t['alert-bottleneck-detail'] || 'leva em média'} ${topBottleneck.avgDays.toFixed(1)} ${t['label-days'] || 'dias'}.`
+            });
+        }
+    }
+
+    return alerts;
+}
+
+export function renderAnomalies(anomalies: AnomalyAlert[]) {
+    const container = document.getElementById('anomaly-alerts-container');
+    if (!container) return;
+
+    if (anomalies.length === 0) {
+        container.innerHTML = '';
+        container.classList.add('hidden');
+        return;
+    }
+
+    container.classList.remove('hidden');
+    container.innerHTML = anomalies
+        .map((a) => {
+            const icon =
+                a.type === 'error'
+                    ? 'ph-fill ph-warning-circle'
+                    : a.type === 'warning'
+                      ? 'ph-fill ph-warning'
+                      : 'ph-fill ph-info';
+            const colorClass = `alert-${a.type}`;
+            return `
+            <div class="anomaly-alert-card ${colorClass}">
+                <i class="${icon}"></i>
+                <div class="anomaly-alert-body">
+                    <strong>${a.title}</strong>
+                    <span>${a.message}</span>
+                </div>
+            </div>
+        `;
+        })
+        .join('');
+}
+
+export function renderAll(metrics: ComputedMetrics, originalItems: WorkItemNode[], options: ProcessAnalyticsOptions) {
+    const currentTheme = options.currentTheme || state.currentTheme;
+    const currentLanguage = options.currentLanguage || state.currentLanguage;
+    const workItemMetadata = options.workItemMetadata || state.workItemMetadata;
+    const charts = options.charts || state.charts;
+    const azureConfig = options.azureConfig || state.azureConfig;
+    const progressList = options.progressList || document.getElementById('progress-list');
+    const callRenderGantt = options.callRenderGantt;
+
+    // Render anomalies
+    renderAnomalies(metrics.anomalies);
 
     // Rendering via charts.js
     renderCharts(metrics.labels, metrics.leadTimes, metrics.cycleTimes, charts, currentTheme, currentLanguage, translations, azureConfig);
@@ -246,9 +351,9 @@ export function renderAll(metrics: ComputedMetrics, originalItems: WorkItemNode[
     renderAssigneeChart(metrics.assigneeWorkload, charts, currentTheme, currentLanguage, translations);
     renderWIPChart(metrics.boardColumnWIP, charts, currentTheme, currentLanguage, translations);
     renderCFDChart(metrics.cfdSeries, charts, currentTheme, currentLanguage, translations);
-    renderActivityHeatmap(metrics.heatmapData, currentLanguage, translations);
-
-    renderThroughputChart(metrics.throughputData, charts, currentTheme, currentLanguage, translations);
+    if (metrics.throughputData && metrics.throughputData.length > 0) {
+        renderThroughputChart(metrics.throughputData, charts, currentTheme, currentLanguage, translations);
+    }
 
     // Bottleneck Analysis
     if (metrics.bottleneckData) {
@@ -281,8 +386,11 @@ export function renderAll(metrics: ComputedMetrics, originalItems: WorkItemNode[
     updateTextContent('kpi-done-pct', `${pct(metrics.kpis.doneRemoved)}%`);
 }
 
-export function processAnalytics(items: WorkItemNode[], tree: WorkItemNode[], options: any = {}) {
-    const { currentLanguage, workItemMetadata, revisionsData } = options;
+export function processAnalytics(items: WorkItemNode[], tree: WorkItemNode[], options: ProcessAnalyticsOptions = {}) {
+    const currentLanguage = options.currentLanguage || state.currentLanguage;
+    const workItemMetadata = options.workItemMetadata || state.workItemMetadata;
+    const revisionsData = options.revisionsData || state.currentData.revisions;
+    const cfdPeriod = options.cfdPeriod || state.cfdPeriod || 180;
 
     // Global Type Filters Initialization
     if (!state.globalActiveTypes) {
@@ -296,10 +404,20 @@ export function processAnalytics(items: WorkItemNode[], tree: WorkItemNode[], op
             }
         });
         state.globalActiveTypes.sort();
+        try {
+            localStorage.setItem('global_active_types', JSON.stringify(state.globalActiveTypes));
+        } catch {
+            // ignore localStorage quota errors
+        }
     }
 
     renderGlobalTypeFilters(state.globalActiveTypes, items, workItemMetadata, currentLanguage, (newActiveTypes) => {
         state.globalActiveTypes = newActiveTypes;
+        try {
+            localStorage.setItem('global_active_types', JSON.stringify(newActiveTypes));
+        } catch {
+            // ignore
+        }
         processAnalytics(state.currentData.items, state.currentData.tree, options);
     });
 
@@ -308,15 +426,15 @@ export function processAnalytics(items: WorkItemNode[], tree: WorkItemNode[], op
         return state.globalActiveTypes?.includes(type);
     });
 
-    const metrics = computeMetrics(filteredItems, revisionsData, workItemMetadata, currentLanguage);
+    const metrics = computeMetrics(filteredItems, revisionsData, workItemMetadata, currentLanguage, cfdPeriod);
     renderAll(metrics, items, options);
 }
 
 export function calculateBottlenecks(
     items: WorkItemNode[],
-    revisionsData: Record<number, any[]>,
+    revisionsData: Record<number, WorkItem[]>,
     workItemMetadata: WorkItemMetadata
-) {
+): BottleneckResult[] {
     const columnTimes: Record<string, number[]> = {}; // { column: [durations] }
     let itemsWithRevisions = 0;
 
@@ -327,7 +445,9 @@ export function calculateBottlenecks(
 
         // Sort revisions by date
         const sorted = [...revisions].sort(
-            (a, b) => new Date(a.fields['System.ChangedDate'] as string).getTime() - new Date(b.fields['System.ChangedDate'] as string).getTime()
+            (a, b) =>
+                new Date(a.fields['System.ChangedDate'] as string).getTime() -
+                new Date(b.fields['System.ChangedDate'] as string).getTime()
         );
 
         // Time spent between transitions
@@ -362,7 +482,7 @@ export function calculateBottlenecks(
     logger.info(`Bottlenecks: Calculated for ${itemsWithRevisions}/${items.length} items`);
 
     // Calculate averages
-    const results = Object.entries(columnTimes)
+    const results: BottleneckResult[] = Object.entries(columnTimes)
         .map(([column, durations]) => ({
             column,
             avgDays: durations.length > 0 ? durations.reduce((a, b) => a + b, 0) / durations.length : 0

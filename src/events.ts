@@ -88,6 +88,9 @@ export function initEvents(
         handleTimelinePeriodChange: () => void;
         handleTimelineNav: (dir: number) => void;
         handleGanttFilterChange: () => void;
+        handleCFDPeriodChange: (days: number) => void;
+        handleItemsSearch: (query: string) => void;
+        handleExportPDF: () => void;
     }
 ) {
     const {
@@ -108,7 +111,9 @@ export function initEvents(
         tabSetup,
         timelineGanttPeriod,
         timelineGanttPrev,
-        timelineGanttNext
+        timelineGanttNext,
+        cfdPeriodSelect,
+        itemsSearchInput
     } = elements;
 
     const {
@@ -122,7 +127,10 @@ export function initEvents(
         handleGanttNav,
         handleTabSwitch,
         handleTimelinePeriodChange,
-        handleTimelineNav
+        handleTimelineNav,
+        handleCFDPeriodChange,
+        handleItemsSearch,
+        handleExportPDF
     } = handlers;
 
     // Tabs
@@ -153,6 +161,25 @@ export function initEvents(
     // Data Controls
     querySelector?.addEventListener('change', handleQueryChange);
     refreshBtn?.addEventListener('click', handleRefresh);
+
+    // PDF Export
+    const pdfBtn = document.getElementById('pdf-export-btn');
+    pdfBtn?.addEventListener('click', handleExportPDF);
+
+    // CFD Period
+    cfdPeriodSelect?.addEventListener('change', () => {
+        const val = Number(cfdPeriodSelect.value) || 180;
+        handleCFDPeriodChange(val);
+    });
+
+    // Items Search
+    let searchDebounce: any = null;
+    itemsSearchInput?.addEventListener('input', () => {
+        clearTimeout(searchDebounce);
+        searchDebounce = setTimeout(() => {
+            handleItemsSearch(itemsSearchInput.value);
+        }, 300);
+    });
 
     // Gantt
     ganttPeriod?.addEventListener('change', handleGanttPeriodChange);

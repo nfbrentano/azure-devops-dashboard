@@ -35,15 +35,25 @@ export function renderWIPChart(
 
     const { gridColor, textColor } = getChartThemeOptions(currentTheme);
 
+    const bgColors = columns.map((col, idx) => {
+        const count = counts[idx];
+        const lower = col.toLowerCase();
+        const isExcluded = ['done', 'closed', 'removed', 'backlog', 'new'].includes(lower);
+        if (!isExcluded && count >= 8) {
+            return '#ef4444'; // Overloaded WIP alert
+        }
+        return '#f59e0b';
+    });
+
     charts.wip = new Chart(canvas as HTMLCanvasElement, {
         type: 'bar',
         data: {
             labels: columns,
             datasets: [
                 {
-                    label: translations[currentLanguage]['label-items-count'],
+                    label: translations[currentLanguage]['label-items-count'] || 'Items',
                     data: counts,
-                    backgroundColor: '#f59e0b',
+                    backgroundColor: bgColors,
                     borderRadius: 4
                 }
             ]

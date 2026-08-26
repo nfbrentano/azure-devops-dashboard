@@ -16,9 +16,11 @@ export const state: AppState = {
     },
     heatmapData: null,
     ganttOffset: 0,
+    timelineOffset: 0,
+    cfdPeriod: Number(localStorage.getItem('cfd_period')) || 180,
     currentTheme: (localStorage.getItem('theme') as 'dark' | 'light') || 'dark',
     currentLanguage: localStorage.getItem('language') || 'pt-br',
-    globalActiveTypes: null,
+    globalActiveTypes: JSON.parse(localStorage.getItem('global_active_types') || 'null'),
     workItemMetadata: {
         types: {},
         backlogs: [],

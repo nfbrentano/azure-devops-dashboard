@@ -17,16 +17,13 @@ describe('progress.ts', () => {
             Active: { category: 'InProgress', color: '#0078d4' },
             Done: { category: 'Completed', color: '#10b981' }
         },
-        backlogs: [
-            { name: 'Epics', type: 'portfolio', workItemTypes: ['Epic'] }
-        ]
+        backlogs: [{ name: 'Epics', type: 'portfolio', workItemTypes: ['Epic'] }]
     } as unknown as WorkItemMetadata;
 
     const mockConfig: AzureConfig = {
-        organization: 'my-org',
+        org: 'my-org',
         project: 'my-project',
-        pat: 'pat',
-        team: ''
+        pat: 'pat'
     };
 
     beforeEach(() => {

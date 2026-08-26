@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calculateProgress, getStatusInfo, getItemIcon, encryptPAT, decryptPAT, escapeHtml, showToast } from './utils.ts';
+import { calculateProgress, getStatusInfo, getItemIcon, encryptPAT, decryptPAT, escapeHtml, showToast, isRequirementType } from './utils.ts';
 import type { WorkItemMetadata, WorkItemNode } from './types.ts';
 
 describe('utils.ts', () => {
@@ -135,15 +135,49 @@ describe('utils.ts', () => {
         });
     });
 
+    describe('isRequirementType', () => {
+        it('should identify standard agile/scrum requirement types', () => {
+            expect(isRequirementType('User Story')).toBe(true);
+            expect(isRequirementType('Product Backlog Item')).toBe(true);
+            expect(isRequirementType('Requirement')).toBe(true);
+            expect(isRequirementType('Issue')).toBe(true);
+            expect(isRequirementType('Task')).toBe(false);
+            expect(isRequirementType('Epic')).toBe(false);
+        });
+
+        it('should respect workItemMetadata requirement backlog types', () => {
+            const customMeta = {
+                backlogs: [{ name: 'Custom Requirement Backlog', type: 'requirement', workItemTypes: ['Story', 'Enabler'] }]
+            } as unknown as WorkItemMetadata;
+            expect(isRequirementType('Enabler', customMeta)).toBe(true);
+            expect(isRequirementType('Story', customMeta)).toBe(true);
+            expect(isRequirementType('Bug', customMeta)).toBe(false);
+        });
+    });
+
     describe('encryptPAT and decryptPAT', () => {
         const testPAT = 'my-super-secret-pat';
         const password = 'my-secure-password';
 
-        it('should encrypt and decrypt correctly', async () => {
+        it('should encrypt with v2 format and decrypt correctly', async () => {
             const encrypted = await encryptPAT(testPAT, password);
-            expect(encrypted).toContain(':');
+            expect(encrypted.startsWith('v2:')).toBe(true);
+            const parts = encrypted.split(':');
+            expect(parts.length).toBe(4); // v2, salt, iv, encrypted
+
             const decrypted = await decryptPAT(encrypted, password);
             expect(decrypted).toBe(testPAT);
+        });
+
+        it('should produce unique ciphertexts and salts for the same input (random salt)', async () => {
+            const enc1 = await encryptPAT(testPAT, password);
+            const enc2 = await encryptPAT(testPAT, password);
+            expect(enc1).not.toBe(enc2);
+
+            const decrypted1 = await decryptPAT(enc1, password);
+            const decrypted2 = await decryptPAT(enc2, password);
+            expect(decrypted1).toBe(testPAT);
+            expect(decrypted2).toBe(testPAT);
         });
 
         it('should return empty/original if pat or password is empty', async () => {
@@ -158,17 +192,24 @@ describe('utils.ts', () => {
             expect(decrypted).toBeNull();
         });
 
-        it('should fallback to XOR decryption for legacy format without password', async () => {
-            // Legacy format was XOR(42) + base64. Let's encode a alphanumeric legacy PAT using XOR
-            const legacyPAT = 'mysupersecretpat';
-            const xorEncoded = btoa(
-                legacyPAT
-                    .split('')
-                    .map((c) => String.fromCharCode(c.charCodeAt(0) ^ 42))
-                    .join('')
+        it('should support legacy v1 format (iv:ciphertext) seamlessly', async () => {
+            // Legacy encryption simulation using legacy salt
+            const encoder = new TextEncoder();
+            const legacySalt = new Uint8Array([71, 101, 109, 105, 110, 105, 32, 65, 105, 32, 82, 111, 99, 107, 115, 33]);
+            const baseKey = await crypto.subtle.importKey('raw', encoder.encode(password), 'PBKDF2', false, ['deriveKey']);
+            const key = await crypto.subtle.deriveKey(
+                { name: 'PBKDF2', salt: legacySalt as unknown as BufferSource, iterations: 100000, hash: 'SHA-256' },
+                baseKey,
+                { name: 'AES-GCM', length: 256 },
+                false,
+                ['encrypt', 'decrypt']
             );
-            const decrypted = await decryptPAT(xorEncoded);
-            expect(decrypted).toBe(legacyPAT);
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+            const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, encoder.encode(testPAT));
+            const v1Format = `${btoa(String.fromCharCode(...iv))}:${btoa(String.fromCharCode(...new Uint8Array(encrypted)))}`;
+
+            const decrypted = await decryptPAT(v1Format, password);
+            expect(decrypted).toBe(testPAT);
         });
     });
 

@@ -9,12 +9,20 @@
 
 .gantt-row {
     display: flex;
-    align-items: stretch; /* Modified to allow lines to stretch */
+    align-items: stretch;
     gap: 1rem;
     min-width: 800px;
     border-bottom: 1px solid var(--border-glass);
     position: relative;
-    height: 36px; /* Fixed height for consistent lines */
+    height: 40px; /* Increased height for better readability */
+    transition: background-color 0.2s ease;
+}
+
+.gantt-row:hover {
+    background-color: rgba(255, 255, 255, 0.02);
+}
+[data-theme='light'] .gantt-row:hover {
+    background-color: rgba(0, 0, 0, 0.02);
 }
 
 .gantt-label {
@@ -64,26 +72,48 @@
 .gantt-bar {
     position: absolute;
     height: 100%;
-    border-radius: 4px;
+    border-radius: 6px; /* More rounded */
     display: flex;
     align-items: center;
     padding-left: 0.5rem;
-    font-size: 0.65rem;
+    font-size: 0.7rem;
     font-weight: bold;
     color: white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1), 0 2px 4px rgba(0, 0, 0, 0.2);
     white-space: nowrap;
     overflow: hidden;
+    background-image: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 100%);
+    transition: filter 0.2s;
+    cursor: pointer;
+}
+
+.gantt-bar:hover {
+    filter: brightness(1.1);
 }
 
 .today-line {
     position: absolute;
-    top: 0;
+    top: -24px;
     bottom: 0;
     width: 2px;
     background: #f43f5e;
     z-index: 10;
     pointer-events: none;
+    box-shadow: 0 0 10px rgba(244, 63, 94, 0.5);
+}
+
+.today-line::before {
+    content: 'Today';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #f43f5e;
+    color: white;
+    font-size: 0.65rem;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 4px;
 }
 
 /* Status Classes */
@@ -218,10 +248,17 @@
     align-items: center;
     gap: 0.4rem;
     font-size: 0.7rem;
-    color: var(--text-muted);
-    min-width: 100px;
+    font-weight: 500;
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-glass);
+    padding: 0.2rem 0.5rem;
+    border-radius: 1rem;
     margin-left: auto;
-    padding: 0 0.5rem;
+}
+
+[data-theme='light'] .status-indicator {
+    background: rgba(0, 0, 0, 0.05);
 }
 
 .status-dot {
@@ -236,7 +273,7 @@
     left: 12px;
     top: 0;
     bottom: 50%;
-    width: 1.5px;
+    width: 1px;
     background: var(--border-glass);
 }
 
@@ -246,7 +283,7 @@
     left: 12px;
     top: 50%;
     width: 12px;
-    height: 1.5px;
+    height: 1px;
     background: var(--border-glass);
 }
 
@@ -257,8 +294,21 @@
     left: 12px;
     top: 0;
     bottom: 0;
-    width: 1.5px;
+    width: 1px;
     background: var(--border-glass);
+}
+
+/* Depth styles (applied via JS) */
+.gantt-row.depth-2 .tree-line.connector::before,
+.gantt-row.depth-2 .tree-line.connector::after,
+.gantt-row.depth-2 .tree-line.spacer.active::before {
+    background-image: linear-gradient(to bottom, var(--border-glass) 50%, transparent 50%);
+    background-size: 1px 4px;
+    background-color: transparent;
+}
+.gantt-row.depth-2 .tree-line.connector::after {
+    background-image: linear-gradient(to right, var(--border-glass) 50%, transparent 50%);
+    background-size: 4px 1px;
 }
 
 /* Specific logic for last child needs JS class or clever CSS */

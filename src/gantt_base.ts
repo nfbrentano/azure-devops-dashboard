@@ -374,7 +374,7 @@ function renderRecursive(
 
             const progress = calculateProgress(item, workItemMetadata);
             const row = document.createElement('div');
-            row.className = `gantt-row ${hasChildren ? 'parent' : ''} ${depth === 0 ? 'root' : ''} ${isLastChild ? 'last-child' : ''}`;
+            row.className = `gantt-row depth-${Math.min(depth, 3)} ${hasChildren ? 'parent' : ''} ${depth === 0 ? 'root' : ''} ${isLastChild ? 'last-child' : ''}`;
 
             const itemTitle = escapeHtml(String(fields['System.Title'] || ''));
             const escapedState = escapeHtml(state);
@@ -404,6 +404,8 @@ function renderRecursive(
                 const startDateStr = hasPlannedDates ? itemStart.toLocaleDateString(currentLanguage, { day: '2-digit', month: '2-digit', year: '2-digit' }) : '---';
                 const endDateStr = hasPlannedDates ? itemEnd.toLocaleDateString(currentLanguage, { day: '2-digit', month: '2-digit', year: '2-digit' }) : '---';
                 const workItemUrl = escapeHtml(getWorkItemUrl(azureConfig, item.id, fields['System.TeamProject'] as string));
+                
+                const tooltipText = hasPlannedDates ? escapeHtml(`${startDateStr} → ${endDateStr}`) : '';
 
                 row.innerHTML = `
                     <div class="gantt-label" title="${itemTitle}" style="min-width: 300px;">
@@ -435,7 +437,7 @@ function renderRecursive(
                         ${
                             hasPlannedDates && !isOutside
                                 ? `
-                        <div class="gantt-bar ${statusInfo.class}" style="left: ${Math.max(0, left)}%; width: ${Math.min(100, width)}%; padding-left: 0.5rem; background-color: ${statusInfo.color}">
+                        <div class="gantt-bar ${statusInfo.class}" data-tooltip="${tooltipText}" style="left: ${Math.max(0, left)}%; width: ${Math.min(100, width)}%; padding-left: 0.5rem; background-color: ${statusInfo.color}">
                             <span>${progress}%</span>
                         </div>
                         `
@@ -468,6 +470,10 @@ function renderRecursive(
                 const isOutside = right <= 0 || left >= 100;
                 const workItemUrl = escapeHtml(getWorkItemUrl(azureConfig, item.id));
 
+                const startDateStr = isValidDate(itemStart) ? itemStart.toLocaleDateString(currentLanguage, { day: '2-digit', month: '2-digit', year: '2-digit' }) : '---';
+                const endDateStr = isValidDate(itemEnd) ? itemEnd.toLocaleDateString(currentLanguage, { day: '2-digit', month: '2-digit', year: '2-digit' }) : '---';
+                const tooltipText = escapeHtml(`${startDateStr} → ${endDateStr}`);
+
                 row.innerHTML = `
                     <div class="gantt-label" title="${itemTitle}">
                         ${treeLinesHtml}
@@ -485,7 +491,7 @@ function renderRecursive(
                         ${
                             !isOutside
                                 ? `
-                        <div class="gantt-bar ${statusInfo.class}" style="left: ${Math.max(0, left)}%; width: ${Math.min(100, width)}%; padding-left: 0.5rem; background-color: ${statusInfo.color}">
+                        <div class="gantt-bar ${statusInfo.class}" data-tooltip="${tooltipText}" style="left: ${Math.max(0, left)}%; width: ${Math.min(100, width)}%; padding-left: 0.5rem; background-color: ${statusInfo.color}">
                             <span>${progress}%</span>
                         </div>
                         `

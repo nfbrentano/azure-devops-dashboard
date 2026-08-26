@@ -140,7 +140,20 @@ export const translations: Translations = {
         'msg-portfolio-empty-toast': 'No items found in the portfolio.',
         'loading-processing-items': 'Processing {count} items...',
         'msg-timeline-error': 'Timeline error: {message}',
-        'label-load-more': 'Load More'
+        'label-load-more': 'Load More',
+        'cfd-period-30': 'Last 30 Days',
+        'cfd-period-60': 'Last 60 Days',
+        'cfd-period-90': 'Last 90 Days',
+        'cfd-period-180': 'Last 180 Days',
+        'alert-stale-title': 'Stuck In-Progress Items',
+        'alert-stale-msg': 'items in In Progress have had no updates for more than 14 days.',
+        'alert-wip-title': 'WIP Limit Warning',
+        'alert-wip-msg': 'Columns exceeding recommended WIP limit:',
+        'alert-bottleneck-title': 'Main Bottleneck Detected',
+        'alert-bottleneck-msg': 'The column',
+        'alert-bottleneck-detail': 'takes on average',
+        'placeholder-search-items': 'Search by title, ID or assignee...',
+        'btn-export-pdf': 'Export PDF Report'
     },
     'pt-br': {
         'tab-dashboard': 'Painel',
@@ -274,6 +287,19 @@ export const translations: Translations = {
         'msg-portfolio-empty-toast': 'Nenhum item encontrado no portfólio.',
         'loading-processing-items': 'Processando {count} itens...',
         'msg-timeline-error': 'Erro na Timeline: {message}',
-        'label-load-more': 'Carregar Mais'
+        'label-load-more': 'Carregar Mais',
+        'cfd-period-30': 'Últimos 30 Dias',
+        'cfd-period-60': 'Últimos 60 Dias',
+        'cfd-period-90': 'Últimos 90 Dias',
+        'cfd-period-180': 'Últimos 180 Dias',
+        'alert-stale-title': 'Itens Estagnados em Progresso',
+        'alert-stale-msg': 'itens em In Progress estão há mais de 14 dias sem atualização.',
+        'alert-wip-title': 'Alerta de Limite de WIP',
+        'alert-wip-msg': 'Colunas com sobrecarga de itens:',
+        'alert-bottleneck-title': 'Principal Gargalo Detectado',
+        'alert-bottleneck-msg': 'A coluna',
+        'alert-bottleneck-detail': 'leva em média',
+        'placeholder-search-items': 'Buscar por título, ID ou responsável...',
+        'btn-export-pdf': 'Exportar Relatório PDF'
     }
 };

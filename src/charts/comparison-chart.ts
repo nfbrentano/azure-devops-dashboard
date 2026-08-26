@@ -65,21 +65,21 @@ export function renderCharts(
                     label: translations[currentLanguage]['metric-lead-time-title'],
                     data: leadTimes,
                     borderColor: '#6366f1',
-                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 4,
-                    pointHoverRadius: 6
+                    backgroundColor: 'rgba(99, 102, 241, 0.5)',
+                    fill: false,
+                    showLine: false,
+                    pointRadius: 5,
+                    pointHoverRadius: 7
                 },
                 {
                     label: translations[currentLanguage]['metric-cycle-time-title'],
                     data: cycleTimes,
                     borderColor: '#10b981',
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 4,
-                    pointHoverRadius: 6
+                    backgroundColor: 'rgba(16, 185, 129, 0.5)',
+                    fill: false,
+                    showLine: false,
+                    pointRadius: 5,
+                    pointHoverRadius: 7
                 }
             ]
         },

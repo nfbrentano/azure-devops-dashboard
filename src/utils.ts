@@ -13,16 +13,16 @@ export function escapeHtml(str: unknown): string {
         .replace(/'/g, '&#39;');
 }
 
-// Encryption constants
-const SALT = new Uint8Array([71, 101, 109, 105, 110, 105, 32, 65, 105, 32, 82, 111, 99, 107, 115, 33]); // 'Gemini Ai Rocks!'
+// Legacy salt only retained for non-destructive migration of previously encrypted PATs
+const LEGACY_SALT = new Uint8Array([71, 101, 109, 105, 110, 105, 32, 65, 105, 32, 82, 111, 99, 107, 115, 33]);
 
-async function getEncryptionKey(password: string): Promise<CryptoKey> {
+async function getEncryptionKey(password: string, salt: Uint8Array): Promise<CryptoKey> {
     const encoder = new TextEncoder();
     const baseKey = await crypto.subtle.importKey('raw', encoder.encode(password), 'PBKDF2', false, ['deriveKey']);
     return crypto.subtle.deriveKey(
         {
             name: 'PBKDF2',
-            salt: SALT,
+            salt: salt as unknown as BufferSource,
             iterations: 100000,
             hash: 'SHA-256'
         },
@@ -36,14 +36,16 @@ async function getEncryptionKey(password: string): Promise<CryptoKey> {
 export async function encryptPAT(pat: string, password: string): Promise<string> {
     if (!pat || !password) return pat;
     try {
-        const key = await getEncryptionKey(password);
+        const salt = crypto.getRandomValues(new Uint8Array(16));
         const iv = crypto.getRandomValues(new Uint8Array(12));
+        const key = await getEncryptionKey(password, salt);
         const encoder = new TextEncoder();
         const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, encoder.encode(pat));
 
+        const saltBase64 = btoa(String.fromCharCode(...salt));
         const ivBase64 = btoa(String.fromCharCode(...iv));
         const encryptedBase64 = btoa(String.fromCharCode(...new Uint8Array(encrypted)));
-        return `${ivBase64}:${encryptedBase64}`;
+        return `v2:${saltBase64}:${ivBase64}:${encryptedBase64}`;
     } catch (e) {
         console.error('Encryption failed:', e);
         return pat;
@@ -53,9 +55,40 @@ export async function encryptPAT(pat: string, password: string): Promise<string>
 export async function decryptPAT(enc: string, password?: string): Promise<string | null> {
     if (!enc) return enc;
 
-    // Check if it's the new format (base64:base64)
+    // Format v2 (v2:saltBase64:ivBase64:encryptedBase64)
+    if (enc.startsWith('v2:')) {
+        if (!password) return null;
+        try {
+            const parts = enc.split(':');
+            if (parts.length !== 4) return null;
+            const [, saltBase64, ivBase64, encryptedBase64] = parts;
+            const salt = new Uint8Array(
+                atob(saltBase64)
+                    .split('')
+                    .map((c) => c.charCodeAt(0))
+            );
+            const iv = new Uint8Array(
+                atob(ivBase64)
+                    .split('')
+                    .map((c) => c.charCodeAt(0))
+            );
+            const encrypted = new Uint8Array(
+                atob(encryptedBase64)
+                    .split('')
+                    .map((c) => c.charCodeAt(0))
+            );
+            const key = await getEncryptionKey(password, salt);
+            const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, encrypted);
+            return new TextDecoder().decode(decrypted);
+        } catch (e) {
+            console.error('Decryption failed:', e);
+            return null;
+        }
+    }
+
+    // Legacy v1 format (ivBase64:encryptedBase64)
     if (enc.includes(':')) {
-        if (!password) return null; // Need password for new format
+        if (!password) return null;
         try {
             const [ivBase64, encryptedBase64] = enc.split(':');
             const iv = new Uint8Array(
@@ -68,7 +101,7 @@ export async function decryptPAT(enc: string, password?: string): Promise<string
                     .split('')
                     .map((c) => c.charCodeAt(0))
             );
-            const key = await getEncryptionKey(password);
+            const key = await getEncryptionKey(password, LEGACY_SALT);
 
             const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, encrypted);
             return new TextDecoder().decode(decrypted);
@@ -78,19 +111,22 @@ export async function decryptPAT(enc: string, password?: string): Promise<string
         }
     }
 
-    // Backward compatibility with XOR(42) + base64 (only if no password is provided/needed)
-    try {
-        const xorDecoded = atob(enc)
-            .split('')
-            .map((c) => String.fromCharCode(c.charCodeAt(0) ^ 42))
-            .join('');
-        if (/^[a-z0-9]+$/i.test(xorDecoded)) {
-            return xorDecoded;
+    // Return unencrypted plaintext directly if not encrypted
+    return enc;
+}
+
+/**
+ * Helper to identify whether a work item type is a requirement/story level item.
+ */
+export function isRequirementType(type: string, workItemMetadata?: WorkItemMetadata): boolean {
+    const t = (type || '').toLowerCase();
+    if (workItemMetadata?.backlogs) {
+        const reqBacklog = workItemMetadata.backlogs.find((b) => b.name.toLowerCase().includes('requirement'));
+        if (reqBacklog?.workItemTypes?.map((x) => x.toLowerCase()).includes(t)) {
+            return true;
         }
-        return enc;
-    } catch {
-        return enc;
     }
+    return ['user story', 'product backlog item', 'requirement', 'issue'].includes(t);
 }
 
 export function getWorkItemUrl(azureConfig: AzureConfig | null, id: number | string, projectName?: string): string {

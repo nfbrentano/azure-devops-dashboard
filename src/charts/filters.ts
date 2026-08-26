@@ -36,7 +36,9 @@ export function renderPortfolioFilters(
             label.className = 'filter-item';
 
             const statusInfo = getStatusInfo(state, workItemMetadata);
-            const isChecked = previousSelection.size > 0 ? previousSelection.has(state) : statusInfo.label !== 'Done';
+            const isChecked = previousSelection.size > 0 
+                ? previousSelection.has(state) 
+                : (statusInfo.label !== 'Done' && statusInfo.label !== 'Removed');
 
             label.innerHTML = `
             <input type="checkbox" value="${state}" ${isChecked ? 'checked' : ''}>
@@ -155,6 +157,11 @@ export function renderTimelineTypeFilters(
                     if (val) selectedTypes.push(val);
                 }
             });
+            try {
+                localStorage.setItem('timeline_active_types', JSON.stringify(selectedTypes));
+            } catch {
+                // ignore
+            }
             onFilterChange(selectedTypes);
         });
 
@@ -204,6 +211,11 @@ export function renderTimelineStateFilters(
                     if (val) selectedStates.push(val);
                 }
             });
+            try {
+                localStorage.setItem('timeline_active_states', JSON.stringify(selectedStates));
+            } catch {
+                // ignore
+            }
             onFilterChange(selectedStates);
         });
 

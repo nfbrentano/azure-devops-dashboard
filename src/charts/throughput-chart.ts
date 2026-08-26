@@ -24,7 +24,15 @@ export function renderThroughputChart(
                 {
                     label: translations[currentLanguage]['label-delivered-items'],
                     data: throughputData.map((d) => d.count),
-                    backgroundColor: '#3b82f6',
+                    backgroundColor: (context: any) => {
+                        const chart = context.chart;
+                        const { ctx, chartArea } = chart;
+                        if (!chartArea) return '#3b82f6'; // Fallback
+                        const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+                        gradient.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
+                        gradient.addColorStop(1, 'rgba(59, 130, 246, 0.9)');
+                        return gradient;
+                    },
                     borderRadius: 6,
                     hoverBackgroundColor: '#2563eb'
                 }

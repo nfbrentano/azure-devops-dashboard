@@ -1,9 +1,9 @@
 import Chart from 'chart.js/auto';
 import { getChartThemeOptions } from './chart-options.ts';
-import type { ChartInstances } from '../types.ts';
+import type { ChartInstances, CFDDataPoint } from '../types.ts';
 
 export function renderCFDChart(
-    cfdSeries: any[],
+    cfdSeries: CFDDataPoint[],
     charts: ChartInstances,
     currentTheme: 'dark' | 'light',
     currentLanguage: string,
