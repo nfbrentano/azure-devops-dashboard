@@ -2,12 +2,12 @@
  * Event Handlers for Azure DevOps Dashboard
  */
 import { state } from './state.ts';
-import { LOGO_LIGHT, LOGO_DARK } from './logos.ts';
+import { exportToCSV, exportToPDF } from './export.ts';
 import type { DashboardElements } from './types.ts';
-
 
 async function drawWatermark(canvas: HTMLCanvasElement, isDark: boolean): Promise<HTMLCanvasElement> {
     const { companyName } = state.azureConfig || {};
+    const { LOGO_LIGHT, LOGO_DARK } = await import('./logos.ts');
 
     // Use hardcoded theme-aware logo
     const companyLogo = isDark ? LOGO_DARK : LOGO_LIGHT;
@@ -164,7 +164,28 @@ export function initEvents(
 
     // PDF Export
     const pdfBtn = document.getElementById('pdf-export-btn');
-    pdfBtn?.addEventListener('click', handleExportPDF);
+    pdfBtn?.addEventListener('click', async () => {
+        if (!state.currentData || state.currentData.items.length === 0) return;
+        
+        const originalHtml = pdfBtn.innerHTML;
+        pdfBtn.innerHTML = '<i class="ph-bold ph-spinner ph-spin"></i>';
+        (pdfBtn as HTMLButtonElement).disabled = true;
+        
+        try {
+            await exportToPDF(state.currentTheme === 'dark', state.azureConfig);
+        } finally {
+            pdfBtn.innerHTML = originalHtml;
+            (pdfBtn as HTMLButtonElement).disabled = false;
+        }
+    });
+
+    // CSV Export
+    const csvBtn = document.getElementById('csv-export-btn');
+    csvBtn?.addEventListener('click', () => {
+        if (state.currentData && state.currentData.items.length > 0) {
+            exportToCSV(state.currentData.items, state.workItemMetadata, state.currentLanguage);
+        }
+    });
 
     // CFD Period
     cfdPeriodSelect?.addEventListener('change', () => {

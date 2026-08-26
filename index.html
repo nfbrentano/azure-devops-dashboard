@@ -34,9 +34,14 @@
           <button id="refresh-btn" class="glass btn-icon-glass refresh-btn" title="Refresh Data"
             data-i18n-aria="aria-refresh"><i class="ph-bold ph-arrows-clockwise"></i></button>
         </div>
-        <button id="pdf-export-btn" class="glass btn-icon-glass" title="Export PDF" data-i18n-title="btn-export-pdf">
-          <i class="ph-bold ph-file-pdf"></i>
-        </button>
+        <div class="export-controls" style="display: flex; gap: 0.25rem;">
+          <button id="csv-export-btn" class="glass btn-icon-glass" title="Export CSV" data-i18n-title="btn-export-csv">
+            <i class="ph-bold ph-file-csv"></i>
+          </button>
+          <button id="pdf-export-btn" class="glass btn-icon-glass" title="Export PDF" data-i18n-title="btn-export-pdf">
+            <i class="ph-bold ph-file-pdf"></i>
+          </button>
+        </div>
         <div class="divider"></div>
         <button id="lang-toggle" class="glass btn-icon-glass" title="Switch to English"
           data-i18n-aria="aria-lang-toggle">
@@ -273,6 +278,22 @@
           </div>
         </div>
 
+        <!-- Monte Carlo Forecast Chart -->
+        <div class="card glass">
+          <div class="card-title">
+            <div style="display: flex; align-items: center; gap: 0.75rem;" data-i18n="chart-monte-carlo-title">
+              <i class="ph-bold ph-chart-scatter"></i>
+              Monte Carlo Forecasting (Delivery Prevision)
+            </div>
+            <button class="glass btn-icon-glass export-btn" style="margin-left: auto;"
+              data-i18n-title="btn-export-chart" data-target="monteCarloChart" title="Export Chart (PNG)"><i
+                class="ph-bold ph-download-simple"></i></button>
+          </div>
+          <div class="chart-container-lg">
+            <canvas id="monteCarloChart"></canvas>
+          </div>
+        </div>
+
         <!-- Assignee Workload Chart -->
         <div class="card glass">
           <div class="card-title">
@@ -464,6 +485,42 @@
             <span class="kpi-label" data-i18n="status-done-removed">Done / Removed</span>
             <h2 class="kpi-value" id="kpi-done">0</h2>
             <span class="kpi-percent" id="kpi-done-pct">0%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- DORA Metrics Container -->
+      <div id="dora-metrics-container" class="kpi-grid" style="margin-top: 1rem; display: none;">
+        <div class="card glass kpi-card" id="dora-df">
+          <div class="kpi-icon"><i class="ph-bold ph-rocket-launch"></i></div>
+          <div class="kpi-content">
+            <span class="kpi-label" data-i18n="dora-df-title">Deployment Frequency</span>
+            <h2 class="kpi-value" id="dora-df-val">-</h2>
+            <span class="kpi-percent" id="dora-df-class" style="font-weight: 600;">-</span>
+          </div>
+        </div>
+        <div class="card glass kpi-card" id="dora-lt">
+          <div class="kpi-icon"><i class="ph-bold ph-clock"></i></div>
+          <div class="kpi-content">
+            <span class="kpi-label" data-i18n="dora-lt-title">Lead Time for Changes</span>
+            <h2 class="kpi-value" id="dora-lt-val">-</h2>
+            <span class="kpi-percent" id="dora-lt-class" style="font-weight: 600;">-</span>
+          </div>
+        </div>
+        <div class="card glass kpi-card" id="dora-cfr">
+          <div class="kpi-icon"><i class="ph-bold ph-warning-circle"></i></div>
+          <div class="kpi-content">
+            <span class="kpi-label" data-i18n="dora-cfr-title">Change Failure Rate</span>
+            <h2 class="kpi-value" id="dora-cfr-val">-</h2>
+            <span class="kpi-percent" id="dora-cfr-class" style="font-weight: 600;">-</span>
+          </div>
+        </div>
+        <div class="card glass kpi-card" id="dora-mttr">
+          <div class="kpi-icon"><i class="ph-bold ph-wrench"></i></div>
+          <div class="kpi-content">
+            <span class="kpi-label" data-i18n="dora-mttr-title">Time to Restore Service</span>
+            <h2 class="kpi-value" id="dora-mttr-val">-</h2>
+            <span class="kpi-percent" id="dora-mttr-class" style="font-weight: 600;">-</span>
           </div>
         </div>
       </div>

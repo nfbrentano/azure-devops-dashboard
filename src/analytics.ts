@@ -18,6 +18,8 @@ import type {
 import { translations } from './translations.ts';
 import { getItemIcon, getStatusInfo, isRequirementType } from './utils.ts';
 import { logger } from './logger.ts';
+import { calculateDORAMetrics } from './dora.ts';
+import { runMonteCarloSimulation } from './forecast.ts';
 import {
     renderCharts,
     renderAgingChart,
@@ -26,6 +28,7 @@ import {
     renderCFDChart,
     renderBottlenecksChart,
     renderThroughputChart,
+    renderMonteCarloChart,
     renderPortfolioFilters,
     renderProgress,
     renderLegends,
@@ -239,6 +242,18 @@ export function computeMetrics(
         bottleneckData
     }, currentLanguage);
 
+    const doraMetrics = calculateDORAMetrics(filteredItems, workItemMetadata);
+    
+    // For monte carlo, let's forecast the remaining In Progress and Backlog items (for requirements)
+    const remainingReqs = filteredItems.filter(item => {
+        const type = (item.fields['System.WorkItemType'] as string)?.toLowerCase();
+        if (!isRequirementType(type, workItemMetadata)) return false;
+        const stateInfo = getStatusInfo(item.fields['System.State'] as string, workItemMetadata);
+        return stateInfo.label === 'Backlog' || stateInfo.label === 'In Progress';
+    }).length;
+
+    const forecastData = runMonteCarloSimulation(throughputData, remainingReqs);
+
     return {
         filteredItems,
         leadTimes,
@@ -252,7 +267,9 @@ export function computeMetrics(
         heatmapData,
         throughputData,
         bottleneckData,
-        anomalies
+        anomalies,
+        doraMetrics,
+        forecastData
     };
 }
 
@@ -384,6 +401,35 @@ export function renderAll(metrics: ComputedMetrics, originalItems: WorkItemNode[
     updateTextContent('kpi-inprogress-pct', `${pct(metrics.kpis.inprogress)}%`);
     updateTextContent('kpi-done', metrics.kpis.doneRemoved);
     updateTextContent('kpi-done-pct', `${pct(metrics.kpis.doneRemoved)}%`);
+
+    // DORA Metrics
+    if (metrics.doraMetrics) {
+        const doraContainer = document.getElementById('dora-metrics-container');
+        if (doraContainer) doraContainer.style.display = 'grid';
+        
+        const updateDoraCard = (id: string, metric: { value: number, class: string, raw: number }) => {
+            const valEl = document.getElementById(`${id}-val`);
+            const classEl = document.getElementById(`${id}-class`);
+            const cardEl = document.getElementById(id);
+            if (valEl) valEl.textContent = String(metric.value);
+            if (classEl) {
+                classEl.textContent = metric.class;
+                cardEl?.classList.remove('dora-elite', 'dora-high', 'dora-medium', 'dora-low');
+                cardEl?.classList.add(`dora-${metric.class.toLowerCase()}`);
+            }
+        };
+
+        updateDoraCard('dora-df', metrics.doraMetrics.deploymentFrequency);
+        updateDoraCard('dora-lt', metrics.doraMetrics.leadTimeForChanges);
+        updateDoraCard('dora-cfr', metrics.doraMetrics.changeFailureRate);
+        updateDoraCard('dora-mttr', metrics.doraMetrics.timeToRestore);
+    } else {
+        const doraContainer = document.getElementById('dora-metrics-container');
+        if (doraContainer) doraContainer.style.display = 'none';
+    }
+
+    // Monte Carlo
+    renderMonteCarloChart(metrics.forecastData || null, charts, currentTheme, currentLanguage, translations);
 }
 
 export function processAnalytics(items: WorkItemNode[], tree: WorkItemNode[], options: ProcessAnalyticsOptions = {}) {

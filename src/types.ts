@@ -2,6 +2,8 @@
  * Type definitions for the Azure DevOps Analytics Dashboard
  */
 import type { Chart } from 'chart.js';
+import type { DORAMetrics } from './dora.ts';
+import type { ForecastResult } from './forecast.ts';
 
 // ─── Azure DevOps Config ────────────────────────────────────────────────────
 
@@ -103,6 +105,7 @@ export interface ChartInstances {
     assignee: Chart | null;
     cfd: Chart | null;
     throughput: Chart | null;
+    monteCarlo: Chart | null;
     bottlenecks: Chart | null;
     wip?: Chart | null;
 }
@@ -201,6 +204,8 @@ export interface ComputedMetrics {
     throughputData: ThroughputDataPoint[];
     bottleneckData: BottleneckResult[] | null;
     anomalies: AnomalyAlert[];
+    doraMetrics?: DORAMetrics;
+    forecastData?: ForecastResult | null;
 }
 
 // ─── Query Types ────────────────────────────────────────────────────────────

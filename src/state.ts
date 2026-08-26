@@ -12,6 +12,7 @@ export const state: AppState = {
         assignee: null,
         cfd: null,
         throughput: null,
+        monteCarlo: null,
         bottlenecks: null
     },
     heatmapData: null,
