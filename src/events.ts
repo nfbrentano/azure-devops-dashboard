@@ -166,11 +166,11 @@ export function initEvents(
     const pdfBtn = document.getElementById('pdf-export-btn');
     pdfBtn?.addEventListener('click', async () => {
         if (!state.currentData || state.currentData.items.length === 0) return;
-        
+
         const originalHtml = pdfBtn.innerHTML;
         pdfBtn.innerHTML = '<i class="ph-bold ph-spinner ph-spin"></i>';
         (pdfBtn as HTMLButtonElement).disabled = true;
-        
+
         try {
             await exportToPDF(state.currentTheme === 'dark', state.azureConfig);
         } finally {
@@ -184,6 +184,196 @@ export function initEvents(
     csvBtn?.addEventListener('click', () => {
         if (state.currentData && state.currentData.items.length > 0) {
             exportToCSV(state.currentData.items, state.workItemMetadata, state.currentLanguage);
+        }
+    });
+
+    // Share URL View
+    const shareBtn = document.getElementById('share-url-btn');
+    shareBtn?.addEventListener('click', () => {
+        const url = window.location.href;
+        navigator.clipboard.writeText(url).then(() => {
+            import('./utils.ts').then(({ showToast }) => {
+                import('./translations.ts').then(({ translations }) => {
+                    const msg = translations[state.currentLanguage]['msg-share-copied'] || 'Link copied to clipboard!';
+                    showToast(msg, 'success');
+                });
+            });
+        });
+    });
+
+    // Presentation / TV Mode
+    const tvBtn = document.getElementById('tv-mode-btn');
+    let tvCycleInterval: any = null;
+
+    const toggleTVMode = () => {
+        const isTv = document.body.classList.toggle('tv-mode');
+        if (isTv) {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            }
+            // Auto cycle tabs / views every 20s
+            let currentTabIdx = 0;
+            const tabs = ['dashboard', 'items', 'timeline'];
+            tvCycleInterval = setInterval(() => {
+                currentTabIdx = (currentTabIdx + 1) % tabs.length;
+                handleTabSwitch(tabs[currentTabIdx]);
+            }, 20000);
+        } else {
+            if (document.fullscreenElement) {
+                document.exitFullscreen().catch(() => {});
+            }
+            if (tvCycleInterval) clearInterval(tvCycleInterval);
+        }
+    };
+
+    tvBtn?.addEventListener('click', toggleTVMode);
+
+    document.addEventListener('fullscreenchange', () => {
+        if (!document.fullscreenElement && document.body.classList.contains('tv-mode')) {
+            document.body.classList.remove('tv-mode');
+            if (tvCycleInterval) clearInterval(tvCycleInterval);
+        }
+    });
+
+    // Shortcuts Modal
+    const shortcutsModal = document.getElementById('shortcuts-modal');
+    const shortcutsBtn = document.getElementById('shortcuts-help-btn');
+    const closeShortcutsBtn = document.getElementById('close-shortcuts-btn');
+
+    const toggleShortcutsModal = (open?: boolean) => {
+        if (!shortcutsModal) return;
+        const shouldOpen = open !== undefined ? open : shortcutsModal.classList.contains('hidden');
+        if (shouldOpen) {
+            shortcutsModal.classList.remove('hidden');
+        } else {
+            shortcutsModal.classList.add('hidden');
+        }
+    };
+
+    shortcutsBtn?.addEventListener('click', () => toggleShortcutsModal(true));
+    closeShortcutsBtn?.addEventListener('click', () => toggleShortcutsModal(false));
+
+    // Alerts Modal & Rules
+    const alertsModal = document.getElementById('alerts-modal');
+    const alertsBtn = document.getElementById('alerts-config-btn');
+    const closeAlertsBtn = document.getElementById('close-alerts-btn');
+    const saveAlertsBtn = document.getElementById('save-alerts-btn');
+    const resetAlertsBtn = document.getElementById('reset-alerts-btn');
+    const alertsRulesList = document.getElementById('alerts-rules-list');
+
+    const renderAlertRulesUI = () => {
+        if (!alertsRulesList) return;
+        import('./alerts.ts').then(({ getAlertRules }) => {
+            const rules = getAlertRules();
+            alertsRulesList.innerHTML = rules
+                .map(
+                    (r) => `
+                <div class="alert-rule-row">
+                    <div class="alert-rule-info">
+                        <label class="alert-rule-name">${r.name}</label>
+                        <span class="alert-rule-sub">Condição: ${r.metric} ${r.operator} limite</span>
+                    </div>
+                    <div class="alert-rule-controls">
+                        <input type="number" class="alert-threshold-input" data-rule-id="${r.id}" value="${r.threshold}" min="1" step="1">
+                        <input type="checkbox" data-rule-enable="${r.id}" ${r.enabled ? 'checked' : ''}>
+                    </div>
+                </div>
+            `
+                )
+                .join('');
+        });
+    };
+
+    const toggleAlertsModal = (open?: boolean) => {
+        if (!alertsModal) return;
+        const shouldOpen = open !== undefined ? open : alertsModal.classList.contains('hidden');
+        if (shouldOpen) {
+            renderAlertRulesUI();
+            alertsModal.classList.remove('hidden');
+        } else {
+            alertsModal.classList.add('hidden');
+        }
+    };
+
+    alertsBtn?.addEventListener('click', () => toggleAlertsModal(true));
+    closeAlertsBtn?.addEventListener('click', () => toggleAlertsModal(false));
+
+    saveAlertsBtn?.addEventListener('click', () => {
+        import('./alerts.ts').then(({ getAlertRules, saveAlertRules }) => {
+            const rules = getAlertRules();
+            rules.forEach((r) => {
+                const input = alertsRulesList?.querySelector(`input[data-rule-id="${r.id}"]`) as HTMLInputElement | null;
+                const enableCb = alertsRulesList?.querySelector(`input[data-rule-enable="${r.id}"]`) as HTMLInputElement | null;
+                if (input) r.threshold = Number(input.value) || r.threshold;
+                if (enableCb) r.enabled = enableCb.checked;
+            });
+            saveAlertRules(rules);
+            toggleAlertsModal(false);
+            import('./utils.ts').then((u) => u.showToast('Regras salvas com sucesso!', 'success'));
+            if (state.currentData.items.length > 0) {
+                handleRefresh();
+            }
+        });
+    });
+
+    resetAlertsBtn?.addEventListener('click', () => {
+        import('./alerts.ts').then(({ DEFAULT_ALERT_RULES, saveAlertRules }) => {
+            saveAlertRules([...DEFAULT_ALERT_RULES]);
+            renderAlertRulesUI();
+        });
+    });
+
+    // Global Keyboard Shortcuts
+    document.addEventListener('keydown', (e: KeyboardEvent) => {
+        const target = e.target as HTMLElement | null;
+        const isInput = target?.tagName === 'INPUT' || target?.tagName === 'SELECT' || target?.tagName === 'TEXTAREA' || target?.isContentEditable;
+
+        if (e.key === 'Escape') {
+            if (shortcutsModal && !shortcutsModal.classList.contains('hidden')) {
+                toggleShortcutsModal(false);
+                return;
+            }
+            if (alertsModal && !alertsModal.classList.contains('hidden')) {
+                toggleAlertsModal(false);
+                return;
+            }
+            if (document.body.classList.contains('tv-mode')) {
+                toggleTVMode();
+                return;
+            }
+        }
+
+        // Do not trigger shortcuts when typing in form fields
+        if (isInput) return;
+
+        switch (e.key.toLowerCase()) {
+            case '1':
+                handleTabSwitch('dashboard');
+                break;
+            case '2':
+                handleTabSwitch('items');
+                break;
+            case '3':
+                handleTabSwitch('timeline');
+                break;
+            case '4':
+                handleTabSwitch('setup');
+                break;
+            case 'r':
+                handleRefresh();
+                break;
+            case 't':
+                handleThemeToggle();
+                break;
+            case 'l':
+                handleLangToggle();
+                break;
+            case 'f':
+                toggleTVMode();
+                break;
+            case '?':
+                toggleShortcutsModal();
+                break;
         }
     });
 
@@ -255,9 +445,7 @@ export function initEvents(
             targetToCapture.classList.add('exporting');
 
             try {
-                // If it's a simple canvas, we still want the card if possible
-                // But specifically for Chart.js, we might need a small delay for CSS to apply
-                await new Promise(r => setTimeout(r, 100));
+                await new Promise((r) => setTimeout(r, 100));
 
                 const { default: html2canvas } = await import('html2canvas');
                 const canvas = await html2canvas(targetToCapture as HTMLElement, {

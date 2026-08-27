@@ -1,0 +1,228 @@
+/* Modal Overlay & Card */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    padding: 1rem;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.modal-card {
+    width: 100%;
+    max-width: 480px;
+    max-height: 90vh;
+    overflow-y: auto;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-glass);
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 600;
+}
+
+/* Keyboard Shortcuts */
+.shortcuts-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.shortcuts-table tr {
+    border-bottom: 1px solid var(--border-glass);
+}
+
+.shortcuts-table tr:last-child {
+    border-bottom: none;
+}
+
+.shortcuts-table td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.9rem;
+}
+
+.shortcuts-table td:first-child {
+    width: 120px;
+    white-space: nowrap;
+}
+
+kbd {
+    display: inline-block;
+    padding: 0.2rem 0.45rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1;
+    color: var(--text-main);
+    background: var(--bg-glass);
+    border: 1px solid var(--border-glass);
+    border-radius: 4px;
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
+}
+
+/* SLA Overview Cards */
+.sla-overview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1rem;
+}
+
+.sla-card {
+    padding: 1rem;
+    border-radius: 10px;
+    border: 1px solid var(--border-glass);
+    background: var(--bg-card);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sla-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.2);
+}
+
+.sla-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.sla-type-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text-main);
+}
+
+.sla-target-badge {
+    font-size: 0.75rem;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    background: var(--bg-glass);
+    color: var(--text-muted);
+}
+
+.sla-card-body {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.sla-pct {
+    font-size: 1.75rem;
+    font-weight: 700;
+}
+
+.sla-details {
+    display: flex;
+    flex-direction: column;
+    text-align: right;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.sla-good {
+    border-left: 4px solid #10b981;
+}
+
+.sla-good .sla-pct {
+    color: #10b981;
+}
+
+.sla-warn {
+    border-left: 4px solid #f59e0b;
+}
+
+.sla-warn .sla-pct {
+    color: #f59e0b;
+}
+
+.sla-danger {
+    border-left: 4px solid #ef4444;
+}
+
+.sla-danger .sla-pct {
+    color: #ef4444;
+}
+
+/* Alerts Rules UI */
+.alert-rule-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem;
+    border-radius: 8px;
+    background: var(--bg-glass);
+    border: 1px solid var(--border-glass);
+    gap: 0.75rem;
+}
+
+.alert-rule-info {
+    flex: 1;
+}
+
+.alert-rule-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: block;
+    margin-bottom: 0.2rem;
+}
+
+.alert-rule-sub {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.alert-rule-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.alert-threshold-input {
+    width: 60px;
+    padding: 0.25rem 0.4rem;
+    font-size: 0.85rem;
+    border-radius: 4px;
+    border: 1px solid var(--border-glass);
+    background: var(--bg-card);
+    color: var(--text-main);
+    text-align: center;
+}
+
+/* TV / Presentation Mode */
+body.tv-mode .tabs-nav,
+body.tv-mode .items-search-box,
+body.tv-mode .gantt-controls,
+body.tv-mode .export-btn,
+body.tv-mode .setup-guide-link {
+    display: none !important;
+}
+
+body.tv-mode {
+    padding: 1.5rem !important;
+    background: #090d16 !important;
+}
+
+body.tv-mode .card {
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+}
+
+body.tv-mode .kpi-value {
+    font-size: 2.5rem !important;
+}

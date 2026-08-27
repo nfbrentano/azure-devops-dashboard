@@ -74,15 +74,51 @@ const elements: DashboardElements = {
     timelineGanttPrev: document.getElementById('timeline-gantt-prev') as HTMLButtonElement | null,
     timelineGanttNext: document.getElementById('timeline-gantt-next') as HTMLButtonElement | null,
     cfdPeriodSelect: document.getElementById('cfd-period-select') as HTMLSelectElement | null,
-    itemsSearchInput: document.getElementById('items-search-input') as HTMLInputElement | null
+    itemsSearchInput: document.getElementById('items-search-input') as HTMLInputElement | null,
+    shortcutsModal: document.getElementById('shortcuts-modal'),
+    shortcutsHelpBtn: document.getElementById('shortcuts-help-btn') as HTMLButtonElement | null,
+    tvModeBtn: document.getElementById('tv-mode-btn') as HTMLButtonElement | null,
+    shareUrlBtn: document.getElementById('share-url-btn') as HTMLButtonElement | null,
+    alertsModal: document.getElementById('alerts-modal'),
+    alertsConfigBtn: document.getElementById('alerts-config-btn') as HTMLButtonElement | null
 };
 
+export function syncURLState() {
+    try {
+        const params = new URLSearchParams();
+        if (state.currentLanguage) params.set('lang', state.currentLanguage);
+        if (state.currentTheme) params.set('theme', state.currentTheme);
+        if (elements.querySelector?.value) params.set('q', elements.querySelector.value);
+        if (elements.ganttPeriod?.value) params.set('period', elements.ganttPeriod.value);
+        if (state.cfdPeriod) params.set('cfd', String(state.cfdPeriod));
+        const activeTab = document.querySelector('.tab-btn.active')?.id.replace('tab-', '');
+        if (activeTab) params.set('tab', activeTab);
+        history.replaceState(null, '', '?' + params.toString());
+    } catch {
+        // Ignore in environments without window/history
+    }
+}
+
 async function initApp() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('lang')) {
+        state.currentLanguage = urlParams.get('lang')!;
+    }
+    if (urlParams.get('theme') === 'dark' || urlParams.get('theme') === 'light') {
+        state.currentTheme = urlParams.get('theme') as 'dark' | 'light';
+    }
+    if (urlParams.get('cfd')) {
+        state.cfdPeriod = Number(urlParams.get('cfd')) || state.cfdPeriod;
+    }
+
     document.documentElement.setAttribute('data-theme', state.currentTheme);
     updateThemeIcon(elements.themeToggle, state.currentTheme);
 
     if (elements.cfdPeriodSelect) {
         elements.cfdPeriodSelect.value = String(state.cfdPeriod);
+    }
+    if (elements.ganttPeriod && urlParams.get('period')) {
+        elements.ganttPeriod.value = urlParams.get('period')!;
     }
 
     const uiOptions = {
@@ -120,9 +156,15 @@ async function initApp() {
         switchTab('setup', elements);
     }
 
+    const initialTab = urlParams.get('tab');
+    if (initialTab && ['dashboard', 'items', 'timeline', 'setup'].includes(initialTab)) {
+        switchTab(initialTab, elements);
+    }
+
     const handlers = {
         handleTabSwitch: (tabId: string) => {
             switchTab(tabId, elements);
+            syncURLState();
             if (tabId === 'timeline') {
                 if (state.timelineData.items.length === 0) {
                     loadTimelineData();
@@ -318,11 +360,34 @@ async function showDashboard(initialQueries: any[] | null = null) {
     }
     populateQueries(queries, elements.querySelector, state.currentLanguage);
 
+    const urlParams = new URLSearchParams(window.location.search);
+    const queryFromURL = urlParams.get('q');
+    if (queryFromURL && elements.querySelector) {
+        elements.querySelector.value = queryFromURL;
+        loadQueryData(queryFromURL);
+    }
+
     await metadataPromise;
 }
 
 async function loadQueryData(queryId: string, { bust = false } = {}) {
     if (!queryId) return;
+
+    // Restore query preferences if available
+    try {
+        const prefsStr = localStorage.getItem('query_prefs_' + queryId);
+        if (prefsStr) {
+            const prefs = JSON.parse(prefsStr);
+            if (prefs.ganttPeriod && elements.ganttPeriod) elements.ganttPeriod.value = prefs.ganttPeriod;
+            if (prefs.activeTypes) state.globalActiveTypes = prefs.activeTypes;
+            if (prefs.cfdPeriod) {
+                state.cfdPeriod = prefs.cfdPeriod;
+                if (elements.cfdPeriodSelect) elements.cfdPeriodSelect.value = String(prefs.cfdPeriod);
+            }
+        }
+    } catch {
+        // ignore
+    }
 
     // ── Phase: start ──────────────────────────────────────────
     showLoading(true, 0);
@@ -408,6 +473,19 @@ async function loadQueryData(queryId: string, { bust = false } = {}) {
             activeNameEl.innerHTML = `${queryLabel} <span class="${badgeClass}">${badgeIcon} ${badgeText}</span>`;
         }
 
+        // Persist query preferences
+        try {
+            const prefs = {
+                ganttPeriod: elements.ganttPeriod?.value,
+                activeTypes: state.globalActiveTypes,
+                cfdPeriod: state.cfdPeriod
+            };
+            localStorage.setItem('query_prefs_' + queryId, JSON.stringify(prefs));
+        } catch {
+            // ignore
+        }
+
+        syncURLState();
         runAnalytics();
     } catch (e) {
         console.error('Error loading query data:', e);

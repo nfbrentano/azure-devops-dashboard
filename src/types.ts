@@ -108,6 +108,7 @@ export interface ChartInstances {
     monteCarlo: Chart | null;
     bottlenecks: Chart | null;
     wip?: Chart | null;
+    scatter?: Chart | null;
 }
 
 export interface AppState {
@@ -185,6 +186,56 @@ export interface AnomalyAlert {
     count?: number;
 }
 
+// ─── Scatter & SLA & Alerts ──────────────────────────────────────────────────
+
+export interface ScatterDataPoint {
+    x: string | number; // Closed date or timestamp
+    y: number; // Cycle time in days
+    id: number;
+    title: string;
+    type: string;
+    state: string;
+}
+
+export interface ScatterMetrics {
+    points: ScatterDataPoint[];
+    p50: number;
+    p85: number;
+    p95: number;
+}
+
+export interface AlertRule {
+    id: string;
+    metric: 'lead_time_avg' | 'cycle_time_avg' | 'wip_total' | 'aging_max' | 'cfr_pct';
+    operator: '>' | '<' | '>=';
+    threshold: number;
+    name: string;
+    enabled: boolean;
+}
+
+export interface SLAConfigItem {
+    targetDays: number;
+    metric: 'cycle' | 'lead';
+}
+
+export type SLAConfig = Record<string, SLAConfigItem>;
+
+export interface SLAResult {
+    workItemType: string;
+    total: number;
+    met: number;
+    breached: number;
+    compliancePct: number;
+    avgDays: number;
+    targetDays: number;
+}
+
+export interface QueryPreferences {
+    ganttPeriod?: string;
+    activeTypes?: string[];
+    cfdPeriod?: number;
+}
+
 export interface ComputedMetrics {
     filteredItems: WorkItemNode[];
     leadTimes: string[];
@@ -206,6 +257,8 @@ export interface ComputedMetrics {
     anomalies: AnomalyAlert[];
     doraMetrics?: DORAMetrics;
     forecastData?: ForecastResult | null;
+    scatterData?: ScatterMetrics;
+    slaData?: SLAResult[];
 }
 
 // ─── Query Types ────────────────────────────────────────────────────────────
@@ -249,6 +302,12 @@ export interface DashboardElements {
     timelineGanttNext: HTMLButtonElement | null;
     cfdPeriodSelect: HTMLSelectElement | null;
     itemsSearchInput: HTMLInputElement | null;
+    shortcutsModal?: HTMLElement | null;
+    shortcutsHelpBtn?: HTMLButtonElement | null;
+    tvModeBtn?: HTMLButtonElement | null;
+    shareUrlBtn?: HTMLButtonElement | null;
+    alertsModal?: HTMLElement | null;
+    alertsConfigBtn?: HTMLButtonElement | null;
 }
 
 export type Translations = Record<string, Record<string, string>>;

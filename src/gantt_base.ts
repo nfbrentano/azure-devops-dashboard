@@ -1,4 +1,5 @@
 import { getWorkItemUrl, getStatusInfo, getItemIcon, calculateProgress, escapeHtml } from './utils.ts';
+import { isItemBreachingSLA } from './sla.ts';
 import type { WorkItemNode, WorkItemMetadata, AzureConfig } from './types.ts';
 
 export interface GanttContext {
@@ -473,6 +474,8 @@ function renderRecursive(
                 const startDateStr = isValidDate(itemStart) ? itemStart.toLocaleDateString(currentLanguage, { day: '2-digit', month: '2-digit', year: '2-digit' }) : '---';
                 const endDateStr = isValidDate(itemEnd) ? itemEnd.toLocaleDateString(currentLanguage, { day: '2-digit', month: '2-digit', year: '2-digit' }) : '---';
                 const tooltipText = escapeHtml(`${startDateStr} → ${endDateStr}`);
+                const isSlaBreached = isItemBreachingSLA(item);
+                const slaWarning = isSlaBreached ? `<span style="font-size: 0.7rem; color: #ef4444; margin-left: 0.35rem; font-weight: bold;" title="Item excedeu o SLA recomendado">⚠️ SLA</span>` : '';
 
                 row.innerHTML = `
                     <div class="gantt-label" title="${itemTitle}">
@@ -485,6 +488,7 @@ function renderRecursive(
                         <div class="status-indicator">
                             <div class="status-dot" style="background: ${statusInfo.color}"></div>
                             <span>${escapedState}</span>
+                            ${slaWarning}
                         </div>
                     </div>
                     <div class="gantt-track">

@@ -5,6 +5,7 @@
 export { renderCharts } from './comparison-chart.ts';
 export { renderThroughputChart } from './throughput-chart.ts';
 export { renderMonteCarloChart } from './monte-carlo-chart.ts';
+export { renderScatterChart } from './scatter-chart.ts';
 export { renderAgingChart } from './aging-chart.ts';
 export { renderAssigneeChart } from './assignee-chart.ts';
 export { renderWIPChart } from './wip-chart.ts';

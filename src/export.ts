@@ -125,33 +125,34 @@ export async function exportToPDF(isDark: boolean, azureConfig: AzureConfig | nu
             // If it's too tall, we might need multiple pages for this element, 
             // but for simplicity we just scale it down to fit the page width and let it overflow to next pages if needed
             // A more robust implementation would split the canvas.
-            let position = 10; // Top margin
             const pageHeight = pdf.internal.pageSize.getHeight();
-            
-            if (pdfHeight > pageHeight - 20) {
-                // Multi-page logic for tall elements
+            const topMargin = 10;
+            const bottomMargin = 15;
+            const usableHeight = pageHeight - topMargin - bottomMargin;
+
+            if (pdfHeight > usableHeight) {
                 let heightLeft = pdfHeight;
-                
-                pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
-                heightLeft -= pageHeight;
-                
-                while (heightLeft >= 0) {
-                    position = heightLeft - pdfHeight;
+                let pageOffset = 0;
+
+                pdf.addImage(imgData, 'PNG', 0, topMargin, pdfWidth, pdfHeight);
+                heightLeft -= usableHeight;
+
+                while (heightLeft > 0) {
+                    pageOffset += usableHeight;
                     pdf.addPage();
-                    pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
-                    heightLeft -= pageHeight;
+                    pdf.addImage(imgData, 'PNG', 0, topMargin - pageOffset, pdfWidth, pdfHeight);
+                    heightLeft -= usableHeight;
                 }
             } else {
-                pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+                pdf.addImage(imgData, 'PNG', 0, topMargin, pdfWidth, pdfHeight);
             }
-            
+
             // Add watermark text
             if (azureConfig?.companyName) {
                 pdf.setTextColor(isDark ? 200 : 100);
-                pdf.setFontSize(10);
-                pdf.text(azureConfig.companyName, 10, pageHeight - 10);
+                pdf.setFontSize(9);
+                pdf.text(azureConfig.companyName, 10, pageHeight - 6);
             }
-            
         } catch (e) {
             console.error('Error rendering element for PDF', e);
         } finally {

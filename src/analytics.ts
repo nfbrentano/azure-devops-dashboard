@@ -20,6 +20,8 @@ import { getItemIcon, getStatusInfo, isRequirementType } from './utils.ts';
 import { logger } from './logger.ts';
 import { calculateDORAMetrics } from './dora.ts';
 import { runMonteCarloSimulation } from './forecast.ts';
+import { calculateSLACompliance } from './sla.ts';
+import { evaluateAlertRules } from './alerts.ts';
 import {
     renderCharts,
     renderAgingChart,
@@ -29,6 +31,7 @@ import {
     renderBottlenecksChart,
     renderThroughputChart,
     renderMonteCarloChart,
+    renderScatterChart,
     renderPortfolioFilters,
     renderProgress,
     renderLegends,
@@ -220,14 +223,60 @@ export function computeMetrics(
         }
     }
 
+    // Scatter plot data for cycle time of closed items
+    const scatterPoints = filteredItems
+        .filter((item) => {
+            const f = item.fields;
+            const closedDateStr = f['Microsoft.VSTS.Common.ClosedDate'] || f['System.ClosedDate'];
+            return !!closedDateStr;
+        })
+        .map((item) => {
+            const f = item.fields;
+            const createdDate = new Date(f['System.CreatedDate'] as string);
+            const activatedDate = f['Microsoft.VSTS.Common.ActivatedDate']
+                ? new Date(f['Microsoft.VSTS.Common.ActivatedDate'] as string)
+                : createdDate;
+            const closedDateStr = f['Microsoft.VSTS.Common.ClosedDate'] || f['System.ClosedDate'];
+            const closedDate = new Date(closedDateStr as string);
+            const cycleDays = Math.max(0, (closedDate.getTime() - activatedDate.getTime()) / (1000 * 60 * 60 * 24));
+
+            return {
+                x: closedDate.toISOString().split('T')[0],
+                y: Number(cycleDays.toFixed(1)),
+                id: item.id,
+                title: (f['System.Title'] as string) || `Item #${item.id}`,
+                type: (f['System.WorkItemType'] as string) || '',
+                state: (f['System.State'] as string) || ''
+            };
+        });
+
+    const sortedCycleValues = scatterPoints.map((p) => p.y).sort((a, b) => a - b);
+    const getPercentile = (p: number) => {
+        if (sortedCycleValues.length === 0) return 0;
+        const idx = Math.floor(sortedCycleValues.length * p);
+        return sortedCycleValues[Math.min(idx, sortedCycleValues.length - 1)];
+    };
+
+    const scatterData = {
+        points: scatterPoints,
+        p50: getPercentile(0.50),
+        p85: getPercentile(0.85),
+        p95: getPercentile(0.95)
+    };
+
+    // SLA tracking calculation
+    const slaData = calculateSLACompliance(filteredItems, workItemMetadata);
+
+    const doraMetrics = calculateDORAMetrics(filteredItems, workItemMetadata);
+
     // Bottlenecks
     let bottleneckData: BottleneckResult[] | null = null;
     if (revisionsData) {
         bottleneckData = calculateBottlenecks(filteredItems, revisionsData, workItemMetadata);
     }
 
-    // Anomalies & alerts
-    const anomalies = calculateAnomalies({
+    // Initial anomalies
+    const baseMetricsPartial = {
         filteredItems,
         leadTimes,
         cycleTimes,
@@ -239,13 +288,18 @@ export function computeMetrics(
         cfdSeries,
         heatmapData,
         throughputData,
-        bottleneckData
-    }, currentLanguage);
+        bottleneckData,
+        doraMetrics,
+        scatterData,
+        slaData
+    };
 
-    const doraMetrics = calculateDORAMetrics(filteredItems, workItemMetadata);
-    
+    const builtInAnomalies = calculateAnomalies(baseMetricsPartial, currentLanguage);
+    const customAlerts = evaluateAlertRules({ ...baseMetricsPartial, anomalies: builtInAnomalies });
+    const anomalies = [...builtInAnomalies, ...customAlerts];
+
     // For monte carlo, let's forecast the remaining In Progress and Backlog items (for requirements)
-    const remainingReqs = filteredItems.filter(item => {
+    const remainingReqs = filteredItems.filter((item) => {
         const type = (item.fields['System.WorkItemType'] as string)?.toLowerCase();
         if (!isRequirementType(type, workItemMetadata)) return false;
         const stateInfo = getStatusInfo(item.fields['System.State'] as string, workItemMetadata);
@@ -269,7 +323,9 @@ export function computeMetrics(
         bottleneckData,
         anomalies,
         doraMetrics,
-        forecastData
+        forecastData,
+        scatterData,
+        slaData
     };
 }
 
@@ -430,6 +486,56 @@ export function renderAll(metrics: ComputedMetrics, originalItems: WorkItemNode[
 
     // Monte Carlo
     renderMonteCarloChart(metrics.forecastData || null, charts, currentTheme, currentLanguage, translations);
+
+    // Cycle Time Scatter Plot
+    renderScatterChart(metrics.scatterData, charts, currentTheme, currentLanguage, translations, azureConfig);
+
+    // SLA Tracking Overview
+    renderSLAStats(metrics.slaData, currentLanguage, translations);
+}
+
+export function renderSLAStats(
+    slaData: ComputedMetrics['slaData'],
+    currentLanguage: string,
+    translations: Record<string, Record<string, string>>
+) {
+    const container = document.getElementById('sla-stats-container');
+    if (!container) return;
+
+    if (!slaData || slaData.length === 0) {
+        container.innerHTML = '';
+        container.style.display = 'none';
+        return;
+    }
+
+    container.style.display = 'block';
+    const t = translations[currentLanguage] || translations['en'];
+
+    container.innerHTML = `
+        <div class="sla-overview-grid">
+            ${slaData
+                .map((s) => {
+                    const statusClass =
+                        s.compliancePct >= 90 ? 'sla-good' : s.compliancePct >= 70 ? 'sla-warn' : 'sla-danger';
+                    return `
+                <div class="sla-card ${statusClass}">
+                    <div class="sla-card-header">
+                        <span class="sla-type-title">${s.workItemType}</span>
+                        <span class="sla-target-badge">${t['sla-target'] || 'Meta'}: ≤${s.targetDays}d</span>
+                    </div>
+                    <div class="sla-card-body">
+                        <div class="sla-pct">${s.compliancePct}%</div>
+                        <div class="sla-details">
+                            <span>${s.met}/${s.total} ${t['sla-within-target'] || 'dentro do SLA'}</span>
+                            <span>${t['label-avg'] || 'Média'}: ${s.avgDays}d</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+                })
+                .join('')}
+        </div>
+    `;
 }
 
 export function processAnalytics(items: WorkItemNode[], tree: WorkItemNode[], options: ProcessAnalyticsOptions = {}) {
