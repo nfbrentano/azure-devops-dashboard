@@ -6,8 +6,8 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Azure DevOps Metrics</title>
-  <script type="module" crossorigin src="/azure-devops-dashboard/assets/index-_QbAH3Ep.js"></script>
-  <link rel="stylesheet" crossorigin href="/azure-devops-dashboard/assets/index-BZhNQMM7.css">
+  <script type="module" crossorigin src="/azure-devops-dashboard/assets/index-CqCr2cKA.js"></script>
+  <link rel="stylesheet" crossorigin href="/azure-devops-dashboard/assets/index-CTM7HHS4.css">
 </head>
 
 <body>
@@ -42,6 +42,21 @@
           </button>
           <button id="pdf-export-btn" class="glass btn-icon-glass" title="Export PDF" data-i18n-title="btn-export-pdf">
             <i class="ph-bold ph-file-pdf"></i>
+          </button>
+        </div>
+        <div class="divider"></div>
+        <div class="feature-controls" style="display: flex; gap: 0.25rem;">
+          <button id="share-url-btn" class="glass btn-icon-glass" title="Share View (Copy Link)" data-i18n-title="btn-share-url">
+            <i class="ph-bold ph-share-network"></i>
+          </button>
+          <button id="alerts-config-btn" class="glass btn-icon-glass" title="Configure Alerts" data-i18n-title="alerts-btn-title">
+            <i class="ph-bold ph-bell-ringing"></i>
+          </button>
+          <button id="tv-mode-btn" class="glass btn-icon-glass" title="Presentation Mode (TV)" data-i18n-title="btn-tv-mode">
+            <i class="ph-bold ph-television"></i>
+          </button>
+          <button id="shortcuts-help-btn" class="glass btn-icon-glass" title="Keyboard Shortcuts (?)" data-i18n-title="shortcuts-title">
+            <i class="ph-bold ph-keyboard"></i>
           </button>
         </div>
         <div class="divider"></div>
@@ -245,6 +260,22 @@
           </div>
           <div class="chart-container-md">
             <canvas id="comparisonChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Cycle Time Scatter Plot Card -->
+        <div class="card glass full-width">
+          <div class="card-title">
+            <div class="card-title-content" data-i18n="chart-scatter-title">
+              <i class="ph-bold ph-chart-scatter"></i>
+              Cycle Time Scatter Plot & Percentiles
+            </div>
+            <button class="glass btn-icon-glass export-btn" style="margin-left: auto;"
+              data-i18n-title="btn-export-chart" data-target="scatterChart" title="Export Chart (PNG)"><i
+                class="ph-bold ph-download-simple"></i></button>
+          </div>
+          <div class="chart-container-md">
+            <canvas id="scatterChart"></canvas>
           </div>
         </div>
 
@@ -527,6 +558,9 @@
         </div>
       </div>
 
+      <!-- SLA Compliance Overview -->
+      <div id="sla-stats-container" style="margin-top: 1rem; display: none;"></div>
+
       <!-- Empty State -->
       <div id="dashboard-empty-state" class="empty-state hidden glass">
         <i class="ph ph-files"></i>
@@ -668,9 +702,57 @@
         </div>
 
         <div id="loading-steps" class="loading-steps">
-          <div id="step-queries"    class="loading-step step-pending"><i class="ph-bold ph-database"></i>       <span>Queries</span></div>
-          <div id="step-items"      class="loading-step step-pending"><i class="ph-bold ph-stack"></i>          <span>Work Items</span></div>
-          <div id="step-revisions"  class="loading-step step-pending"><i class="ph-bold ph-clock-clockwise"></i><span>Revisions</span></div>
+          <div id="step-queries" class="loading-step step-pending"><i class="ph-bold ph-database"></i> <span>Queries</span></div>
+          <div id="step-items" class="loading-step step-pending"><i class="ph-bold ph-stack"></i> <span>Work Items</span></div>
+          <div id="step-revisions" class="loading-step step-pending"><i class="ph-bold ph-clock-clockwise"></i> <span>Revisions</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Shortcuts Modal -->
+    <div id="shortcuts-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+      <div class="modal-card glass">
+        <div class="modal-header">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <i class="ph-bold ph-keyboard" style="font-size: 1.25rem; color: var(--primary);"></i>
+            <h3 data-i18n="shortcuts-title">Atalhos de Teclado</h3>
+          </div>
+          <button id="close-shortcuts-btn" class="glass btn-icon-glass"><i class="ph-bold ph-x"></i></button>
+        </div>
+        <div class="modal-body">
+          <table class="shortcuts-table">
+            <tbody>
+              <tr><td><kbd>1</kbd>–<kbd>4</kbd></td><td data-i18n="shortcut-tabs">Alternar abas (Dashboard, Itens, Timeline, Setup)</td></tr>
+              <tr><td><kbd>R</kbd></td><td data-i18n="shortcut-refresh">Atualizar dados da consulta</td></tr>
+              <tr><td><kbd>T</kbd></td><td data-i18n="shortcut-theme">Alternar tema Claro / Escuro</td></tr>
+              <tr><td><kbd>L</kbd></td><td data-i18n="shortcut-lang">Alternar idioma (PT-BR / EN)</td></tr>
+              <tr><td><kbd>F</kbd></td><td data-i18n="shortcut-tv">Alternar Modo Apresentação / TV</td></tr>
+              <tr><td><kbd>?</kbd></td><td data-i18n="shortcut-help">Exibir ajuda de atalhos</td></tr>
+              <tr><td><kbd>Esc</kbd></td><td data-i18n="shortcut-esc">Fechar modais / Sair do modo TV</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alerts Modal -->
+    <div id="alerts-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+      <div class="modal-card glass" style="max-width: 580px;">
+        <div class="modal-header">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <i class="ph-bold ph-bell-ringing" style="font-size: 1.25rem; color: var(--warning);"></i>
+            <h3 data-i18n="alerts-modal-title">Regras e Limites de Alertas</h3>
+          </div>
+          <button id="close-alerts-btn" class="glass btn-icon-glass"><i class="ph-bold ph-x"></i></button>
+        </div>
+        <div class="modal-body">
+          <div id="alerts-rules-list" style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <!-- Rendered dynamically -->
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-top: 1.5rem;">
+            <button id="reset-alerts-btn" class="glass" style="padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.85rem;" data-i18n="alerts-reset">Restaurar Padrões</button>
+            <button id="save-alerts-btn" class="glass" style="padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.85rem; background: var(--primary); color: white;" data-i18n="alerts-save">Salvar Regras</button>
+          </div>
         </div>
       </div>
     </div>
