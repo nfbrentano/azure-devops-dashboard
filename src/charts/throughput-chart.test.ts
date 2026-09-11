@@ -71,4 +71,43 @@ describe('throughput-chart.ts', () => {
         const fallbackColor = bgFunc({ chart: {} });
         expect(fallbackColor).toBe('#3b82f6');
     });
+
+    it('should create linear gradient if chartArea is present', () => {
+        const charts: any = {};
+        const data = [{ label: 'Week 1', count: 5, range: 'Jan 1 - Jan 7' }];
+        renderThroughputChart(data, charts, 'light', 'en', translations);
+
+        const callArgs = vi.mocked(Chart).mock.calls[0][1] as any;
+        const bgFunc = callArgs.data.datasets[0].backgroundColor;
+
+        const mockGradient = { addColorStop: vi.fn() };
+        const mockCtx = { createLinearGradient: vi.fn(() => mockGradient) };
+        const context = {
+            chart: {
+                ctx: mockCtx,
+                chartArea: { top: 10, bottom: 100 }
+            }
+        };
+
+        const result = bgFunc(context);
+        expect(mockCtx.createLinearGradient).toHaveBeenCalledWith(0, 100, 0, 10);
+        expect(mockGradient.addColorStop).toHaveBeenCalledWith(0, 'rgba(59, 130, 246, 0.2)');
+        expect(mockGradient.addColorStop).toHaveBeenCalledWith(1, 'rgba(59, 130, 246, 0.9)');
+        expect(result).toBe(mockGradient);
+    });
+
+    it('should format tooltips with callbacks', () => {
+        const charts: any = {};
+        const data = [{ label: 'Week 1', count: 5, range: 'Jan 1 - Jan 7' }];
+        renderThroughputChart(data, charts, 'light', 'en', translations);
+
+        const callArgs = vi.mocked(Chart).mock.calls[0][1] as any;
+        const tooltipCallbacks = callArgs.options.plugins.tooltip.callbacks;
+
+        const title = tooltipCallbacks.title([{ dataIndex: 0 }]);
+        expect(title).toBe('Jan 1 - Jan 7');
+
+        const label = tooltipCallbacks.label({ raw: 5 });
+        expect(label).toBe('Delivered: 5 items');
+    });
 });

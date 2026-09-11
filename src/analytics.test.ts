@@ -1,6 +1,31 @@
-import { describe, it, expect } from 'vitest';
-import { calculateBottlenecks, computeMetrics } from './analytics.ts';
-import type { WorkItemNode, WorkItemMetadata } from './types.ts';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import {
+    calculateBottlenecks,
+    computeMetrics,
+    calculateAnomalies,
+    renderAnomalies,
+    renderSLAStats,
+    renderAll,
+    processAnalytics
+} from './analytics.ts';
+import { state } from './state.ts';
+import type { WorkItemNode, WorkItemMetadata, ComputedMetrics, AnomalyAlert } from './types.ts';
+
+vi.mock('./charts/index.ts', () => ({
+    renderCharts: vi.fn(),
+    renderAgingChart: vi.fn(),
+    renderAssigneeChart: vi.fn(),
+    renderWIPChart: vi.fn(),
+    renderCFDChart: vi.fn(),
+    renderBottlenecksChart: vi.fn(),
+    renderThroughputChart: vi.fn(),
+    renderMonteCarloChart: vi.fn(),
+    renderScatterChart: vi.fn(),
+    renderPortfolioFilters: vi.fn(),
+    renderProgress: vi.fn(),
+    renderLegends: vi.fn(),
+    renderGlobalTypeFilters: vi.fn()
+}));
 
 describe('analytics.ts > calculateBottlenecks', () => {
     const mockMetadata = {
@@ -76,14 +101,14 @@ describe('analytics.ts > calculateBottlenecks', () => {
         };
 
         const result = calculateBottlenecks(items, revisionsData, mockMetadata);
-        
+
         // Duration in To Do is 1 day (day2 - baseTime)
         // Duration in In Progress is 2 days (day4 - day2)
         // Duration in Done is ignored since Done is 'Completed' and it is the last state
         expect(result).toHaveLength(2);
-        
-        const inProgress = result.find(r => r.column === 'In Progress');
-        const toDo = result.find(r => r.column === 'To Do');
+
+        const inProgress = result.find((r) => r.column === 'In Progress');
+        const toDo = result.find((r) => r.column === 'To Do');
 
         expect(inProgress).toBeDefined();
         expect(inProgress?.avgDays).toBe(2);
@@ -204,5 +229,242 @@ describe('analytics.ts > computeMetrics and calculateAnomalies', () => {
 
         const wipAlert = metrics.anomalies.find((a) => a.type === 'error');
         expect(wipAlert).toBeDefined();
+    });
+});
+
+describe('analytics.ts > calculateAnomalies', () => {
+    const translations = {
+        'alert-lt-title': 'Lead Time Spike',
+        'alert-lt-msg': 'Recent items are taking much longer',
+        'alert-wip-title': 'WIP Limit Alert',
+        'alert-wip-msg': 'Columns overloaded:',
+        'alert-bottleneck-title': 'Main Bottleneck Detected',
+        'alert-bottleneck-msg': 'Column',
+        'alert-bottleneck-detail': 'takes on average',
+        'label-days': 'days'
+    };
+
+    it('should generate bottleneck alert when top bottleneck avgDays >= 7', () => {
+        const dummyMetrics = {
+            agingData: [],
+            leadTimes: [2, 2, 2, 2, 2],
+            boardColumnWIP: {},
+            bottleneckData: [{ column: 'Review', avgDays: 8.5 }]
+        } as unknown as ComputedMetrics;
+
+        const alerts = calculateAnomalies(dummyMetrics, 'en');
+        const bottleneckAlert = alerts.find((a) => a.type === 'info');
+        expect(bottleneckAlert).toBeDefined();
+        expect(bottleneckAlert?.title).toBeDefined();
+        expect(bottleneckAlert?.message).toContain('"Review"');
+    });
+
+    it('should generate stale items alert when agingData has items with age >= 14', () => {
+        const dummyMetrics = {
+            agingData: [{ id: 1, age: 16, title: 'Old item' }],
+            leadTimes: [],
+            boardColumnWIP: {},
+            bottleneckData: []
+        } as unknown as ComputedMetrics;
+
+        const alerts = calculateAnomalies(dummyMetrics, 'en');
+        const staleAlert = alerts.find((a) => a.type === 'warning');
+        expect(staleAlert).toBeDefined();
+        expect(staleAlert?.count).toBe(1);
+    });
+
+    it('should generate WIP alert when column items >= 8', () => {
+        const dummyMetrics = {
+            agingData: [],
+            leadTimes: [],
+            boardColumnWIP: { 'In Progress': 9, Done: 20 },
+            bottleneckData: []
+        } as unknown as ComputedMetrics;
+
+        const alerts = calculateAnomalies(dummyMetrics, 'en');
+        const wipAlert = alerts.find((a) => a.type === 'error');
+        expect(wipAlert).toBeDefined();
+        expect(wipAlert?.message).toContain('In Progress (9)');
+    });
+});
+
+describe('analytics.ts > renderAnomalies', () => {
+    beforeEach(() => {
+        document.body.innerHTML = `
+            <div id="anomaly-alerts-container" class="hidden"></div>
+        `;
+    });
+
+    it('should do nothing if container does not exist', () => {
+        document.body.innerHTML = '';
+        expect(() => renderAnomalies([])).not.toThrow();
+    });
+
+    it('should clear and hide container if anomalies array is empty', () => {
+        const container = document.getElementById('anomaly-alerts-container')!;
+        container.classList.remove('hidden');
+        container.innerHTML = '<span>Old</span>';
+
+        renderAnomalies([]);
+        expect(container.innerHTML).toBe('');
+        expect(container.classList.contains('hidden')).toBe(true);
+    });
+
+    it('should render alert cards with proper classes and icons', () => {
+        const container = document.getElementById('anomaly-alerts-container')!;
+        const anomalies: AnomalyAlert[] = [
+            { type: 'error', title: 'WIP Overload', message: 'Col 1 has 10 items' },
+            { type: 'warning', title: 'Stale Item', message: 'Task is 15d old' },
+            { type: 'info', title: 'Bottleneck', message: 'Code review is slow' }
+        ];
+
+        renderAnomalies(anomalies);
+        expect(container.classList.contains('hidden')).toBe(false);
+        expect(container.querySelectorAll('.anomaly-alert-card')).toHaveLength(3);
+        expect(container.querySelector('.alert-error')).not.toBeNull();
+        expect(container.querySelector('.alert-warning')).not.toBeNull();
+        expect(container.querySelector('.alert-info')).not.toBeNull();
+    });
+});
+
+describe('analytics.ts > renderSLAStats', () => {
+    const translations = {
+        en: {
+            'sla-target': 'Target',
+            'sla-within-target': 'within SLA',
+            'label-avg': 'Average'
+        }
+    };
+
+    beforeEach(() => {
+        document.body.innerHTML = `
+            <div id="sla-stats-container"></div>
+        `;
+    });
+
+    it('should do nothing if container does not exist', () => {
+        document.body.innerHTML = '';
+        expect(() => renderSLAStats([], 'en', translations)).not.toThrow();
+    });
+
+    it('should hide container when slaData is empty', () => {
+        const container = document.getElementById('sla-stats-container')!;
+        renderSLAStats([], 'en', translations);
+        expect(container.style.display).toBe('none');
+    });
+
+    it('should render SLA cards with compliance classes', () => {
+        const container = document.getElementById('sla-stats-container')!;
+        const slaData = [
+            { workItemType: 'Bug', compliancePct: 95, targetDays: 5, met: 19, total: 20, avgDays: 3 },
+            { workItemType: 'User Story', compliancePct: 75, targetDays: 10, met: 15, total: 20, avgDays: 8 },
+            { workItemType: 'Task', compliancePct: 50, targetDays: 2, met: 5, total: 10, avgDays: 4 }
+        ];
+
+        renderSLAStats(slaData as any, 'en', translations);
+
+        expect(container.style.display).toBe('block');
+        expect(container.querySelectorAll('.sla-card')).toHaveLength(3);
+        expect(container.querySelector('.sla-good')).not.toBeNull();
+        expect(container.querySelector('.sla-warn')).not.toBeNull();
+        expect(container.querySelector('.sla-danger')).not.toBeNull();
+    });
+});
+
+describe('analytics.ts > renderAll and processAnalytics', () => {
+    beforeEach(() => {
+        document.body.innerHTML = `
+            <div id="anomaly-alerts-container"></div>
+            <div id="progress-list"></div>
+            <div id="kpi-total"></div>
+            <div id="kpi-total-pct"></div>
+            <div id="kpi-backlog"></div>
+            <div id="kpi-backlog-pct"></div>
+            <div id="kpi-inprogress"></div>
+            <div id="kpi-inprogress-pct"></div>
+            <div id="kpi-done"></div>
+            <div id="kpi-done-pct"></div>
+            <div id="dora-metrics-container">
+                <div id="dora-df"><span id="dora-df-val"></span><span id="dora-df-class"></span></div>
+                <div id="dora-lt"><span id="dora-lt-val"></span><span id="dora-lt-class"></span></div>
+                <div id="dora-cfr"><span id="dora-cfr-val"></span><span id="dora-cfr-class"></span></div>
+                <div id="dora-mttr"><span id="dora-mttr-val"></span><span id="dora-mttr-class"></span></div>
+            </div>
+            <div id="sla-stats-container"></div>
+        `;
+        vi.clearAllMocks();
+    });
+
+    it('should update KPI counts, percentages and DORA metrics', () => {
+        const mockMetrics: ComputedMetrics = {
+            labels: ['Item 1'],
+            leadTimes: [5],
+            cycleTimes: [3],
+            kpis: { total: 10, backlog: 3, inprogress: 4, doneRemoved: 3 },
+            agingData: [],
+            assigneeWorkload: {},
+            boardColumnWIP: {},
+            cfdSeries: [],
+            scatterData: [],
+            anomalies: [],
+            slaData: [],
+            doraMetrics: {
+                deploymentFrequency: { value: 1.5, class: 'Elite', raw: 10 },
+                leadTimeForChanges: { value: 2, class: 'High', raw: 2 },
+                changeFailureRate: { value: 5, class: 'Medium', raw: 0.05 },
+                timeToRestore: { value: 4, class: 'Low', raw: 4 }
+            },
+            throughputData: [{ label: 'W1', count: 5, range: 'Jan' }],
+            bottleneckData: [{ column: 'Active', avgDays: 4 }]
+        };
+
+        const callGantt = vi.fn();
+        renderAll(mockMetrics, [], { callRenderGantt: callGantt });
+
+        expect(document.getElementById('kpi-total')?.textContent).toBe('10');
+        expect(document.getElementById('kpi-total-pct')?.textContent).toBe('100%');
+        expect(document.getElementById('kpi-backlog')?.textContent).toBe('3');
+        expect(document.getElementById('kpi-backlog-pct')?.textContent).toBe('30%');
+        expect(document.getElementById('kpi-inprogress')?.textContent).toBe('4');
+        expect(document.getElementById('kpi-inprogress-pct')?.textContent).toBe('40%');
+        expect(document.getElementById('kpi-done')?.textContent).toBe('3');
+        expect(document.getElementById('kpi-done-pct')?.textContent).toBe('30%');
+
+        expect(document.getElementById('dora-df-val')?.textContent).toBe('1.5');
+        expect(document.getElementById('dora-df-class')?.textContent).toBe('Elite');
+        expect(document.getElementById('dora-df')?.classList.contains('dora-elite')).toBe(true);
+        expect(callGantt).toHaveBeenCalled();
+    });
+
+    it('should hide DORA container when doraMetrics is undefined', () => {
+        const mockMetrics = {
+            labels: [],
+            leadTimes: [],
+            cycleTimes: [],
+            kpis: { total: 0, backlog: 0, inprogress: 0, doneRemoved: 0 },
+            agingData: [],
+            assigneeWorkload: {},
+            boardColumnWIP: {},
+            cfdSeries: [],
+            scatterData: [],
+            anomalies: [],
+            slaData: []
+        } as unknown as ComputedMetrics;
+
+        renderAll(mockMetrics, [], {});
+        expect(document.getElementById('dora-metrics-container')?.style.display).toBe('none');
+    });
+
+    it('should initialize globalActiveTypes and process analytics', () => {
+        state.globalActiveTypes = null;
+        const items: WorkItemNode[] = [
+            { id: 1, fields: { 'System.WorkItemType': 'Task', 'System.State': 'Active' }, children: [] },
+            { id: 2, fields: { 'System.WorkItemType': 'Bug', 'System.State': 'Active' }, children: [] }
+        ];
+
+        processAnalytics(items, items, {});
+
+        expect(state.globalActiveTypes).toEqual(['Bug', 'Task']);
+        expect(localStorage.getItem('global_active_types')).toContain('Bug');
     });
 });

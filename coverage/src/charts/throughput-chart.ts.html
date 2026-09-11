@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">68.42% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>13/19</span>
+                <span class='fraction'>19/19</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">83.33% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>5/6</span>
+                <span class='fraction'>6/6</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">66.66% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>4/6</span>
+                <span class='fraction'>6/6</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">62.5% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>10/16</span>
+                <span class='fraction'>16/16</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line medium'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -142,29 +142,29 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -190,9 +190,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -228,11 +228,11 @@ export function renderThroughputChart(
                     backgroundColor: (context: any) =&gt; {
                         const chart = context.chart;
                         const { ctx, chartArea } = chart;
-                        <span class="missing-if-branch" title="else path not taken" >E</span>if (!chartArea) return '#3b82f6'; // Fallback
-                        const gradient = <span class="cstat-no" title="statement not covered" >ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);</span>
-<span class="cstat-no" title="statement not covered" >                        gradient.addColorStop(0, 'rgba(59, 130, 246, 0.2)');</span>
-<span class="cstat-no" title="statement not covered" >                        gradient.addColorStop(1, 'rgba(59, 130, 246, 0.9)');</span>
-<span class="cstat-no" title="statement not covered" >                        return gradient;</span>
+                        if (!chartArea) return '#3b82f6'; // Fallback
+                        const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+                        gradient.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
+                        gradient.addColorStop(1, 'rgba(59, 130, 246, 0.9)');
+                        return gradient;
                     },
                     borderRadius: 6,
                     hoverBackgroundColor: '#2563eb'
@@ -258,9 +258,9 @@ export function renderThroughputChart(
                 legend: { display: false },
                 tooltip: {
                     callbacks: {
-<span class="fstat-no" title="function not covered" >                        title: (i</span>tems: any[]) =&gt; <span class="cstat-no" title="statement not covered" >throughputData[items[0].dataIndex].range,</span>
-<span class="fstat-no" title="function not covered" >                        label: (i</span>tem: any) =&gt;
-<span class="cstat-no" title="statement not covered" >                            `${translations[currentLanguage]['label-delivered']}: ${item.raw} ${translations[currentLanguage]['label-items']}`</span>
+                        title: (items: any[]) =&gt; throughputData[items[0].dataIndex].range,
+                        label: (item: any) =&gt;
+                            `${translations[currentLanguage]['label-delivered']}: ${item.raw} ${translations[currentLanguage]['label-items']}`
                     }
                 }
             }
@@ -274,7 +274,7 @@ export function renderThroughputChart(
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-09-11T17:13:51.820Z
+                at 2026-09-11T17:32:37.591Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
