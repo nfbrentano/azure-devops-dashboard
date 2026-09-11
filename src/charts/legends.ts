@@ -80,7 +80,11 @@ export function renderLegends(
         if (renderedTypes.has(typeName)) return;
         renderedTypes.add(typeName);
 
-        const type = workItemMetadata.types[typeName];
+        let type = workItemMetadata.types[typeName];
+        if (!type) {
+            const key = Object.keys(workItemMetadata.types).find((k) => k.toLowerCase() === typeName);
+            if (key) type = workItemMetadata.types[key];
+        }
         if (!type) return;
         const iconInfo = getItemIcon(typeName, workItemMetadata);
 
@@ -98,7 +102,7 @@ export function renderLegends(
             const iterBacklog = workItemMetadata.backlogs.find(
                 (b) => b.name === 'Iteration backlog' || b.name === 'Iteration Backlog'
             );
-            if (iterBacklog && iterBacklog.workItemTypes.some((t) => t.toLowerCase() === typeName)) {
+            if (iterBacklog && iterBacklog.workItemTypes.some((t) => t.toLowerCase() === typeName.toLowerCase())) {
                 isIterationBacklog = true;
             }
         }
