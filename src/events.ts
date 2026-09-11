@@ -4,10 +4,13 @@
 import { state } from './state.ts';
 import { exportToCSV, exportToPDF } from './export.ts';
 import type { DashboardElements } from './types.ts';
+import { LOGO_LIGHT, LOGO_DARK } from './logos.ts';
+import { showToast } from './utils.ts';
+import { translations } from './translations.ts';
+import { getAlertRules, saveAlertRules, DEFAULT_ALERT_RULES } from './alerts.ts';
 
 async function drawWatermark(canvas: HTMLCanvasElement, isDark: boolean): Promise<HTMLCanvasElement> {
     const { companyName } = state.azureConfig || {};
-    const { LOGO_LIGHT, LOGO_DARK } = await import('./logos.ts');
 
     // Use hardcoded theme-aware logo
     const companyLogo = isDark ? LOGO_DARK : LOGO_LIGHT;
@@ -38,10 +41,10 @@ async function drawWatermark(canvas: HTMLCanvasElement, isDark: boolean): Promis
                 img.src = companyLogo;
             });
             const aspect = img.width / img.height;
-            const h = 72; 
+            const h = 72;
             const w = h * aspect;
             const logoY = (padding - h) / 2;
-            
+
             // Draw logo with smooth scaling
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = 'high';
@@ -49,7 +52,7 @@ async function drawWatermark(canvas: HTMLCanvasElement, isDark: boolean): Promis
 
             if (companyName) {
                 ctx.fillStyle = textColor;
-                ctx.font = '600 28px "Inter", sans-serif'; 
+                ctx.font = '600 28px "Inter", sans-serif';
                 ctx.textBaseline = 'middle';
                 const textY = padding / 2;
                 ctx.fillText(companyName, 40 + w + 20, textY);
@@ -192,12 +195,8 @@ export function initEvents(
     shareBtn?.addEventListener('click', () => {
         const url = window.location.href;
         navigator.clipboard.writeText(url).then(() => {
-            import('./utils.ts').then(({ showToast }) => {
-                import('./translations.ts').then(({ translations }) => {
-                    const msg = translations[state.currentLanguage]['msg-share-copied'] || 'Link copied to clipboard!';
-                    showToast(msg, 'success');
-                });
-            });
+            const msg = translations[state.currentLanguage]['msg-share-copied'] || 'Link copied to clipboard!';
+            showToast(msg, 'success');
         });
     });
 
@@ -263,25 +262,23 @@ export function initEvents(
 
     const renderAlertRulesUI = () => {
         if (!alertsRulesList) return;
-        import('./alerts.ts').then(({ getAlertRules }) => {
-            const rules = getAlertRules();
-            alertsRulesList.innerHTML = rules
-                .map(
-                    (r) => `
-                <div class="alert-rule-row">
-                    <div class="alert-rule-info">
-                        <label class="alert-rule-name">${r.name}</label>
-                        <span class="alert-rule-sub">Condição: ${r.metric} ${r.operator} limite</span>
-                    </div>
-                    <div class="alert-rule-controls">
-                        <input type="number" class="alert-threshold-input" data-rule-id="${r.id}" value="${r.threshold}" min="1" step="1">
-                        <input type="checkbox" data-rule-enable="${r.id}" ${r.enabled ? 'checked' : ''}>
-                    </div>
+        const rules = getAlertRules();
+        alertsRulesList.innerHTML = rules
+            .map(
+                (r) => `
+            <div class="alert-rule-row">
+                <div class="alert-rule-info">
+                    <label class="alert-rule-name">${r.name}</label>
+                    <span class="alert-rule-sub">Condição: ${r.metric} ${r.operator} limite</span>
                 </div>
-            `
-                )
-                .join('');
-        });
+                <div class="alert-rule-controls">
+                    <input type="number" class="alert-threshold-input" data-rule-id="${r.id}" value="${r.threshold}" min="1" step="1">
+                    <input type="checkbox" data-rule-enable="${r.id}" ${r.enabled ? 'checked' : ''}>
+                </div>
+            </div>
+        `
+            )
+            .join('');
     };
 
     const toggleAlertsModal = (open?: boolean) => {
@@ -299,34 +296,36 @@ export function initEvents(
     closeAlertsBtn?.addEventListener('click', () => toggleAlertsModal(false));
 
     saveAlertsBtn?.addEventListener('click', () => {
-        import('./alerts.ts').then(({ getAlertRules, saveAlertRules }) => {
-            const rules = getAlertRules();
-            rules.forEach((r) => {
-                const input = alertsRulesList?.querySelector(`input[data-rule-id="${r.id}"]`) as HTMLInputElement | null;
-                const enableCb = alertsRulesList?.querySelector(`input[data-rule-enable="${r.id}"]`) as HTMLInputElement | null;
-                if (input) r.threshold = Number(input.value) || r.threshold;
-                if (enableCb) r.enabled = enableCb.checked;
-            });
-            saveAlertRules(rules);
-            toggleAlertsModal(false);
-            import('./utils.ts').then((u) => u.showToast('Regras salvas com sucesso!', 'success'));
-            if (state.currentData.items.length > 0) {
-                handleRefresh();
-            }
+        const rules = getAlertRules();
+        rules.forEach((r) => {
+            const input = alertsRulesList?.querySelector(`input[data-rule-id="${r.id}"]`) as HTMLInputElement | null;
+            const enableCb = alertsRulesList?.querySelector(
+                `input[data-rule-enable="${r.id}"]`
+            ) as HTMLInputElement | null;
+            if (input) r.threshold = Number(input.value) || r.threshold;
+            if (enableCb) r.enabled = enableCb.checked;
         });
+        saveAlertRules(rules);
+        toggleAlertsModal(false);
+        showToast('Regras salvas com sucesso!', 'success');
+        if (state.currentData.items.length > 0) {
+            handleRefresh();
+        }
     });
 
     resetAlertsBtn?.addEventListener('click', () => {
-        import('./alerts.ts').then(({ DEFAULT_ALERT_RULES, saveAlertRules }) => {
-            saveAlertRules([...DEFAULT_ALERT_RULES]);
-            renderAlertRulesUI();
-        });
+        saveAlertRules([...DEFAULT_ALERT_RULES]);
+        renderAlertRulesUI();
     });
 
     // Global Keyboard Shortcuts
     document.addEventListener('keydown', (e: KeyboardEvent) => {
         const target = e.target as HTMLElement | null;
-        const isInput = target?.tagName === 'INPUT' || target?.tagName === 'SELECT' || target?.tagName === 'TEXTAREA' || target?.isContentEditable;
+        const isInput =
+            target?.tagName === 'INPUT' ||
+            target?.tagName === 'SELECT' ||
+            target?.tagName === 'TEXTAREA' ||
+            target?.isContentEditable;
 
         if (e.key === 'Escape') {
             if (shortcutsModal && !shortcutsModal.classList.contains('hidden')) {
@@ -425,7 +424,7 @@ export function initEvents(
         if (exportBtn) {
             const targetId = exportBtn.getAttribute('data-target');
             if (!targetId) return;
-            let element = document.getElementById(targetId);
+            const element = document.getElementById(targetId);
 
             if (!element) return;
 
