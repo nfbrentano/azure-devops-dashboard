@@ -9,9 +9,14 @@ export function renderCFDChart(
     currentLanguage: string,
     translations: Record<string, Record<string, string>>
 ) {
-    let canvas = document.getElementById('cfdChart');
-    if (!canvas) return;
-    const container = canvas.parentElement;
+    let canvas = document.getElementById('cfdChart') as HTMLCanvasElement | null;
+    let container = canvas?.parentElement;
+    const emptyMsg = document.getElementById('cfd-empty-msg');
+
+    if (!canvas && emptyMsg) {
+        container = emptyMsg.parentElement;
+    }
+
     if (!container) return;
 
     if (charts.cfd) charts.cfd.destroy();

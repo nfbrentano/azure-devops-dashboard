@@ -9,9 +9,14 @@ export function renderAssigneeChart(
     currentLanguage: string,
     translations: Record<string, Record<string, string>>
 ) {
-    let canvas = document.getElementById('assigneeChart');
-    if (!canvas) return;
-    const container = canvas.parentElement;
+    let canvas = document.getElementById('assigneeChart') as HTMLCanvasElement | null;
+    let container = canvas?.parentElement;
+    const emptyMsg = document.getElementById('assignee-empty-msg');
+
+    if (!canvas && emptyMsg) {
+        container = emptyMsg.parentElement;
+    }
+
     if (!container) return;
 
     if (charts.assignee) charts.assignee.destroy();

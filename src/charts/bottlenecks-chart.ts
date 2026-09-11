@@ -10,9 +10,14 @@ export function renderBottlenecksChart(
     translations: Record<string, Record<string, string>>
 ) {
     console.log('Rendering Bottlenecks Chart with data:', bottleneckData);
-    let canvas = document.getElementById('bottlenecksChart');
-    if (!canvas) return;
-    const container = canvas.parentElement;
+    let canvas = document.getElementById('bottlenecksChart') as HTMLCanvasElement | null;
+    let container = canvas?.parentElement;
+    const emptyMsg = document.getElementById('bottlenecks-empty-msg');
+
+    if (!canvas && emptyMsg) {
+        container = emptyMsg.parentElement;
+    }
+
     if (!container) return;
 
     if (charts.bottlenecks) charts.bottlenecks.destroy();

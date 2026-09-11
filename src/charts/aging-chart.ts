@@ -11,9 +11,14 @@ export function renderAgingChart(
     translations: Record<string, Record<string, string>>,
     azureConfig: AzureConfig | null
 ) {
-    let canvas = document.getElementById('agingChart');
-    if (!canvas) return;
-    const container = canvas.parentElement;
+    let canvas = document.getElementById('agingChart') as HTMLCanvasElement | null;
+    let container = canvas?.parentElement;
+    const emptyMsg = document.getElementById('aging-empty-msg');
+
+    if (!canvas && emptyMsg) {
+        container = emptyMsg.parentElement;
+    }
+
     if (!container) return;
 
     if (charts.aging) charts.aging.destroy();

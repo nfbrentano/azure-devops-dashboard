@@ -9,8 +9,14 @@ export function renderWIPChart(
     currentLanguage: string,
     translations: Record<string, Record<string, string>>
 ) {
-    let canvas = document.getElementById('wipChart');
-    const container = canvas?.parentElement;
+    let canvas = document.getElementById('wipChart') as HTMLCanvasElement | null;
+    let container = canvas?.parentElement;
+    const emptyMsg = document.getElementById('wip-empty-msg');
+
+    if (!canvas && emptyMsg) {
+        container = emptyMsg.parentElement;
+    }
+
     if (!container) return;
 
     if (charts.wip) charts.wip.destroy();
