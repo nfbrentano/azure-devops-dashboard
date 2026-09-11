@@ -33,7 +33,7 @@ export function renderAgingChart(
 
     if (document.getElementById('aging-empty-msg')) {
         container.innerHTML = '<canvas id="agingChart"></canvas>';
-        canvas = document.getElementById('agingChart');
+        canvas = document.getElementById('agingChart') as HTMLCanvasElement;
     }
 
     if (!canvas) return;

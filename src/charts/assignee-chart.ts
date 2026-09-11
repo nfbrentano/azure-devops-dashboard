@@ -46,7 +46,7 @@ export function renderAssigneeChart(
 
     if (document.getElementById('assignee-empty-msg')) {
         container.innerHTML = '<canvas id="assigneeChart"></canvas>';
-        canvas = document.getElementById('assigneeChart');
+        canvas = document.getElementById('assigneeChart') as HTMLCanvasElement;
     }
 
     if (!canvas) return;

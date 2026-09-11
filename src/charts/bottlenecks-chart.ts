@@ -32,7 +32,7 @@ export function renderBottlenecksChart(
 
     if (document.getElementById('bottlenecks-empty-msg')) {
         container.innerHTML = '<canvas id="bottlenecksChart"></canvas>';
-        canvas = document.getElementById('bottlenecksChart');
+        canvas = document.getElementById('bottlenecksChart') as HTMLCanvasElement;
     }
 
     if (!canvas) return;

@@ -31,7 +31,7 @@ export function renderCFDChart(
 
     if (document.getElementById('cfd-empty-msg')) {
         container.innerHTML = '<canvas id="cfdChart"></canvas>';
-        canvas = document.getElementById('cfdChart');
+        canvas = document.getElementById('cfdChart') as HTMLCanvasElement;
     }
 
     if (!canvas) return;

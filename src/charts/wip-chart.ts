@@ -34,7 +34,7 @@ export function renderWIPChart(
 
     if (document.getElementById('wip-empty-msg')) {
         container.innerHTML = '<canvas id="wipChart"></canvas>';
-        canvas = document.getElementById('wipChart');
+        canvas = document.getElementById('wipChart') as HTMLCanvasElement;
     }
 
     if (!canvas) return;
