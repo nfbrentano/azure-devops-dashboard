@@ -4,8 +4,8 @@ import type { WorkItemNode, WorkItemMetadata } from '../types.ts';
 export function renderPortfolioFilters(
     items: WorkItemNode[],
     workItemMetadata: WorkItemMetadata,
-    translations: Record<string, Record<string, string>>,
-    currentLanguage: string,
+    _translations: Record<string, Record<string, string>>,
+    _currentLanguage: string,
     onFilterChange: () => void
 ) {
     const container = document.getElementById('portfolio-status-filters');
@@ -41,21 +41,43 @@ export function renderPortfolioFilters(
                     ? previousSelection.has(state)
                     : statusInfo.label !== 'Done' && statusInfo.label !== 'Removed';
 
-            label.innerHTML = `
-            <input type="checkbox" value="${state}" ${isChecked ? 'checked' : ''}>
-            <span>${state}</span>
-        `;
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.value = state;
+            checkbox.checked = isChecked;
 
-            label.querySelector('input')!.addEventListener('change', () => onFilterChange());
+            const span = document.createElement('span');
+            span.textContent = state;
+
+            label.appendChild(checkbox);
+            label.appendChild(document.createTextNode(' '));
+            label.appendChild(span);
+
+            checkbox.addEventListener('change', () => onFilterChange());
             container.appendChild(label);
         });
+}
+
+function createIconElement(iconInfo: ReturnType<typeof getItemIcon>, fallbackColor: string): HTMLElement {
+    if (iconInfo.iconData) {
+        const img = document.createElement('img');
+        img.src = iconInfo.iconData;
+        img.style.width = '16px';
+        img.style.height = '16px';
+        img.alt = '';
+        return img;
+    }
+    const icon = document.createElement('i');
+    icon.className = iconInfo.icon;
+    icon.style.color = fallbackColor;
+    return icon;
 }
 
 export function renderGlobalTypeFilters(
     activeTypes: string[],
     items: WorkItemNode[],
     workItemMetadata: WorkItemMetadata,
-    currentLanguage: string,
+    _currentLanguage: string,
     onFilterChange: (newActiveTypes: string[]) => void
 ) {
     const container = document.getElementById('global-type-legend');
@@ -80,19 +102,23 @@ export function renderGlobalTypeFilters(
         const label = document.createElement('label');
         label.className = 'filter-item';
 
-        let iconHtml = `<i class="${iconInfo.icon}" style="color: ${typeMeta.color}"></i>`;
-        if (iconInfo.iconData) {
-            iconHtml = `<img src="${iconInfo.iconData}" style="width: 16px; height: 16px;" alt="">`;
-        }
-
         const isChecked = activeTypes.includes(typeName);
 
-        label.innerHTML = `
-            <input type="checkbox" data-global-type="${typeName}" ${isChecked ? 'checked' : ''}>
-            ${iconHtml} <span>${typeMeta.name}</span>
-        `;
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.setAttribute('data-global-type', typeName);
+        checkbox.checked = isChecked;
 
-        const checkbox = label.querySelector('input')!;
+        const iconElem = createIconElement(iconInfo, typeMeta.color);
+        const span = document.createElement('span');
+        span.textContent = typeMeta.name;
+
+        label.appendChild(checkbox);
+        label.appendChild(document.createTextNode(' '));
+        label.appendChild(iconElem);
+        label.appendChild(document.createTextNode(' '));
+        label.appendChild(span);
+
         checkbox.addEventListener('change', () => {
             const newActiveTypes: string[] = [];
             container.querySelectorAll('input').forEach((cb) => {
@@ -112,7 +138,7 @@ export function renderTimelineTypeFilters(
     items: WorkItemNode[],
     activeTypes: string[],
     workItemMetadata: WorkItemMetadata,
-    currentLanguage: string,
+    _currentLanguage: string,
     onFilterChange: (selectedTypes: string[]) => void
 ) {
     const container = document.getElementById('timeline-type-legend');
@@ -137,19 +163,23 @@ export function renderTimelineTypeFilters(
         const label = document.createElement('label');
         label.className = 'filter-item';
 
-        let iconHtml = `<i class="${iconInfo.icon}" style="color: ${typeMeta.color}"></i>`;
-        if (iconInfo.iconData) {
-            iconHtml = `<img src="${iconInfo.iconData}" style="width: 16px; height: 16px;" alt="">`;
-        }
-
         const isChecked = activeTypes.includes(typeName);
 
-        label.innerHTML = `
-            <input type="checkbox" data-timeline-type="${typeName}" ${isChecked ? 'checked' : ''}>
-            ${iconHtml} <span>${typeMeta.name}</span>
-        `;
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.setAttribute('data-timeline-type', typeName);
+        checkbox.checked = isChecked;
 
-        const checkbox = label.querySelector('input')!;
+        const iconElem = createIconElement(iconInfo, typeMeta.color);
+        const span = document.createElement('span');
+        span.textContent = typeMeta.name;
+
+        label.appendChild(checkbox);
+        label.appendChild(document.createTextNode(' '));
+        label.appendChild(iconElem);
+        label.appendChild(document.createTextNode(' '));
+        label.appendChild(span);
+
         checkbox.addEventListener('change', () => {
             const selectedTypes: string[] = [];
             container.querySelectorAll('input').forEach((cb) => {
@@ -174,7 +204,7 @@ export function renderTimelineStateFilters(
     items: WorkItemNode[],
     activeStates: string[],
     workItemMetadata: WorkItemMetadata,
-    currentLanguage: string,
+    _currentLanguage: string,
     onFilterChange: (selectedStates: string[]) => void
 ) {
     const container = document.getElementById('timeline-state-filters');
@@ -197,13 +227,27 @@ export function renderTimelineStateFilters(
 
         const isChecked = activeStates.includes(stateName);
 
-        label.innerHTML = `
-            <input type="checkbox" data-timeline-state="${stateName}" ${isChecked ? 'checked' : ''}>
-            <div class="status-dot" style="background: ${statusInfo.color}; width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px;"></div>
-            <span>${stateName}</span>
-        `;
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.setAttribute('data-timeline-state', stateName);
+        checkbox.checked = isChecked;
 
-        const checkbox = label.querySelector('input')!;
+        const dot = document.createElement('div');
+        dot.className = 'status-dot';
+        dot.style.background = statusInfo.color;
+        dot.style.width = '8px';
+        dot.style.height = '8px';
+        dot.style.borderRadius = '50%';
+        dot.style.display = 'inline-block';
+        dot.style.marginRight = '4px';
+
+        const span = document.createElement('span');
+        span.textContent = stateName;
+
+        label.appendChild(checkbox);
+        label.appendChild(dot);
+        label.appendChild(span);
+
         checkbox.addEventListener('change', () => {
             const selectedStates: string[] = [];
             container.querySelectorAll('input').forEach((cb) => {

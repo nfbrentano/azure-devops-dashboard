@@ -6,8 +6,18 @@ import { renderLegends } from './charts/index.ts';
 import type { DashboardElements, WorkItemMetadata } from './types.ts';
 
 export function switchTab(tabId: string, elements: DashboardElements) {
-    const { tabDashboard, tabItems, tabTimeline, tabSetup, dashboardView, itemsView, timelineView, setupView, unlockView, dataControls } =
-        elements;
+    const {
+        tabDashboard,
+        tabItems,
+        tabTimeline,
+        tabSetup,
+        dashboardView,
+        itemsView,
+        timelineView,
+        setupView,
+        unlockView,
+        dataControls
+    } = elements;
 
     tabDashboard?.classList.toggle('active', tabId === 'dashboard');
     tabItems?.classList.toggle('active', tabId === 'items');
@@ -137,11 +147,18 @@ export function showEmptyState(show: boolean) {
     }
 }
 
-export function populateQueries(queries: any[] | null, querySelector: HTMLSelectElement | null, currentLanguage: string) {
+export function populateQueries(
+    queries: any[] | null,
+    querySelector: HTMLSelectElement | null,
+    currentLanguage: string
+) {
     if (!querySelector) return;
     const currentVal = querySelector.value;
     const lang = translations[currentLanguage];
-    querySelector.innerHTML = `<option value="">${lang['query-selector-placeholder']}</option>`;
+    const defaultOpt = document.createElement('option');
+    defaultOpt.value = '';
+    defaultOpt.textContent = lang['query-selector-placeholder'];
+    querySelector.replaceChildren(defaultOpt);
     if (!queries) return;
     queries
         .sort((a, b) => a.name.localeCompare(b.name))

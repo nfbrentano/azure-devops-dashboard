@@ -31,7 +31,8 @@ export const translations: Translations = {
         'gantt-section-title': 'Hierarchical Gantt',
         'timeline-gantt-title': 'Hierarchical Gantt',
         'timeline-section-title': 'Project Timeline (Portfolio)',
-        'timeline-section-subtitle': 'Roadmap view of all Portfolio Work Items (Epics, Features) in the configured project',
+        'timeline-section-subtitle':
+            'Roadmap view of all Portfolio Work Items (Epics, Features) in the configured project',
         'timeline-filter-types': 'Work Item Types',
         'timeline-filter-states': 'Work Item States',
         'gantt-period-total': 'General View (Auto)',
@@ -179,7 +180,13 @@ export const translations: Translations = {
         'alerts-btn-title': 'Configure Alerts',
         'alerts-modal-title': 'Alert Rules & Thresholds',
         'alerts-save': 'Save Rules',
-        'alerts-reset': 'Reset Defaults'
+        'alerts-reset': 'Reset Defaults',
+        'alerts-saved-toast': 'Alert rules saved successfully!',
+        'alerts-condition-label': 'Condition: {metric} {operator} threshold',
+        'alert-prefix': 'Alert',
+        'alert-current-value': 'Current value: {value} {unit} ({operator} limit of {threshold} {unit})',
+        'unit-days': 'days',
+        'unit-items': 'items'
     },
     'pt-br': {
         'tab-dashboard': 'Painel',
@@ -352,6 +359,12 @@ export const translations: Translations = {
         'alerts-btn-title': 'Configurar Alertas',
         'alerts-modal-title': 'Regras e Limites de Alertas',
         'alerts-save': 'Salvar Regras',
-        'alerts-reset': 'Restaurar Padrões'
+        'alerts-reset': 'Restaurar Padrões',
+        'alerts-saved-toast': 'Regras salvas com sucesso!',
+        'alerts-condition-label': 'Condição: {metric} {operator} limite',
+        'alert-prefix': 'Alerta',
+        'alert-current-value': 'Valor atual: {value} {unit} ({operator} limite de {threshold} {unit})',
+        'unit-days': 'dias',
+        'unit-items': 'itens'
     }
 };

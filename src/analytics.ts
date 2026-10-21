@@ -16,7 +16,7 @@ import type {
     WorkItem
 } from './types.ts';
 import { translations } from './translations.ts';
-import { getItemIcon, getStatusInfo, isRequirementType } from './utils.ts';
+import { getItemIcon, getStatusInfo, isRequirementType, escapeHtml } from './utils.ts';
 import { logger } from './logger.ts';
 import { calculateDORAMetrics } from './dora.ts';
 import { runMonteCarloSimulation } from './forecast.ts';
@@ -87,7 +87,9 @@ export function computeMetrics(
         if (closedDate && !isNaN(closedDate.getTime())) {
             leadTimes.push(((closedDate.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24)).toFixed(1));
             cycleTimes.push(
-                activatedDate ? ((closedDate.getTime() - activatedDate.getTime()) / (1000 * 60 * 60 * 24)).toFixed(1) : 0
+                activatedDate
+                    ? ((closedDate.getTime() - activatedDate.getTime()) / (1000 * 60 * 60 * 24)).toFixed(1)
+                    : 0
             );
             labels.push(`ID ${item.id}`);
         }
@@ -96,27 +98,42 @@ export function computeMetrics(
         const iconInfo = getItemIcon(type, workItemMetadata);
 
         if (statusInfo.label === 'In Progress' && !iconInfo.isPortfolio && !isNaN(changedDate.getTime())) {
-            const assignee = f['System.AssignedTo'] as { displayName?: string; uniqueName?: string } | string | undefined;
-            const name = (typeof assignee === 'object' && assignee !== null ? assignee.displayName || assignee.uniqueName : typeof assignee === 'string' ? assignee : null) || translations[currentLanguage]['label-unassigned'] || 'Unassigned';
-            
+            const assignee = f['System.AssignedTo'] as
+                { displayName?: string; uniqueName?: string } | string | undefined;
+            const name =
+                (typeof assignee === 'object' && assignee !== null
+                    ? assignee.displayName || assignee.uniqueName
+                    : typeof assignee === 'string'
+                      ? assignee
+                      : null) ||
+                translations[currentLanguage]['label-unassigned'] ||
+                'Unassigned';
+
             agingData.push({
                 id: item.id,
                 title: (f['System.Title'] as string) || translations[currentLanguage]['label-no-title'] || 'No title',
                 age: Math.max(0, Math.floor((now.getTime() - changedDate.getTime()) / (1000 * 60 * 60 * 24))),
                 state: stateName,
                 assignee: name,
-                updated: changedDate.toLocaleDateString(currentLanguage, { day: '2-digit', month: '2-digit', year: 'numeric' })
+                updated: changedDate.toLocaleDateString(currentLanguage, {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                })
             });
         }
 
         if (!iconInfo.isPortfolio) {
-            const assignee = f['System.AssignedTo'] as { displayName?: string; uniqueName?: string } | string | undefined;
+            const assignee = f['System.AssignedTo'] as
+                { displayName?: string; uniqueName?: string } | string | undefined;
             const name =
                 (typeof assignee === 'object' && assignee !== null
                     ? assignee.displayName || assignee.uniqueName
                     : typeof assignee === 'string'
                       ? assignee
-                      : null) || translations[currentLanguage]['label-unassigned'] || 'Unassigned';
+                      : null) ||
+                translations[currentLanguage]['label-unassigned'] ||
+                'Unassigned';
             if (!assigneeWorkload[name]) assigneeWorkload[name] = {};
             assigneeWorkload[name][statusInfo.label] = (assigneeWorkload[name][statusInfo.label] || 0) + 1;
 
@@ -259,7 +276,7 @@ export function computeMetrics(
 
     const scatterData = {
         points: scatterPoints,
-        p50: getPercentile(0.50),
+        p50: getPercentile(0.5),
         p85: getPercentile(0.85),
         p95: getPercentile(0.95)
     };
@@ -295,7 +312,11 @@ export function computeMetrics(
     };
 
     const builtInAnomalies = calculateAnomalies(baseMetricsPartial, currentLanguage);
-    const customAlerts = evaluateAlertRules({ ...baseMetricsPartial, anomalies: builtInAnomalies });
+    const customAlerts = evaluateAlertRules(
+        { ...baseMetricsPartial, anomalies: builtInAnomalies },
+        undefined,
+        currentLanguage
+    );
     const anomalies = [...builtInAnomalies, ...customAlerts];
 
     // For monte carlo, let's forecast the remaining In Progress and Backlog items (for requirements)
@@ -329,7 +350,10 @@ export function computeMetrics(
     };
 }
 
-export function calculateAnomalies(metrics: Omit<ComputedMetrics, 'anomalies'>, currentLanguage: string): AnomalyAlert[] {
+export function calculateAnomalies(
+    metrics: Omit<ComputedMetrics, 'anomalies'>,
+    currentLanguage: string
+): AnomalyAlert[] {
     const alerts: AnomalyAlert[] = [];
     const t = translations[currentLanguage] || translations['en'];
 
@@ -392,13 +416,13 @@ export function renderAnomalies(anomalies: AnomalyAlert[]) {
                     : a.type === 'warning'
                       ? 'ph-fill ph-warning'
                       : 'ph-fill ph-info';
-            const colorClass = `alert-${a.type}`;
+            const colorClass = `alert-${escapeHtml(a.type)}`;
             return `
             <div class="anomaly-alert-card ${colorClass}">
                 <i class="${icon}"></i>
                 <div class="anomaly-alert-body">
-                    <strong>${a.title}</strong>
-                    <span>${a.message}</span>
+                    <strong>${escapeHtml(a.title)}</strong>
+                    <span>${escapeHtml(a.message)}</span>
                 </div>
             </div>
         `;
@@ -419,7 +443,16 @@ export function renderAll(metrics: ComputedMetrics, originalItems: WorkItemNode[
     renderAnomalies(metrics.anomalies);
 
     // Rendering via charts.js
-    renderCharts(metrics.labels, metrics.leadTimes, metrics.cycleTimes, charts, currentTheme, currentLanguage, translations, azureConfig);
+    renderCharts(
+        metrics.labels,
+        metrics.leadTimes,
+        metrics.cycleTimes,
+        charts,
+        currentTheme,
+        currentLanguage,
+        translations,
+        azureConfig
+    );
     renderAgingChart(metrics.agingData, charts, currentTheme, currentLanguage, translations, azureConfig);
     renderAssigneeChart(metrics.assigneeWorkload, charts, currentTheme, currentLanguage, translations);
     renderWIPChart(metrics.boardColumnWIP, charts, currentTheme, currentLanguage, translations);
@@ -462,8 +495,8 @@ export function renderAll(metrics: ComputedMetrics, originalItems: WorkItemNode[
     if (metrics.doraMetrics) {
         const doraContainer = document.getElementById('dora-metrics-container');
         if (doraContainer) doraContainer.style.display = 'grid';
-        
-        const updateDoraCard = (id: string, metric: { value: number, class: string, raw: number }) => {
+
+        const updateDoraCard = (id: string, metric: { value: number; class: string; raw: number }) => {
             const valEl = document.getElementById(`${id}-val`);
             const classEl = document.getElementById(`${id}-class`);
             const cardEl = document.getElementById(id);
@@ -520,14 +553,14 @@ export function renderSLAStats(
                     return `
                 <div class="sla-card ${statusClass}">
                     <div class="sla-card-header">
-                        <span class="sla-type-title">${s.workItemType}</span>
-                        <span class="sla-target-badge">${t['sla-target'] || 'Meta'}: ≤${s.targetDays}d</span>
+                        <span class="sla-type-title">${escapeHtml(s.workItemType)}</span>
+                        <span class="sla-target-badge">${escapeHtml(t['sla-target'] || 'Meta')}: ≤${s.targetDays}d</span>
                     </div>
                     <div class="sla-card-body">
                         <div class="sla-pct">${s.compliancePct}%</div>
                         <div class="sla-details">
-                            <span>${s.met}/${s.total} ${t['sla-within-target'] || 'dentro do SLA'}</span>
-                            <span>${t['label-avg'] || 'Média'}: ${s.avgDays}d</span>
+                            <span>${s.met}/${s.total} ${escapeHtml(t['sla-within-target'] || 'dentro do SLA')}</span>
+                            <span>${escapeHtml(t['label-avg'] || 'Média')}: ${s.avgDays}d</span>
                         </div>
                     </div>
                 </div>

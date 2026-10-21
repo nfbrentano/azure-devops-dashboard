@@ -1,12 +1,7 @@
-import { state } from './state.ts';
 import type { WorkItemNode, WorkItemMetadata, AzureConfig } from './types.ts';
-import { getStatusInfo } from './utils.ts';
-import { translations } from './translations.ts';
 
-export function exportToCSV(items: WorkItemNode[], workItemMetadata: WorkItemMetadata, currentLanguage: string) {
+export function exportToCSV(items: WorkItemNode[], _workItemMetadata: WorkItemMetadata, _currentLanguage: string) {
     if (!items || items.length === 0) return;
-
-    const t = translations[currentLanguage] || translations['en'];
 
     // Headers
     const headers = [
@@ -22,7 +17,7 @@ export function exportToCSV(items: WorkItemNode[], workItemMetadata: WorkItemMet
     ];
 
     // Rows
-    const rows = items.map(item => {
+    const rows = items.map((item) => {
         const f = item.fields;
         const createdDate = new Date(f['System.CreatedDate'] as string);
         const activatedDate = f['Microsoft.VSTS.Common.ActivatedDate']
@@ -36,7 +31,9 @@ export function exportToCSV(items: WorkItemNode[], workItemMetadata: WorkItemMet
 
         if (closedDate && !isNaN(closedDate.getTime())) {
             leadTime = ((closedDate.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24)).toFixed(1);
-            cycleTime = activatedDate ? ((closedDate.getTime() - activatedDate.getTime()) / (1000 * 60 * 60 * 24)).toFixed(1) : '0';
+            cycleTime = activatedDate
+                ? ((closedDate.getTime() - activatedDate.getTime()) / (1000 * 60 * 60 * 24)).toFixed(1)
+                : '0';
         }
 
         const assigneeObj = f['System.AssignedTo'] as { displayName?: string; uniqueName?: string } | undefined;
@@ -49,9 +46,9 @@ export function exportToCSV(items: WorkItemNode[], workItemMetadata: WorkItemMet
 
         return [
             item.id,
-            `"${(f['System.Title'] as string || '').replace(/"/g, '""')}"`,
-            `"${f['System.State'] as string || ''}"`,
-            `"${f['System.WorkItemType'] as string || ''}"`,
+            `"${((f['System.Title'] as string) || '').replace(/"/g, '""')}"`,
+            `"${(f['System.State'] as string) || ''}"`,
+            `"${(f['System.WorkItemType'] as string) || ''}"`,
             `"${assignee}"`,
             createdDate.toISOString().split('T')[0],
             closedDate ? closedDate.toISOString().split('T')[0] : '',
@@ -63,7 +60,7 @@ export function exportToCSV(items: WorkItemNode[], workItemMetadata: WorkItemMet
     const csvContent = [headers.join(','), ...rows].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
-    
+
     const link = document.createElement('a');
     link.href = url;
     link.download = `azure-devops-export-${new Date().toISOString().split('T')[0]}.csv`;
@@ -78,13 +75,13 @@ export async function exportToPDF(isDark: boolean, azureConfig: AzureConfig | nu
     // Dynamically import jsPDF and html2canvas
     const { jsPDF } = await import('jspdf');
     const { default: html2canvas } = await import('html2canvas');
-    
+
     const pdf = new jsPDF({
         orientation: 'p',
         unit: 'mm',
         format: 'a4'
     });
-    
+
     const elementsToExport = [
         document.getElementById('dashboard-kpis'),
         document.getElementById('dora-metrics-container'),
@@ -92,16 +89,16 @@ export async function exportToPDF(isDark: boolean, azureConfig: AzureConfig | nu
         document.getElementById('items-content'),
         document.getElementById('timeline-content')
     ];
-    
+
     const bgColor = isDark ? '#0f172a' : '#f8fafc';
     let isFirstPage = true;
 
     for (const el of elementsToExport) {
         if (!el || el.classList.contains('hidden') || el.style.display === 'none') continue;
-        
+
         // Add exporting class to cleanup UI for export
         el.classList.add('exporting');
-        
+
         try {
             const canvas = await html2canvas(el, {
                 backgroundColor: bgColor,
@@ -110,19 +107,19 @@ export async function exportToPDF(isDark: boolean, azureConfig: AzureConfig | nu
                 allowTaint: true,
                 ignoreElements: (node) => node.classList?.contains('export-btn') || node.classList?.contains('no-print')
             });
-            
+
             if (!isFirstPage) {
                 pdf.addPage();
             }
             isFirstPage = false;
-            
+
             const imgData = canvas.toDataURL('image/png');
-            
+
             // Calculate dimensions to fit A4 page width
             const pdfWidth = pdf.internal.pageSize.getWidth();
             const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-            
-            // If it's too tall, we might need multiple pages for this element, 
+
+            // If it's too tall, we might need multiple pages for this element,
             // but for simplicity we just scale it down to fit the page width and let it overflow to next pages if needed
             // A more robust implementation would split the canvas.
             const pageHeight = pdf.internal.pageSize.getHeight();
@@ -159,6 +156,6 @@ export async function exportToPDF(isDark: boolean, azureConfig: AzureConfig | nu
             el.classList.remove('exporting');
         }
     }
-    
+
     pdf.save(`azure-devops-dashboard-${new Date().toISOString().split('T')[0]}.pdf`);
 }

@@ -1,4 +1,5 @@
 import type { AlertRule, ComputedMetrics, AnomalyAlert } from './types.ts';
+import { translations } from './translations.ts';
 
 const ALERTS_STORAGE_KEY = 'az_dashboard_alert_rules';
 
@@ -57,8 +58,13 @@ export function saveAlertRules(rules: AlertRule[]): void {
     }
 }
 
-export function evaluateAlertRules(metrics: ComputedMetrics, rules: AlertRule[] = getAlertRules()): AnomalyAlert[] {
+export function evaluateAlertRules(
+    metrics: ComputedMetrics,
+    rules: AlertRule[] = getAlertRules(),
+    currentLanguage = 'pt-br'
+): AnomalyAlert[] {
     const alerts: AnomalyAlert[] = [];
+    const t = translations[currentLanguage] || translations['pt-br'];
 
     // Calculate aggregate metrics
     const leadTimesNum = metrics.leadTimes.map(Number).filter((n) => !isNaN(n));
@@ -82,19 +88,19 @@ export function evaluateAlertRules(metrics: ComputedMetrics, rules: AlertRule[] 
         switch (rule.metric) {
             case 'lead_time_avg':
                 currentValue = avgLeadTime;
-                unit = 'dias';
+                unit = t['unit-days'] || 'dias';
                 break;
             case 'cycle_time_avg':
                 currentValue = avgCycleTime;
-                unit = 'dias';
+                unit = t['unit-days'] || 'dias';
                 break;
             case 'wip_total':
                 currentValue = totalWIP;
-                unit = 'itens';
+                unit = t['unit-items'] || 'itens';
                 break;
             case 'aging_max':
                 currentValue = maxAging;
-                unit = 'dias';
+                unit = t['unit-days'] || 'dias';
                 break;
             case 'cfr_pct':
                 currentValue = cfr;
@@ -108,10 +114,19 @@ export function evaluateAlertRules(metrics: ComputedMetrics, rules: AlertRule[] 
         else if (rule.operator === '<') violated = currentValue < rule.threshold;
 
         if (violated) {
+            const prefix = t['alert-prefix'] || 'Alerta';
+            const msgTemplate =
+                t['alert-current-value'] || 'Valor atual: {value} {unit} ({operator} limite de {threshold} {unit})';
+            const message = msgTemplate
+                .replace('{value}', currentValue.toFixed(1))
+                .replace(/\{unit\}/g, unit)
+                .replace('{operator}', rule.operator)
+                .replace('{threshold}', String(rule.threshold));
+
             alerts.push({
                 type: 'warning',
-                title: `Alerta: ${rule.name}`,
-                message: `Valor atual: ${currentValue.toFixed(1)} ${unit} (${rule.operator} limite de ${rule.threshold} ${unit})`,
+                title: `${prefix}: ${rule.name}`,
+                message,
                 count: Math.round(currentValue)
             });
         }

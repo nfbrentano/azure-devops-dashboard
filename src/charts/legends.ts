@@ -60,7 +60,11 @@ export function renderLegends(
             else color = '#94a3b8';
         }
 
-        item.innerHTML = `<div class="legend-color" style="background: ${color}"></div> ${info.label}`;
+        const colorBox = document.createElement('div');
+        colorBox.className = 'legend-color';
+        colorBox.style.background = color;
+        item.appendChild(colorBox);
+        item.appendChild(document.createTextNode(` ${info.label}`));
         statusLegend.appendChild(item);
     });
 
@@ -91,9 +95,19 @@ export function renderLegends(
         const label = document.createElement('label');
         label.className = 'filter-item';
 
-        let iconHtml = `<i class="${iconInfo.icon}" style="color: ${type.color}"></i>`;
+        let iconElem: HTMLElement;
         if (iconInfo.iconData) {
-            iconHtml = `<img src="${iconInfo.iconData}" style="width: 16px; height: 16px;" alt="">`;
+            const img = document.createElement('img');
+            img.src = iconInfo.iconData;
+            img.style.width = '16px';
+            img.style.height = '16px';
+            img.alt = '';
+            iconElem = img;
+        } else {
+            const icon = document.createElement('i');
+            icon.className = iconInfo.icon;
+            icon.style.color = type.color;
+            iconElem = icon;
         }
 
         // Check if this type belongs to 'Iteration backlog'
@@ -116,10 +130,20 @@ export function renderLegends(
 
         const isChecked = !isIterationBacklog;
 
-        label.innerHTML = `
-            <input type="checkbox" data-type="${typeName}" ${isChecked ? 'checked' : ''}>
-            ${iconHtml} <span>${type.name}</span>
-        `;
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.setAttribute('data-type', typeName);
+        checkbox.checked = isChecked;
+
+        const span = document.createElement('span');
+        span.textContent = type.name;
+
+        label.appendChild(checkbox);
+        label.appendChild(document.createTextNode(' '));
+        label.appendChild(iconElem);
+        label.appendChild(document.createTextNode(' '));
+        label.appendChild(span);
+
         typeLegend.appendChild(label);
     });
 }

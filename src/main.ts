@@ -20,22 +20,18 @@ import {
     setLoadingStep,
     getStatusInfo
 } from './utils.ts';
-import { 
-    fetchTimelineData, 
-    fetchFullDetails, 
-    buildTree, 
-    fetchQueries, 
-    fetchWithRetry, 
-    getAuthHeader, 
-    fetchMetadata, 
-    fetchRevisionsForItems 
+import {
+    fetchTimelineData,
+    fetchFullDetails,
+    buildTree,
+    fetchQueries,
+    fetchWithRetry,
+    getAuthHeader,
+    fetchMetadata,
+    fetchRevisionsForItems
 } from './api.ts';
 import { apiCache } from './cache.ts';
-import {
-    renderLegends,
-    renderTimelineTypeFilters,
-    renderTimelineStateFilters
-} from './charts/index.ts';
+import { renderLegends, renderTimelineTypeFilters, renderTimelineStateFilters } from './charts/index.ts';
 import { renderGantt } from './gantt.ts';
 import { renderTimeline } from './timeline_render.ts';
 import { switchTab, updateThemeIcon, applyTranslations, showEmptyState, populateQueries } from './ui.ts';
@@ -253,7 +249,12 @@ async function initApp() {
                 switchTab('setup', elements);
                 return;
             }
-            if (!elements.refreshBtn || elements.refreshBtn.classList.contains('spinning') || !elements.querySelector?.value) return;
+            if (
+                !elements.refreshBtn ||
+                elements.refreshBtn.classList.contains('spinning') ||
+                !elements.querySelector?.value
+            )
+                return;
             elements.refreshBtn.classList.add('spinning');
             await loadQueryData(elements.querySelector.value, { bust: true });
             elements.refreshBtn.classList.remove('spinning');
@@ -284,7 +285,9 @@ async function initApp() {
             const isTotal = elements.timelineGanttPeriod?.value === 'total';
             if (elements.timelineGanttPrev && elements.timelineGanttNext) {
                 elements.timelineGanttPrev.disabled = elements.timelineGanttNext.disabled = isTotal;
-                elements.timelineGanttPrev.style.opacity = elements.timelineGanttNext.style.opacity = isTotal ? '0.3' : '1';
+                elements.timelineGanttPrev.style.opacity = elements.timelineGanttNext.style.opacity = isTotal
+                    ? '0.3'
+                    : '1';
             }
             if (state.timelineData.tree.length > 0) callRenderTimeline();
         },
@@ -313,9 +316,10 @@ async function initApp() {
                     itemsToProcess = itemsToProcess.filter((item) => {
                         const title = ((item.fields['System.Title'] as string) || '').toLowerCase();
                         const id = String(item.id);
-                        const assigned = typeof item.fields['System.AssignedTo'] === 'object'
-                            ? ((item.fields['System.AssignedTo'] as any)?.displayName || '').toLowerCase()
-                            : String(item.fields['System.AssignedTo'] || '').toLowerCase();
+                        const assigned =
+                            typeof item.fields['System.AssignedTo'] === 'object'
+                                ? ((item.fields['System.AssignedTo'] as any)?.displayName || '').toLowerCase()
+                                : String(item.fields['System.AssignedTo'] || '').toLowerCase();
                         return title.includes(trimmed) || id.includes(trimmed) || assigned.includes(trimmed);
                     });
                 }
@@ -333,8 +337,8 @@ async function initApp() {
             }
         },
 
-        handleExportPDF: () => {
-            window.print();
+        onAlertsSaved: () => {
+            if (state.currentData.items.length > 0) runAnalytics();
         }
     };
 
@@ -466,11 +470,15 @@ async function loadQueryData(queryId: string, { bust = false } = {}) {
         const activeNameEl = document.getElementById('active-query-name');
         if (activeNameEl && elements.querySelector) {
             const selectedOption = elements.querySelector.options[elements.querySelector.selectedIndex];
-            const queryLabel = `${translations[state.currentLanguage]['label-query']}: ${selectedOption ? selectedOption.text : ''}`;
+            const queryLabel = `${translations[state.currentLanguage]['label-query']}: ${selectedOption ? selectedOption.text : ''} `;
             const badgeClass = fromCache ? 'cache-badge cache-badge--hit' : 'cache-badge cache-badge--miss';
             const badgeIcon = fromCache ? '🗃' : '🌐';
             const badgeText = fromCache ? 'cached' : 'live';
-            activeNameEl.innerHTML = `${queryLabel} <span class="${badgeClass}">${badgeIcon} ${badgeText}</span>`;
+            activeNameEl.textContent = queryLabel;
+            const badgeSpan = document.createElement('span');
+            badgeSpan.className = badgeClass;
+            badgeSpan.textContent = `${badgeIcon} ${badgeText}`;
+            activeNameEl.appendChild(badgeSpan);
         }
 
         // Persist query preferences
@@ -555,59 +563,82 @@ async function loadTimelineData() {
     const startTime = performance.now();
 
     try {
-        const items = await fetchTimelineData(state.azureConfig!, state.workItemMetadata);
+        const items = await fetchTimelineData(state.azureConfig!, state.workItemMetadata, (p) => {
+            updateLoadingProgress(p);
+        });
         const fetchTime = performance.now();
         logger.info(`[Timeline] Fetched ${items.length} items in ${(fetchTime - startTime).toFixed(2)}ms`);
-        
+
         setLoadingStep('step-queries', 'done');
-        
+
         if (items.length === 0) {
             showToast(translations[state.currentLanguage]['msg-portfolio-empty-toast'], 'info');
             showLoading(false);
             return;
         }
 
-        setLoadingStatus(translations[state.currentLanguage]['loading-processing-items'].replace('{count}', String(items.length)));
+        setLoadingStatus(
+            translations[state.currentLanguage]['loading-processing-items'].replace('{count}', String(items.length))
+        );
         setLoadingStep('step-items', 'active');
-        
+
         const treeStartTime = performance.now();
         const { roots, nodes } = buildTree(items, state.workItemMetadata);
         const treeTime = performance.now();
-        logger.info(`[Timeline] Tree built: ${roots.length} roots, ${nodes.length} total nodes in ${(treeTime - treeStartTime).toFixed(2)}ms`);
-        
+        logger.info(
+            `[Timeline] Tree built: ${roots.length} roots, ${nodes.length} total nodes in ${(treeTime - treeStartTime).toFixed(2)}ms`
+        );
+
         state.timelineData = { items: nodes, tree: roots };
-        
+
         // Initial active types and states
-        state.timelineActiveTypes = [...new Set(nodes.map(n => n.fields['System.WorkItemType'] as string))];
-        const allStates = [...new Set(nodes.map(n => n.fields['System.State'] as string))];
-        state.timelineActiveStates = allStates.filter(s => {
+        state.timelineActiveTypes = [...new Set(nodes.map((n) => n.fields['System.WorkItemType'] as string))];
+        const allStates = [...new Set(nodes.map((n) => n.fields['System.State'] as string))];
+        state.timelineActiveStates = allStates.filter((s) => {
             if (!s) return false;
             const info = getStatusInfo(s, state.workItemMetadata);
             return info.label !== 'Done' && info.label !== 'Removed';
         });
 
         // Render filters
-        renderTimelineTypeFilters(nodes, state.timelineActiveTypes, state.workItemMetadata, state.currentLanguage, (selectedTypes) => {
-            state.timelineActiveTypes = selectedTypes;
-            callRenderTimeline();
-        });
+        renderTimelineTypeFilters(
+            nodes,
+            state.timelineActiveTypes,
+            state.workItemMetadata,
+            state.currentLanguage,
+            (selectedTypes) => {
+                state.timelineActiveTypes = selectedTypes;
+                callRenderTimeline();
+            }
+        );
 
-        renderTimelineStateFilters(nodes, state.timelineActiveStates, state.workItemMetadata, state.currentLanguage, (selectedStates) => {
-            state.timelineActiveStates = selectedStates;
-            callRenderTimeline();
-        });
+        renderTimelineStateFilters(
+            nodes,
+            state.timelineActiveStates,
+            state.workItemMetadata,
+            state.currentLanguage,
+            (selectedStates) => {
+                state.timelineActiveStates = selectedStates;
+                callRenderTimeline();
+            }
+        );
 
         setLoadingStep('step-items', 'done');
-        setLoadingStep('step-revisions', 'done'); 
-        
+        setLoadingStep('step-revisions', 'done');
+
         const renderStartTime = performance.now();
         callRenderTimeline();
         const renderTime = performance.now();
         logger.info(`[Timeline] Rendered in ${(renderTime - renderStartTime).toFixed(2)}ms`);
-
     } catch (e) {
         console.error('CRITICAL: loadTimelineData failed:', e);
-        showToast(translations[state.currentLanguage]['msg-timeline-error'].replace('{message}', (e as Error).message || 'Erro desconhecido'), 'error');
+        showToast(
+            translations[state.currentLanguage]['msg-timeline-error'].replace(
+                '{message}',
+                (e as Error).message || 'Erro desconhecido'
+            ),
+            'error'
+        );
     } finally {
         showLoading(false);
     }

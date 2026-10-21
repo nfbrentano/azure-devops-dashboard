@@ -5,7 +5,7 @@ import { state } from './state.ts';
 import { exportToCSV, exportToPDF } from './export.ts';
 import type { DashboardElements } from './types.ts';
 import { LOGO_LIGHT, LOGO_DARK } from './logos.ts';
-import { showToast } from './utils.ts';
+import { showToast, escapeHtml } from './utils.ts';
 import { translations } from './translations.ts';
 import { getAlertRules, saveAlertRules, DEFAULT_ALERT_RULES } from './alerts.ts';
 
@@ -93,7 +93,7 @@ export function initEvents(
         handleGanttFilterChange: () => void;
         handleCFDPeriodChange: (days: number) => void;
         handleItemsSearch: (query: string) => void;
-        handleExportPDF: () => void;
+        onAlertsSaved?: () => void;
     }
 ) {
     const {
@@ -133,7 +133,7 @@ export function initEvents(
         handleTimelineNav,
         handleCFDPeriodChange,
         handleItemsSearch,
-        handleExportPDF
+        onAlertsSaved
     } = handlers;
 
     // Tabs
@@ -263,21 +263,25 @@ export function initEvents(
     const renderAlertRulesUI = () => {
         if (!alertsRulesList) return;
         const rules = getAlertRules();
+        const t = translations[state.currentLanguage] || translations['pt-br'];
+        const condTemplate = t['alerts-condition-label'] || 'Condição: {metric} {operator} limite';
+
         alertsRulesList.innerHTML = rules
-            .map(
-                (r) => `
+            .map((r) => {
+                const condText = condTemplate.replace('{metric}', r.metric).replace('{operator}', r.operator);
+                return `
             <div class="alert-rule-row">
                 <div class="alert-rule-info">
-                    <label class="alert-rule-name">${r.name}</label>
-                    <span class="alert-rule-sub">Condição: ${r.metric} ${r.operator} limite</span>
+                    <label class="alert-rule-name">${escapeHtml(r.name)}</label>
+                    <span class="alert-rule-sub">${escapeHtml(condText)}</span>
                 </div>
                 <div class="alert-rule-controls">
-                    <input type="number" class="alert-threshold-input" data-rule-id="${r.id}" value="${r.threshold}" min="1" step="1">
-                    <input type="checkbox" data-rule-enable="${r.id}" ${r.enabled ? 'checked' : ''}>
+                    <input type="number" class="alert-threshold-input" data-rule-id="${escapeHtml(r.id)}" value="${Number(r.threshold) || 1}" min="1" step="1">
+                    <input type="checkbox" data-rule-enable="${escapeHtml(r.id)}" ${r.enabled ? 'checked' : ''}>
                 </div>
             </div>
-        `
-            )
+        `;
+            })
             .join('');
     };
 
@@ -307,9 +311,14 @@ export function initEvents(
         });
         saveAlertRules(rules);
         toggleAlertsModal(false);
-        showToast('Regras salvas com sucesso!', 'success');
+        const t = translations[state.currentLanguage] || translations['pt-br'];
+        showToast(t['alerts-saved-toast'] || 'Regras salvas com sucesso!', 'success');
         if (state.currentData.items.length > 0) {
-            handleRefresh();
+            if (onAlertsSaved) {
+                onAlertsSaved();
+            } else {
+                handleRefresh();
+            }
         }
     });
 

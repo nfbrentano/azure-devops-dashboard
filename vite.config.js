@@ -3,9 +3,13 @@ import { defineConfig } from "vite"
 export default defineConfig({
   base: "/azure-devops-dashboard/",
   build: {
-    outDir: "dist"
+    outDir: "dist",
+    rollupOptions: {
+      external: ["canvg"]
+    }
   },
   test: {
-    environment: "happy-dom"
+    environment: "happy-dom",
+    pool: "vmThreads"
   }
 })

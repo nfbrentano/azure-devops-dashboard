@@ -275,28 +275,30 @@ export async function fetchMetadata(
         );
         await Promise.all(typePromises);
 
-        // 2. Fetch States for ALL discovered Work Item Types
-        for (const type of typesData.value) {
-            try {
-                const statesUrl = `https://dev.azure.com/${config.org}/${config.project}/_apis/wit/workitemtypes/${type.name}/states?api-version=6.0`;
-                const statesResp = await fetchWithRetry(statesUrl, { headers: { Authorization: auth } });
-                if (!statesResp.ok) continue;
-                const statesData = await statesResp.json();
+        // 2. Fetch States for ALL discovered Work Item Types in parallel
+        await Promise.all(
+            typesData.value.map(async (type: { name: string }) => {
+                try {
+                    const statesUrl = `https://dev.azure.com/${config.org}/${config.project}/_apis/wit/workitemtypes/${type.name}/states?api-version=6.0`;
+                    const statesResp = await fetchWithRetry(statesUrl, { headers: { Authorization: auth } });
+                    if (!statesResp.ok) return;
+                    const statesData = await statesResp.json();
 
-                statesData.value.forEach((s: { name: string; color?: string; category: string }) => {
-                    const lowState = s.name.toLowerCase();
-                    if (!workItemMetadata.states[lowState]) {
-                        workItemMetadata.states[lowState] = {
-                            name: s.name,
-                            color: s.color ? (s.color.startsWith('#') ? s.color : '#' + s.color) : '#64748b',
-                            category: s.category as 'Proposed' | 'InProgress' | 'Completed' | 'Removed'
-                        };
-                    }
-                });
-            } catch {
-                /* ignore types that don't exist */
-            }
-        }
+                    statesData.value.forEach((s: { name: string; color?: string; category: string }) => {
+                        const lowState = s.name.toLowerCase();
+                        if (!workItemMetadata.states[lowState]) {
+                            workItemMetadata.states[lowState] = {
+                                name: s.name,
+                                color: s.color ? (s.color.startsWith('#') ? s.color : '#' + s.color) : '#64748b',
+                                category: s.category as 'Proposed' | 'InProgress' | 'Completed' | 'Removed'
+                            };
+                        }
+                    });
+                } catch {
+                    /* ignore types that don't exist */
+                }
+            })
+        );
 
         // 3. Fetch Backlog Configurations
         try {
@@ -321,7 +323,9 @@ export async function fetchMetadata(
                 }
             }
         } catch {
-            console.log('Informação: As configurações de times/backlogs não puderam ser carregadas (provavelmente devido a CORS ou permissões do PAT). O app usará as configurações padrão.');
+            console.log(
+                'Informação: As configurações de times/backlogs não puderam ser carregadas (provavelmente devido a CORS ou permissões do PAT). O app usará as configurações padrão.'
+            );
         }
 
         // Store snapshot in cache
@@ -393,7 +397,7 @@ export function buildTree(
     // Sort hierarchy recursively
     const sortFn = (a: WorkItemNode, b: WorkItemNode) => sortByPriority(a, b, workItemMetadata);
     roots.sort(sortFn);
-    
+
     const visit = (node: WorkItemNode) => {
         if (node.children?.length > 0) {
             node.children.sort(sortFn);
@@ -409,7 +413,7 @@ export function getTypePriority(type: string | undefined, workItemMetadata: Work
     const t = (type || '').toLowerCase();
     if (workItemMetadata && workItemMetadata.backlogs) {
         for (let i = 0; i < workItemMetadata.backlogs.length; i++) {
-            if (workItemMetadata.backlogs[i].workItemTypes.map(type => type.toLowerCase()).includes(t)) {
+            if (workItemMetadata.backlogs[i].workItemTypes.map((type) => type.toLowerCase()).includes(t)) {
                 return i + 1;
             }
         }
@@ -440,17 +444,19 @@ export async function fetchProjects(config: AzureConfig): Promise<{ id: string; 
     return (data.value || []).map((p: any) => ({ id: p.id, name: p.name }));
 }
 
-export async function fetchTimelineData(config: AzureConfig, workItemMetadata: WorkItemMetadata): Promise<WorkItem[]> {
+export async function fetchTimelineData(
+    config: AzureConfig,
+    workItemMetadata: WorkItemMetadata,
+    onProgress: ((pct: number) => void) | null = null
+): Promise<WorkItem[]> {
     // Determine all portfolio-level types, including "Initiative" as a common custom type
     let portfolioTypes = ['Initiative', 'Epic', 'Feature'];
     if (workItemMetadata && workItemMetadata.backlogs && workItemMetadata.backlogs.length > 0) {
-        const types = workItemMetadata.backlogs
-            .filter(b => b.type === 'portfolio')
-            .flatMap(b => b.workItemTypes);
+        const types = workItemMetadata.backlogs.filter((b) => b.type === 'portfolio').flatMap((b) => b.workItemTypes);
         if (types.length > 0) portfolioTypes = types;
     }
 
-    const typesFilter = portfolioTypes.map(t => `'${t}'`).join(', ');
+    const typesFilter = portfolioTypes.map((t) => `'${t}'`).join(', ');
 
     const decodedProject = decodeURIComponent(config.project);
     const url = `https://dev.azure.com/${config.org}/${encodeURIComponent(decodedProject)}/_apis/wit/wiql?api-version=6.0`;
@@ -482,25 +488,36 @@ export async function fetchTimelineData(config: AzureConfig, workItemMetadata: W
 
     if (ids.length === 0) return [];
 
-    // Fetch details for these IDs at the ORG level
+    // Fetch details for these IDs at the ORG level with caching
     const auth = getAuthHeader(config.pat);
     const chunkSize = 200;
     let allItems: WorkItem[] = [];
+    const total = ids.length;
+    const p1 = (decodedProject || '').trim().toLowerCase();
+    const p2 = (config.project || '').trim().toLowerCase();
 
-    for (let i = 0; i < ids.length; i += chunkSize) {
+    for (let i = 0; i < total; i += chunkSize) {
+        if (onProgress) {
+            onProgress((i / total) * 100);
+        }
         const chunk = ids.slice(i, i + chunkSize);
         const chunkKey = chunk.join(',');
         const detailsUrl = `https://dev.azure.com/${config.org}/_apis/wit/workitems?ids=${chunkKey}&$expand=all&api-version=6.0`;
-        const detailsResp = await fetchWithRetry(detailsUrl, {
-            headers: { Authorization: auth }
-        });
-        if (detailsResp.ok) {
-            const data = await detailsResp.json();
-            const value = data.value || [];
-            const p1 = (decodedProject || '').trim().toLowerCase();
-            const p2 = (config.project || '').trim().toLowerCase();
+        const chunkItems = await apiCache.getOrFetch(
+            detailsUrl,
+            async () => {
+                const detailsResp = await fetchWithRetry(detailsUrl, {
+                    headers: { Authorization: auth }
+                });
+                if (!detailsResp.ok) return null;
+                const data = await detailsResp.json();
+                return (data.value || []) as WorkItem[];
+            },
+            TTL.WORK_ITEMS
+        );
 
-            const filtered = value.filter((wi: any) => {
+        if (chunkItems) {
+            const filtered = chunkItems.filter((wi: any) => {
                 const project = (wi.fields['System.TeamProject'] || '').trim().toLowerCase();
                 return (project === p1 || project === p2) && project !== '';
             });
@@ -508,7 +525,10 @@ export async function fetchTimelineData(config: AzureConfig, workItemMetadata: W
         }
     }
 
+    if (onProgress) {
+        onProgress(100);
+    }
+
     console.log(`[API] Returning ${allItems.length} Items after client-side project filtering`);
     return allItems;
 }
-
