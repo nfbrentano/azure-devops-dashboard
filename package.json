@@ -42,7 +42,7 @@
   },
   "dependencies": {
     "@phosphor-icons/web": "^2.1.2",
-    "chart.js": "^4.6.1",
+    "chart.js": "^4.6.2",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1"
   },
